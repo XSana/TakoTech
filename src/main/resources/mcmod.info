@@ -1,0 +1,28 @@
+{
+  "modListVersion": 2,
+  "modList": [
+    {
+      "modid": "${modId}",
+      "name": "${modName}",
+      "description": "Private content for GTNH.",
+      "version": "${modVersion}",
+      "mcversion": "${minecraftVersion}",
+      "url": "https://github.com/XSana/TakoTech",
+      "updateUrl": "",
+      "authorList": [
+        "XSana"
+      ],
+      "credits": "",
+      "logoFile": "assets/takotech/logo.png",
+      "screenshots": [],
+      "parent": "",
+      "requiredMods": [],
+      "dependencies": [
+        "required-after:gtnhlib",
+        "after:NotEnoughItems"
+      ],
+      "dependants": [],
+      "useDependencyInformation": false
+    }
+  ]
+}
