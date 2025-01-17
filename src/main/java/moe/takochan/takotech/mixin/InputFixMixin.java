@@ -1,6 +1,5 @@
 package moe.takochan.takotech.mixin;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import org.lwjgl.LWJGLUtil;
 import org.lwjgl.input.Keyboard;
