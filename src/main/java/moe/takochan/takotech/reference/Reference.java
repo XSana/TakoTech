@@ -8,24 +8,24 @@ import moe.takochan.takotech.Tags;
 public class Reference {
 
     /**
-     * 模组的唯一标识符（Mod ID）。
-     */
-    public static final String MODID = Tags.MODID;
-
-    /**
-     * 模组名称。
-     */
-    public static final String MODNAME = Tags.MODNAME;
-
-    /**
      * 模组版本。
      */
     public static final String VERSION = Tags.VERSION;
 
     /**
+     * 模组的唯一标识符（Mod ID）。
+     */
+    public static final String MODID = "TakoTech";
+
+    /**
+     * 模组名称。
+     */
+    public static final String MODNAME = "TakoTech";
+
+    /**
      * 模组的组名。
      */
-    public static final String GROUPNAME = Tags.GROUPNAME;
+    public static final String GROUPNAME = "moe.takochan.takotech";
 
     /**
      * GUI 工厂类的全限定名。
@@ -36,7 +36,7 @@ public class Reference {
     /**
      * 资源根标识符。
      */
-    public static final String RESOURCE_ROOT_ID = Tags.MODID.toLowerCase();
+    public static final String RESOURCE_ROOT_ID = MODID.toLowerCase();
 
     /**
      * 模组的依赖关系列表。
