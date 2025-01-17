@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8.5-GTNH",
+  "package": "moe.takochan.takotech.mixin",
+  "refmap": "mixins.TakoTech.refmap.json",
+  "target": "@env(DEFAULT)",
+  "plugin": "moe.takochan.takotech.mixin.MixinPlugin",
+  "compatibilityLevel": "JAVA_8",
+  "priority": 999,
+  "mixins": [],
+  "client": [
+    "InputFixMixin"
+  ],
+  "server": []
+}
