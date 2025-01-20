@@ -1,0 +1,5 @@
+itemGroup.TakoTech=TakoTech
+
+item.takotech.mine_storage_cell.name=ME Mine Storage Cell
+
+tooltip.takotech.mine_storage_cell.desc=An almost infinite capacity storage component, only usable for mineral storage.

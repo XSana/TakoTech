@@ -1,16 +1,17 @@
 package moe.takochan.takotech;
 
-import moe.takochan.takotech.common.CommonProxy;
-import moe.takochan.takotech.reference.Reference;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import moe.takochan.takotech.common.CommonProxy;
+import moe.takochan.takotech.common.item.ModItems;
+import moe.takochan.takotech.config.TakoTechConfig;
+import moe.takochan.takotech.reference.Reference;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Mod(
     modid = Reference.MODID,
@@ -38,6 +39,9 @@ public class TakoTechMod {
     // preInit "Run before anything else. Read your config, create blocks, items, etc, and register them with the
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
+        TakoTechConfig.init();
+        ModItems.registerItems();
+
         proxy.preInit(event);
     }
 
