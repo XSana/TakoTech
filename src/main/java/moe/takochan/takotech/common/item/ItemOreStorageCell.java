@@ -5,7 +5,6 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageCell;
-import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
@@ -19,6 +18,7 @@ import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import moe.takochan.takotech.common.storage.BaseCellInventory;
 import moe.takochan.takotech.common.tabs.TakoTechTabs;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
@@ -74,7 +74,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
 
         // 检查库存处理器是否是 ICellInventoryHandler 类型
         if (inventory instanceof ICellInventoryHandler handler) {
-            final ICellInventory cellInventory = handler.getCellInv(); // 获取存储单元的库存
+            final BaseCellInventory cellInventory = (BaseCellInventory) handler.getCellInv(); // 获取存储单元的库存
 
             if (cellInventory != null) {
                 // 显示已用字节数和总字节数
@@ -177,7 +177,8 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public int getTotalTypes(ItemStack cellItem) {
-        return Integer.MAX_VALUE;
+        // 应该没这么多矿物类型吧（恶臭）
+        return 114514;
     }
 
     /**
