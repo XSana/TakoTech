@@ -33,13 +33,13 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-public class ItemMineStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
+public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
 
     @SuppressWarnings("Guava")
-    public ItemMineStorageCell() {
+    public ItemOreStorageCell() {
         this.setMaxStackSize(1);
-        this.setUnlocalizedName(NameConstants.ITEM_MINE_STORAGE_CELL);
-        this.setTextureName(CommonUtils.resource(NameConstants.ITEM_MINE_STORAGE_CELL));
+        this.setUnlocalizedName(NameConstants.ITEM_ORE_STORAGE_CELL);
+        this.setTextureName(CommonUtils.resource(NameConstants.ITEM_ORE_STORAGE_CELL));
         this.setFeature(EnumSet.of(AEFeature.StorageCells));
     }
 
@@ -66,7 +66,7 @@ public class ItemMineStorageCell extends BaseAECellItem implements IStorageCell,
     @SideOnly(Side.CLIENT)
     @Override
     public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo) {
-        lines.add(I18nUtils.tooltip(NameConstants.ITEM_MINE_STORAGE_CELL_DESC)); // 添加物品的描述
+        lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC)); // 添加物品的描述
 
         // 获取物品堆栈关联的存储单元库存处理器
         final IMEInventoryHandler<?> inventory = AEApi.instance().registries().cell()
@@ -177,7 +177,7 @@ public class ItemMineStorageCell extends BaseAECellItem implements IStorageCell,
      */
     @Override
     public int getTotalTypes(ItemStack cellItem) {
-        return 4;
+        return Integer.MAX_VALUE;
     }
 
     /**
@@ -295,7 +295,7 @@ public class ItemMineStorageCell extends BaseAECellItem implements IStorageCell,
 
     @Override
     public void register() {
-        GameRegistry.registerItem(this, "mine_storage_cell");
+        GameRegistry.registerItem(this, "ore_storage_cell");
         setCreativeTab(TakoTechTabs.INSTANCE);
     }
 }

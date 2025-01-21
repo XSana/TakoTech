@@ -1,5 +1,5 @@
 itemGroup.TakoTech=塔可科技
 
-item.takotech.mine_storage_cell.name=ME矿物存储原件
+item.takotech.ore_storage_cell.name=ME矿物存储原件
 
-tooltip.takotech.mine_storage_cell.desc=一个近乎无限容量的存储元件，只能用于矿物存储
+tooltip.takotech.ore_storage_cell.desc=一个近乎无限容量的存储元件，只能用于矿物存储

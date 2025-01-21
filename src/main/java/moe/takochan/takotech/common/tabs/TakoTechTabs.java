@@ -15,6 +15,6 @@ public class TakoTechTabs extends CreativeTabs {
 
     @Override
     public Item getTabIconItem() {
-        return ModItems.itemMineStorageCell;
+        return ModItems.ITEM_ORE_STORAGE_CELL;
     }
 }

@@ -9,7 +9,7 @@ import appeng.api.storage.data.IAEItemStack;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-public class ItemMineStorageCellInventory implements ICellInventory {
+public class OreStorageCellInventory implements ICellInventory {
 
     /**
      * 获取当前存储单元的物品堆栈。
