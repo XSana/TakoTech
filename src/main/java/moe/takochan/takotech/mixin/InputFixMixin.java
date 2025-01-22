@@ -1,6 +1,6 @@
 package moe.takochan.takotech.mixin;
 
-import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.LWJGLUtil;
 import org.lwjgl.input.Keyboard;
 import org.spongepowered.asm.mixin.Mixin;
