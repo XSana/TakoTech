@@ -5,6 +5,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageCell;
+import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
@@ -18,7 +19,6 @@ import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import moe.takochan.takotech.common.storage.BaseCellInventory;
 import moe.takochan.takotech.common.tabs.TakoTechTabs;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
@@ -74,7 +74,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
 
         // 检查库存处理器是否是 ICellInventoryHandler 类型
         if (inventory instanceof ICellInventoryHandler handler) {
-            final BaseCellInventory cellInventory = (BaseCellInventory) handler.getCellInv(); // 获取存储单元的库存
+            final ICellInventory cellInventory = handler.getCellInv(); // 获取存储单元的库存
 
             if (cellInventory != null) {
                 // 显示已用字节数和总字节数
@@ -86,7 +86,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                 // 显示已存储的物品类型数量和总物品类型数量
                 lines.add(NumberFormat.getInstance().format(cellInventory.getStoredItemTypes()) + " "
                     + GuiText.Of.getLocal() + ' '
-                    + NumberFormat.getInstance().format(cellInventory.getTotalItemTypes())
+                    + NumberFormat.getInstance().format(this.getTotalTypes(stack))
                     + ' ' + GuiText.Types.getLocal());
 
                 // 如果存储单元启用了预格式化

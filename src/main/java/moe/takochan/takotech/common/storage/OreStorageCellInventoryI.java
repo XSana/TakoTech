@@ -21,7 +21,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import static appeng.me.storage.CellInventory.getCell;
 
-public class OreStorageCellInventory extends BaseCellInventory {
+public class OreStorageCellInventoryI implements IBaseCellInventory {
 
     // NBT标签名称，用于存储物品类型和数量的标签
     private static final String ITEM_TYPE_TAG = "it";
@@ -48,7 +48,7 @@ public class OreStorageCellInventory extends BaseCellInventory {
      * @param container 存储单元的保存提供器
      * @throws AppEngException 如果物品堆栈不是有效的存储单元，抛出异常
      */
-    public OreStorageCellInventory(ItemStack storage, ISaveProvider container) throws AppEngException {
+    public OreStorageCellInventoryI(ItemStack storage, ISaveProvider container) throws AppEngException {
         if (storage == null) {
             throw new AppEngException("ItemStack was used as a cell, but was not a cell!");
         }
@@ -265,7 +265,7 @@ public class OreStorageCellInventory extends BaseCellInventory {
     /**
      * 获取该存储单元的矿石过滤器。
      *
-     * @return 返回当前的矿石过滤器字符串，通常用于物品筛选。
+     * @return 返回当前的矿石过滤器字符串
      */
     @Override
     public String getOreFilter() {
