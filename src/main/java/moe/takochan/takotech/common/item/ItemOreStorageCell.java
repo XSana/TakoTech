@@ -15,7 +15,10 @@ import appeng.core.localization.GuiText;
 import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
 import appeng.util.Platform;
+import appeng.util.item.AEItemDef;
 import appeng.util.item.AEItemStack;
+import appeng.util.item.OreHelper;
+import appeng.util.item.OreReference;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -29,6 +32,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import java.text.NumberFormat;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -191,8 +195,18 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     @Override
     public boolean isBlackListed(ItemStack cellItem, IAEItemStack requestedAddition) {
         if (requestedAddition instanceof AEItemStack itemStack) {
-            System.out.println("Storing ore: " + itemStack.getDisplayName() + " " + itemStack.isOre());
-            return !itemStack.isOre();
+            // 获取矿物信息
+            OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
+            if (oreReference != null) {
+                Collection<String> oreDefs = oreReference.getEquivalents();
+                if (oreDefs != null && !oreDefs.isEmpty()) {
+                    String unLocalizedItemName = itemStack.getItemStack().getUnlocalizedName();
+                    for (String oreDef : oreDefs) {
+                        // TODO 判断矿典标签,符合条件返回false
+                        return false;
+                    }
+                }
+            }
         }
         return true;
     }
