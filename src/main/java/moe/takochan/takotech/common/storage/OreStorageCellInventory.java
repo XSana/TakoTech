@@ -14,6 +14,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import moe.takochan.takotech.common.item.ItemOreStorageCell;
+import moe.takochan.takotech.constants.NBTConstants;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -21,7 +22,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import static appeng.me.storage.CellInventory.getCell;
 
-public class OreStorageCellInventoryI implements IBaseCellInventory {
+public class OreStorageCellInventory implements IBaseCellInventory {
 
     // NBT标签名称，用于存储物品类型和数量的标签
     private static final String ITEM_TYPE_TAG = "it";
@@ -48,7 +49,7 @@ public class OreStorageCellInventoryI implements IBaseCellInventory {
      * @param container 存储单元的保存提供器
      * @throws AppEngException 如果物品堆栈不是有效的存储单元，抛出异常
      */
-    public OreStorageCellInventoryI(ItemStack storage, ISaveProvider container) throws AppEngException {
+    public OreStorageCellInventory(ItemStack storage, ISaveProvider container) throws AppEngException {
         if (storage == null) {
             throw new AppEngException("ItemStack was used as a cell, but was not a cell!");
         }
@@ -488,9 +489,18 @@ public class OreStorageCellInventoryI implements IBaseCellInventory {
      * 从存储单元加载物品列表。
      */
     private void loadCellItems() {
+        // TODO 初始化读取内容逻辑
         if (this.cellItems == null) {
-            // TODO 初始化读取内容逻辑
+            this.cellItems = AEApi.instance().storage().createPrimitiveItemList();
         }
+
+        this.cellItems.resetStatus();
+
+        for (final IAEItemStack ais : this.cellItems) {
+            ais.setCraftable(false);
+            ais.setCountRequestable(0);
+        }
+
     }
 
     /**
@@ -498,7 +508,18 @@ public class OreStorageCellInventoryI implements IBaseCellInventory {
      */
     private void saveChanges() {
         // TODO 保存内容逻辑
+
+        if (this.cellItems != null) {
+            this.container.saveChanges(this);
+        }
     }
 
 
+    @Override
+    public String getDiskID() {
+        if (this.tagCompound.hasNoTags()) {
+            return "";
+        }
+        return this.tagCompound.getString(NBTConstants.DISK_ID);
+    }
 }
