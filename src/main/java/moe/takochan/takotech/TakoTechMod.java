@@ -7,9 +7,9 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import moe.takochan.takotech.common.CommonProxy;
+import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.item.ModItems;
 import moe.takochan.takotech.config.TakoTechConfig;
-import moe.takochan.takotech.reference.Reference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

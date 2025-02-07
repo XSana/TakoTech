@@ -1,7 +1,7 @@
 package moe.takochan.takotech.common.tabs;
 
+import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.item.ModItems;
-import moe.takochan.takotech.reference.Reference;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 

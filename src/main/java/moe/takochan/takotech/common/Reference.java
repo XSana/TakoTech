@@ -1,4 +1,4 @@
-package moe.takochan.takotech.reference;
+package moe.takochan.takotech.common;
 
 import moe.takochan.takotech.Tags;
 

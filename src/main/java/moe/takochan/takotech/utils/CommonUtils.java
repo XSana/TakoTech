@@ -1,6 +1,6 @@
 package moe.takochan.takotech.utils;
 
-import moe.takochan.takotech.reference.Reference;
+import moe.takochan.takotech.common.Reference;
 import net.minecraft.util.ResourceLocation;
 
 public class CommonUtils {
