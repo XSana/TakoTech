@@ -1,5 +1,6 @@
 package moe.takochan.takotech;
 
+import appeng.api.AEApi;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -9,6 +10,7 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import moe.takochan.takotech.common.CommonProxy;
 import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.item.ModItems;
+import moe.takochan.takotech.common.storage.CellHandler;
 import moe.takochan.takotech.config.TakoTechConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,6 +56,8 @@ public class TakoTechMod {
     @Mod.EventHandler
     // postInit "Handle interaction with other mods, complete your setup based on this." (Remove if not needed)
     public void postInit(FMLPostInitializationEvent event) {
+        // 注册CellHandler
+        AEApi.instance().registries().cell().addCellHandler(new CellHandler());
         proxy.postInit(event);
     }
 

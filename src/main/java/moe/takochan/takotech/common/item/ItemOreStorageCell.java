@@ -5,8 +5,6 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageCell;
-import appeng.api.storage.ICellInventory;
-import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
@@ -15,14 +13,15 @@ import appeng.core.localization.GuiText;
 import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
 import appeng.util.Platform;
-import appeng.util.item.AEItemDef;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import moe.takochan.takotech.common.tabs.TakoTechTabs;
+import moe.takochan.takotech.client.tabs.TakoTechTabs;
+import moe.takochan.takotech.common.storage.IBaseCellInventory;
+import moe.takochan.takotech.common.storage.IBaseCellInventoryHandler;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
@@ -77,8 +76,8 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
             .getCellInventory(stack, null, StorageChannel.ITEMS);
 
         // 检查库存处理器是否是 ICellInventoryHandler 类型
-        if (inventory instanceof ICellInventoryHandler handler) {
-            final ICellInventory cellInventory = handler.getCellInv(); // 获取存储单元的库存
+        if (inventory instanceof IBaseCellInventoryHandler handler) {
+            final IBaseCellInventory cellInventory = handler.getCellInv(); // 获取存储单元的库存
 
             if (cellInventory != null) {
                 // 显示已用字节数和总字节数

@@ -1,4 +1,4 @@
-package moe.takochan.takotech.common.tabs;
+package moe.takochan.takotech.client.tabs;
 
 import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.item.ModItems;

@@ -500,7 +500,6 @@ public class OreStorageCellInventory implements IBaseCellInventory {
             ais.setCraftable(false);
             ais.setCountRequestable(0);
         }
-
     }
 
     /**
@@ -515,11 +514,18 @@ public class OreStorageCellInventory implements IBaseCellInventory {
     }
 
 
+    /**
+     * 获取磁盘ID
+     *
+     * @return 磁盘ID的字符串表示，如果没有磁盘ID，则返回空字符串
+     */
     @Override
     public String getDiskID() {
+        // 检查NBT中是否没有任何标签，如果是，则返回空字符串
         if (this.tagCompound.hasNoTags()) {
             return "";
         }
+        // 从NBT中获取磁盘ID的字符串值并返回
         return this.tagCompound.getString(NBTConstants.DISK_ID);
     }
 }
