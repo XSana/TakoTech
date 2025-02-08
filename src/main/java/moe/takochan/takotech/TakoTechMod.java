@@ -66,4 +66,10 @@ public class TakoTechMod {
     public void serverStarting(FMLServerStartingEvent event) {
         proxy.serverStarting(event);
     }
+
+    @Mod.EventHandler
+    // register server commands in this event handler (Remove if not needed)
+    public void serverStopping(FMLServerStartingEvent event) {
+        proxy.serverStopping(event);
+    }
 }

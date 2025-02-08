@@ -489,16 +489,20 @@ public class OreStorageCellInventory implements IBaseCellInventory {
      * 从存储单元加载物品列表。
      */
     private void loadCellItems() {
-        // TODO 初始化读取内容逻辑
         if (this.cellItems == null) {
             this.cellItems = AEApi.instance().storage().createPrimitiveItemList();
         }
 
         this.cellItems.resetStatus();
 
-        for (final IAEItemStack ais : this.cellItems) {
-            ais.setCraftable(false);
-            ais.setCountRequestable(0);
+        IAEItemStack[] storedItems = StorageCellSaveData.getInstance().getStoredItems(this.getDiskID());
+
+        if (storedItems != null) {
+            for (final IAEItemStack ais : storedItems) {
+                ais.setCraftable(false);
+                ais.setCountRequestable(0);
+                this.cellItems.add(ais);
+            }
         }
     }
 
@@ -506,11 +510,11 @@ public class OreStorageCellInventory implements IBaseCellInventory {
      * 保存物品更改。
      */
     private void saveChanges() {
-        // TODO 保存内容逻辑
-
         if (this.cellItems != null) {
             this.container.saveChanges(this);
         }
+        StorageCellSaveData.getInstance().setStoredItems(this.getDiskID(), this.cellItems);
+        StorageCellSaveData.getInstance().markDirty();
     }
 
 
