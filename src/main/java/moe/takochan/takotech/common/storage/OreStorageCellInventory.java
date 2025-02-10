@@ -20,6 +20,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+import java.util.UUID;
+
 import static appeng.me.storage.CellInventory.getCell;
 
 public class OreStorageCellInventory implements IBaseCellInventory {
@@ -30,7 +32,7 @@ public class OreStorageCellInventory implements IBaseCellInventory {
 
     // 存储的物品数量和物品类型数量
     private long storedItemCount;
-    private long storedItemTypes;
+    private int storedItemTypes;
 
     // 存储单元的物品堆栈、保存提供器和NBT数据
     private final ItemStack storage;
@@ -38,7 +40,7 @@ public class OreStorageCellInventory implements IBaseCellInventory {
     private final NBTTagCompound tagCompound;
 
     // 原件类型实例
-    private ItemOreStorageCell cellType;
+    private final ItemOreStorageCell cellType;
     // 存储单元中的物品列表
     private IItemList<IAEItemStack> cellItems;
 
@@ -54,14 +56,22 @@ public class OreStorageCellInventory implements IBaseCellInventory {
             throw new AppEngException("ItemStack was used as a cell, but was not a cell!");
         }
 
+        // 获取物品堆栈关联的存储单元库存处理器
         this.storage = storage;
         this.container = container;
 
         // 读取NBT数据
         this.tagCompound = Platform.openNbtData(storage);
 
+        // 初始化DiskId
+        String diskId = tagCompound.getString(NBTConstants.DISK_ID);
+        if (diskId.isEmpty()) {
+            diskId = UUID.randomUUID().toString();
+            this.tagCompound.setString(NBTConstants.DISK_ID, diskId);
+        }
+
         // 从NBT数据中读取存储的物品数量和类型
-        this.storedItemTypes = tagCompound.getLong(ITEM_TYPE_TAG);
+        this.storedItemTypes = tagCompound.getInteger(ITEM_TYPE_TAG);
         this.storedItemCount = tagCompound.getLong(ITEM_COUNT_TAG);
 
         // 获取元件实例
@@ -489,19 +499,27 @@ public class OreStorageCellInventory implements IBaseCellInventory {
      * 从存储单元加载物品列表。
      */
     private void loadCellItems() {
+        // 如果物品列表为空，则创建一个新列表
         if (this.cellItems == null) {
             this.cellItems = AEApi.instance().storage().createPrimitiveItemList();
         }
 
+        // 重置物品列表的状态
         this.cellItems.resetStatus();
 
+        // 通过DiskID 从存储单元中获取存储的物品列表
         IAEItemStack[] storedItems = StorageCellSaveData.getInstance().getStoredItems(this.getDiskID());
 
+        // 如果存储的物品列表不为空，则遍历列表并添加到物品列表中
         if (storedItems != null) {
             for (final IAEItemStack ais : storedItems) {
-                ais.setCraftable(false);
-                ais.setCountRequestable(0);
+                if (ais != null && ais.getStackSize() <= 0) {
+                    continue;
+                }
                 this.cellItems.add(ais);
+            }
+            if (this.cellItems.size() != storedItems.length) {
+                this.saveChanges();
             }
         }
     }
@@ -510,6 +528,28 @@ public class OreStorageCellInventory implements IBaseCellInventory {
      * 保存物品更改。
      */
     private void saveChanges() {
+
+        // 更新物品字节数
+//        long itemCount = 0;
+//        for (final IAEItemStack ais : this.cellItems) {
+//            itemCount += ais.getStackSize();
+//        }
+//        this.storedItemCount = itemCount;
+//        if (itemCount == 0) {
+//            this.tagCompound.removeTag(ITEM_COUNT_TAG);
+//        } else {
+//            this.tagCompound.setLong(ITEM_COUNT_TAG, itemCount);
+//        }
+
+        // 更新物品类型数量
+        this.storedItemTypes = this.cellItems.size();
+        if (this.cellItems.isEmpty()) {
+            this.tagCompound.removeTag(ITEM_TYPE_TAG);
+        } else {
+            this.tagCompound.setInteger(ITEM_TYPE_TAG, this.storedItemTypes);
+        }
+
+
         if (this.cellItems != null) {
             this.container.saveChanges(this);
         }

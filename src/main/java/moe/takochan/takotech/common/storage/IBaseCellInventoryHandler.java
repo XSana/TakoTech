@@ -1,10 +1,18 @@
 package moe.takochan.takotech.common.storage;
 
-import appeng.api.storage.ICellInventoryHandler;
+import appeng.api.config.IncludeExclude;
+import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.data.IAEItemStack;
 
-public interface IBaseCellInventoryHandler extends ICellInventoryHandler {
+public interface IBaseCellInventoryHandler extends IMEInventoryHandler<IAEItemStack> {
 
-    @Override
     IBaseCellInventory getCellInv();
+
+
+    boolean isPreformatted();
+
+    boolean isFuzzy();
+
+    IncludeExclude getIncludeExcludeMode();
 
 }

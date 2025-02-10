@@ -5,6 +5,7 @@ import appeng.api.storage.*;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.util.Platform;
+import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.common.item.BaseAECellItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -14,6 +15,9 @@ import net.minecraft.util.IIcon;
 public class CellHandler implements ICellHandler {
     @Override
     public boolean isCell(ItemStack is) {
+        TakoTechMod.LOG.info(is.getItem().getUnlocalizedName());
+        if (is.getItem() instanceof BaseAECellItem) TakoTechMod.LOG.info("isCell");
+        else TakoTechMod.LOG.info("isCell false");
         return is != null && is.getItem() instanceof BaseAECellItem;
     }
 
