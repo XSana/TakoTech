@@ -20,13 +20,15 @@ import com.glodblock.github.util.Ae2Reflect;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-public class CellInventoryHandler
+public class TakoCellInventoryHandler
     extends MEInventoryHandler<IAEItemStack>
-    implements IBaseCellInventoryHandler, ICellCacheRegistry {
+    implements ITakoCellInventoryHandler, ICellCacheRegistry {
 
-    public CellInventoryHandler(IMEInventory<IAEItemStack> meInventory) {
+    public TakoCellInventoryHandler(IMEInventory<IAEItemStack> meInventory) {
         super(meInventory, StorageChannel.ITEMS);
-        final IBaseCellInventory ci = this.getCellInv();
+        final ITakoCellInventory ci = this.getCellInv();
+
+        // init
         if (ci != null) {
             final IInventory upgrades = ci.getUpgradesInventory();
             final IInventory config = ci.getConfigInventory();
@@ -82,12 +84,12 @@ public class CellInventoryHandler
     }
 
     @Override
-    public IBaseCellInventory getCellInv() {
+    public ITakoCellInventory getCellInv() {
         Object o = this.getInternal();
         if (o instanceof MEPassThrough) {
             o = Ae2Reflect.getInternal((MEPassThrough<?>) o);
         }
-        return (IBaseCellInventory) (o instanceof IBaseCellInventory ? o : null);
+        return (ITakoCellInventory) (o instanceof ITakoCellInventory ? o : null);
     }
 
     @Override

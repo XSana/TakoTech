@@ -3,9 +3,11 @@ package moe.takochan.takotech.common.item;
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
+import appeng.api.exceptions.AppEngException;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.core.features.AEFeature;
@@ -13,15 +15,14 @@ import appeng.core.localization.GuiText;
 import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
 import appeng.util.Platform;
-import appeng.util.item.AEItemStack;
-import appeng.util.item.OreHelper;
-import appeng.util.item.OreReference;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
-import moe.takochan.takotech.common.storage.IBaseCellInventory;
-import moe.takochan.takotech.common.storage.IBaseCellInventoryHandler;
+import moe.takochan.takotech.common.storage.ITakoCellInventory;
+import moe.takochan.takotech.common.storage.ITakoCellInventoryHandler;
+import moe.takochan.takotech.common.storage.OreStorageCellInventory;
+import moe.takochan.takotech.common.storage.TakoCellInventoryHandler;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
@@ -31,12 +32,14 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import java.text.NumberFormat;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
 public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
+
+    private final int perType = 1;
+    private final double idleDrain = 0;
 
     @SuppressWarnings("Guava")
     public ItemOreStorageCell() {
@@ -76,15 +79,13 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
             .getCellInventory(stack, null, StorageChannel.ITEMS);
 
         // 检查库存处理器是否是 ICellInventoryHandler 类型
-        if (inventory instanceof IBaseCellInventoryHandler handler) {
-            final IBaseCellInventory cellInventory = handler.getCellInv(); // 获取存储单元的库存
+        if (inventory instanceof ITakoCellInventoryHandler handler) {
+            final ITakoCellInventory cellInventory = handler.getCellInv(); // 获取存储单元的库存
 
             if (cellInventory != null) {
-                // 显示已用字节数和总字节数
-                lines.add(NumberFormat.getInstance().format(cellInventory.getUsedBytes()) + " "
-                    + GuiText.Of.getLocal() + ' '
-                    + NumberFormat.getInstance().format(cellInventory.getTotalBytes())
-                    + ' ' + GuiText.BytesUsed.getLocal());
+                if (!cellInventory.getDiskID().isEmpty()) {
+                    lines.add(cellInventory.getDiskID());
+                }
 
                 // 显示已存储的物品类型数量和总物品类型数量
                 lines.add(NumberFormat.getInstance().format(cellInventory.getStoredItemTypes()) + " "
@@ -158,7 +159,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public int BytePerType(ItemStack cellItem) {
-        return 1;
+        return this.perType;
     }
 
     /**
@@ -169,7 +170,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public int getBytesPerType(ItemStack cellItem) {
-        return 1;
+        return this.perType;
     }
 
     /**
@@ -193,21 +194,22 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public boolean isBlackListed(ItemStack cellItem, IAEItemStack requestedAddition) {
-        if (requestedAddition instanceof AEItemStack itemStack) {
-            // 获取矿物信息
-            OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
-            if (oreReference != null) {
-                Collection<String> oreDefs = oreReference.getEquivalents();
-                if (oreDefs != null && !oreDefs.isEmpty()) {
-                    String unLocalizedItemName = itemStack.getItemStack().getUnlocalizedName();
-                    for (String oreDef : oreDefs) {
-                        // TODO 判断矿典标签,符合条件返回false
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
+//        if (requestedAddition instanceof AEItemStack itemStack) {
+//            // 获取矿物信息
+//            OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
+//            if (oreReference != null) {
+//                Collection<String> oreDefs = oreReference.getEquivalents();
+//                if (oreDefs != null && !oreDefs.isEmpty()) {
+//                    String unLocalizedItemName = itemStack.getItemStack().getUnlocalizedName();
+//                    for (String oreDef : oreDefs) {
+//                        // TODO 判断矿典标签,符合条件返回false
+//                        return false;
+//                    }
+//                }
+//            }
+//        }
+//        return true;
+        return false;
     }
 
     /**
@@ -228,7 +230,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public boolean isStorageCell(ItemStack i) {
-        return true;
+        return false;
     }
 
     /**
@@ -238,7 +240,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public double getIdleDrain() {
-        return 0;
+        return this.idleDrain;
     }
 
     /**
@@ -311,5 +313,10 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     public void register() {
         GameRegistry.registerItem(this, "ore_storage_cell");
         setCreativeTab(TakoTechTabs.INSTANCE);
+    }
+
+    @Override
+    public IMEInventoryHandler<?> getInventoryHandler(ItemStack o, ISaveProvider container) throws AppEngException {
+        return new TakoCellInventoryHandler(new OreStorageCellInventory(o, container));
     }
 }

@@ -5,27 +5,23 @@ import appeng.api.storage.*;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.util.Platform;
-import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.common.item.BaseAECellItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 
-public class CellHandler implements ICellHandler {
+public class TakoCellHandler implements ICellHandler {
     @Override
     public boolean isCell(ItemStack is) {
-        TakoTechMod.LOG.info(is.getItem().getUnlocalizedName());
-        if (is.getItem() instanceof BaseAECellItem) TakoTechMod.LOG.info("isCell");
-        else TakoTechMod.LOG.info("isCell false");
         return is != null && is.getItem() instanceof BaseAECellItem;
     }
 
     @Override
     public IMEInventoryHandler<?> getCellInventory(ItemStack is, ISaveProvider host, StorageChannel channel) {
-        if (isCell(is)) {
+        if (isCell(is) && is.getItem() instanceof BaseAECellItem aci) {
             try {
-                return new CellInventoryHandler(new OreStorageCellInventory(is, host));
+                return aci.getInventoryHandler(is, host);
             } catch (Exception ignored) {
             }
         }
@@ -54,7 +50,7 @@ public class CellHandler implements ICellHandler {
 
     @Override
     public int getStatusForCell(ItemStack is, IMEInventory handler) {
-        if (handler instanceof CellInventoryHandler ci) {
+        if (handler instanceof TakoCellInventoryHandler ci) {
             return ci.getStatusForCell();
         }
         return 0;
@@ -62,7 +58,9 @@ public class CellHandler implements ICellHandler {
 
     @Override
     public double cellIdleDrain(ItemStack is, IMEInventory handler) {
-        final IBaseCellInventory inv = ((IBaseCellInventoryHandler) handler).getCellInv();
-        return inv.getIdleDrain();
+        if (handler instanceof TakoCellInventoryHandler ci) {
+            return ci.getCellInv().getIdleDrain();
+        }
+        return 0;
     }
 }

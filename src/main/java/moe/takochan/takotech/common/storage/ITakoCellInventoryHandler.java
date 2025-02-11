@@ -4,9 +4,9 @@ import appeng.api.config.IncludeExclude;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.data.IAEItemStack;
 
-public interface IBaseCellInventoryHandler extends IMEInventoryHandler<IAEItemStack> {
+public interface ITakoCellInventoryHandler extends IMEInventoryHandler<IAEItemStack> {
 
-    IBaseCellInventory getCellInv();
+    ITakoCellInventory getCellInv();
 
 
     boolean isPreformatted();

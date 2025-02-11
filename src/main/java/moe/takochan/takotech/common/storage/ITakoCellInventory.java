@@ -6,7 +6,7 @@ import appeng.api.storage.data.IAEItemStack;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-public interface IBaseCellInventory extends IMEInventory<IAEItemStack> {
+public interface ITakoCellInventory extends IMEInventory<IAEItemStack> {
 
     String getDiskID();
 

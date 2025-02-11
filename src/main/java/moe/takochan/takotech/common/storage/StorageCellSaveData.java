@@ -22,7 +22,11 @@ public class StorageCellSaveData extends WorldSavedData {
     private final Map<String, IAEItemStack[]> storedItems = new HashMap<>();
 
     public StorageCellSaveData() {
-        super(Reference.MODID);
+        this(Reference.MODID);
+    }
+
+    public StorageCellSaveData(String name) {
+        super(name);
     }
 
     public static synchronized void init(World world) {

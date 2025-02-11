@@ -1,5 +1,8 @@
 package moe.takochan.takotech.common.item;
 
+import appeng.api.exceptions.AppEngException;
+import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.ISaveProvider;
 import appeng.items.AEBaseItem;
 import moe.takochan.takotech.common.Reference;
 import net.minecraft.entity.player.EntityPlayer;
@@ -27,4 +30,7 @@ public abstract class BaseAECellItem extends AEBaseItem implements IBaseItem {
     protected void addCheckedInformation(ItemStack stack, EntityPlayer player, List<String> lines, boolean displayMoreInfo) {
         super.addCheckedInformation(stack, player, lines, displayMoreInfo);
     }
+
+    public abstract IMEInventoryHandler<?> getInventoryHandler(ItemStack o, ISaveProvider container)
+        throws AppEngException;
 }

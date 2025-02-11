@@ -19,12 +19,13 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
 import static appeng.me.storage.CellInventory.getCell;
 
-public class OreStorageCellInventory implements IBaseCellInventory {
+public class OreStorageCellInventory implements ITakoCellInventory {
 
     // NBT标签名称，用于存储物品类型和数量的标签
     private static final String ITEM_TYPE_TAG = "it";
@@ -146,12 +147,7 @@ public class OreStorageCellInventory implements IBaseCellInventory {
     @Override
     public boolean canHoldNewItem() {
         // 获取可用字节数
-        final long bytesFree = this.getFreeBytes();
-
-        // 判断存储单元是否有足够空间存储新物品
-        return (bytesFree > this.getBytesPerType()
-            || (bytesFree == this.getBytesPerType() && this.getUnusedItemCount() > 0))
-            && this.getRemainingItemTypes() > 0;
+        return this.getStoredItemTypes() <= this.getTotalItemTypes();
     }
 
     /**
@@ -223,10 +219,7 @@ public class OreStorageCellInventory implements IBaseCellInventory {
      */
     @Override
     public long getRemainingItemTypes() {
-        final long basedOnStorage = this.getFreeBytes() / this.getBytesPerType();
-        final long baseOnTotal = this.getTotalItemTypes() - this.getStoredItemTypes();
-
-        return Math.min(basedOnStorage, baseOnTotal);
+        return this.getTotalItemTypes() - this.getStoredItemTypes();
     }
 
     /**
@@ -236,9 +229,7 @@ public class OreStorageCellInventory implements IBaseCellInventory {
      */
     @Override
     public long getRemainingItemCount() {
-        final long remaining = this.getFreeBytes() * 8 + this.getUnusedItemCount();
-
-        return remaining > 0 ? remaining : 0;
+        return Long.MAX_VALUE;
     }
 
     /**
@@ -248,13 +239,7 @@ public class OreStorageCellInventory implements IBaseCellInventory {
      */
     @Override
     public int getUnusedItemCount() {
-        final long div = this.getStoredItemCount() % 8;
-
-        if (div == 0) {
-            return 0;
-        }
-
-        return (int) (8 - div);
+        return Integer.MAX_VALUE;
     }
 
     /**
@@ -493,6 +478,23 @@ public class OreStorageCellInventory implements IBaseCellInventory {
     private void updateItemCount(final long delta) {
         this.storedItemCount += delta;
         this.tagCompound.setLong(ITEM_COUNT_TAG, this.storedItemCount);
+    }
+
+    @Override
+    public IAEItemStack getAvailableItem(@NotNull IAEItemStack request, int iteration) {
+        IAEItemStack is = this.getCellItems().findPrecise(request);
+        if (is != null) {
+            return is.copy();
+        }
+        return null;
+    }
+
+    @Override
+    public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out, int iteration) {
+        for (final IAEItemStack ais : this.getCellItems()) {
+            out.add(ais);
+        }
+        return out;
     }
 
     /**

@@ -6,7 +6,6 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import moe.takochan.takotech.common.event.WorldEventHandler;
 import moe.takochan.takotech.common.storage.StorageCellSaveData;
-import moe.takochan.takotech.config.TakoTechConfig;
 import net.minecraftforge.common.MinecraftForge;
 
 public class CommonProxy {
@@ -14,7 +13,6 @@ public class CommonProxy {
     // preInit "Run before anything else. Read your config, create blocks, items, etc, and register them with the
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
-        TakoTechConfig.init();
         MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
     }
 
