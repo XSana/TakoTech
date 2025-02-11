@@ -1,9 +1,8 @@
 package moe.takochan.takotech.common.storage;
 
-import appeng.api.AEApi;
-import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IItemList;
+import appeng.util.Platform;
 import moe.takochan.takotech.common.Reference;
+import moe.takochan.takotech.common.item.BaseAECellItem;
 import moe.takochan.takotech.constants.NBTConstants;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -15,11 +14,12 @@ import net.minecraftforge.common.util.Constants;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class StorageCellSaveData extends WorldSavedData {
 
-    private static StorageCellSaveData INSTANCE; // **全局单例**
-    private final Map<String, IAEItemStack[]> storedItems = new HashMap<>();
+    private static StorageCellSaveData INSTANCE;
+    private final Map<UUID, DataStorage> disks = new HashMap<>();
 
     public StorageCellSaveData() {
         this(Reference.MODID);
@@ -55,50 +55,45 @@ public class StorageCellSaveData extends WorldSavedData {
 
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
-        storedItems.clear();
+        Map<UUID, DataStorage> n = new HashMap<>();
         NBTTagList list = nbt.getTagList(NBTConstants.DISK_LIST, Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < list.tagCount(); i++) {
             NBTTagCompound tag = list.getCompoundTagAt(i);
-            String diskID = tag.getString(NBTConstants.DISK_ID);
+            UUID diskID = UUID.fromString(tag.getString(NBTConstants.DISK_ID));
             NBTTagList items = tag.getTagList(NBTConstants.DISK_ITEMS, Constants.NBT.TAG_COMPOUND);
-
-            IAEItemStack[] itemStacks = new IAEItemStack[items.tagCount()];
-            for (int j = 0; j < items.tagCount(); j++) {
-                NBTTagCompound itemTag = items.getCompoundTagAt(j);
-                itemStacks[j] = AEApi.instance().storage().createItemStack(ItemStack.loadItemStackFromNBT(itemTag));
-            }
-            storedItems.put(diskID, itemStacks);
+            DataStorage storage = DataStorage.readFromNBT(diskID, items);
+            n.put(diskID, storage);
         }
+        disks.clear();
+        disks.putAll(n);
     }
 
     @Override
     public void writeToNBT(NBTTagCompound nbt) {
         NBTTagList list = new NBTTagList();
-        for (Map.Entry<String, IAEItemStack[]> entry : storedItems.entrySet()) {
-            if (entry.getValue() == null || entry.getValue().length == 0) {
+        for (Map.Entry<UUID, DataStorage> entry : disks.entrySet()) {
+            if (entry.getValue() == null || entry.getValue().isEmpty()) {
                 continue;
             }
 
             NBTTagCompound tag = new NBTTagCompound();
-            tag.setString(NBTConstants.DISK_ID, entry.getKey());
-
-            NBTTagList items = new NBTTagList();
-            for (IAEItemStack stack : entry.getValue()) {
-                NBTTagCompound itemTag = new NBTTagCompound();
-                stack.getItemStack().writeToNBT(itemTag);
-                items.appendTag(itemTag);
-            }
-            tag.setTag(NBTConstants.DISK_ITEMS, items);
+            tag.setString(NBTConstants.DISK_ID, entry.getKey().toString());
+            tag.setTag(NBTConstants.DISK_ITEMS, entry.getValue().writeToNBT());
             list.appendTag(tag);
         }
         nbt.setTag(NBTConstants.DISK_LIST, list);
     }
 
-    public void setStoredItems(String diskID, IItemList<IAEItemStack> items) {
-        storedItems.put(diskID, items.toArray(new IAEItemStack[0]));
-    }
-
-    public IAEItemStack[] getStoredItems(String diskID) {
-        return storedItems.getOrDefault(diskID, new IAEItemStack[0]);
+    public DataStorage getDataStorage(ItemStack itemStack) {
+        if (itemStack.getItem() instanceof BaseAECellItem) {
+            NBTTagCompound tag = Platform.openNbtData(itemStack);
+            String diskId = tag.getString(NBTConstants.DISK_ID);
+            if (diskId == null || diskId.isEmpty()) {
+                diskId = UUID.randomUUID().toString();
+            }
+            UUID uuid = UUID.fromString(diskId);
+            return disks.computeIfAbsent(uuid, DataStorage::new);
+        }
+        return null;
     }
 }

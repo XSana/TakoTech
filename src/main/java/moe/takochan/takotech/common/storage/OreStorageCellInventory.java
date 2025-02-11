@@ -32,11 +32,11 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     private static final String ITEM_COUNT_TAG = "ic";
 
     // 存储的物品数量和物品类型数量
-    private long storedItemCount;
+    private final long storedItemCount;
     private int storedItemTypes;
 
     // 存储单元的物品堆栈、保存提供器和NBT数据
-    private final ItemStack storage;
+    private final ItemStack cellItem;
     private final ISaveProvider container;
     private final NBTTagCompound tagCompound;
 
@@ -45,24 +45,27 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     // 存储单元中的物品列表
     private IItemList<IAEItemStack> cellItems;
 
+    protected final DataStorage storage;
+
+
     /**
      * 初始化存储单元的物品堆栈和保存提供器。
      *
-     * @param storage   存储单元的物品堆栈
+     * @param cellItem  存储单元的物品堆栈
      * @param container 存储单元的保存提供器
      * @throws AppEngException 如果物品堆栈不是有效的存储单元，抛出异常
      */
-    public OreStorageCellInventory(ItemStack storage, ISaveProvider container) throws AppEngException {
-        if (storage == null) {
+    public OreStorageCellInventory(ItemStack cellItem, ISaveProvider container) throws AppEngException {
+        if (cellItem == null) {
             throw new AppEngException("ItemStack was used as a cell, but was not a cell!");
         }
 
         // 获取物品堆栈关联的存储单元库存处理器
-        this.storage = storage;
+        this.cellItem = cellItem;
         this.container = container;
 
         // 读取NBT数据
-        this.tagCompound = Platform.openNbtData(storage);
+        this.tagCompound = Platform.openNbtData(cellItem);
 
         // 初始化DiskId
         String diskId = tagCompound.getString(NBTConstants.DISK_ID);
@@ -76,7 +79,9 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         this.storedItemCount = tagCompound.getLong(ITEM_COUNT_TAG);
 
         // 获取元件实例
-        this.cellType = (ItemOreStorageCell) this.storage.getItem();
+        this.cellType = (ItemOreStorageCell) this.cellItem.getItem();
+
+        this.storage = this.getStorage();
     }
 
     /**
@@ -86,7 +91,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     @Override
     public ItemStack getItemStack() {
-        return this.storage;
+        return this.cellItem;
     }
 
     /**
@@ -96,7 +101,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     @Override
     public double getIdleDrain() {
-        return this.cellType.getIdleDrain(this.storage);
+        return this.cellType.getIdleDrain(this.cellItem);
     }
 
     /**
@@ -106,7 +111,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     @Override
     public FuzzyMode getFuzzyMode() {
-        return this.cellType.getFuzzyMode(this.storage);
+        return this.cellType.getFuzzyMode(this.cellItem);
     }
 
     /**
@@ -116,7 +121,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     @Override
     public IInventory getConfigInventory() {
-        return this.cellType.getConfigInventory(this.storage);
+        return this.cellType.getConfigInventory(this.cellItem);
     }
 
     /**
@@ -126,7 +131,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     @Override
     public IInventory getUpgradesInventory() {
-        return this.cellType.getUpgradesInventory(this.storage);
+        return this.cellType.getUpgradesInventory(this.cellItem);
     }
 
     /**
@@ -136,7 +141,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     @Override
     public int getBytesPerType() {
-        return this.cellType.getBytesPerType(this.storage);
+        return this.cellType.getBytesPerType(this.cellItem);
     }
 
     /**
@@ -157,7 +162,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     @Override
     public long getTotalBytes() {
-        return this.cellType.getBytesLong(this.storage);
+        return this.cellType.getBytesLong(this.cellItem);
     }
 
     /**
@@ -189,7 +194,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     @Override
     public long getTotalItemTypes() {
-        return this.cellType.getTotalTypes(this.storage);
+        return this.cellType.getTotalTypes(this.cellItem);
     }
 
     /**
@@ -265,7 +270,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     @Override
     public String getOreFilter() {
-        return this.cellType.getOreFilter(this.storage);
+        return this.cellType.getOreFilter(this.cellItem);
     }
 
     /**
@@ -283,7 +288,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
             return null;
         }
         // 检查物品是否在黑名单中，如果是，则不允许注入，直接返回输入
-        if (this.cellType.isBlackListed(this.storage, input)) {
+        if (this.cellType.isBlackListed(this.cellItem, input)) {
             return input;
         }
 
@@ -313,7 +318,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
 
                 if (mode == Actionable.MODULATE) {
                     existingItem.setStackSize(existingItem.getStackSize() + remainingItemSlots);
-                    this.updateItemCount(remainingItemSlots);
                     this.saveChanges();
                 }
 
@@ -321,7 +325,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
             } else {
                 if (mode == Actionable.MODULATE) {
                     existingItem.setStackSize(existingItem.getStackSize() + input.getStackSize());
-                    this.updateItemCount(input.getStackSize());
                     this.saveChanges();
                 }
 
@@ -342,16 +345,13 @@ public class OreStorageCellInventory implements ITakoCellInventory {
                     if (mode == Actionable.MODULATE) {
                         final IAEItemStack toWrite = input.copy();
                         toWrite.setStackSize(remainingItemCount);
-
                         this.cellItems.add(toWrite);
-                        this.updateItemCount(toWrite.getStackSize());
                         this.saveChanges();
                     }
                     return toReturn;
                 }
 
                 if (mode == Actionable.MODULATE) {
-                    this.updateItemCount(input.getStackSize());
                     this.cellItems.add(input);
                     this.saveChanges();
                 }
@@ -390,7 +390,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
                 results.setStackSize(l.getStackSize());
 
                 if (mode == Actionable.MODULATE) {
-                    this.updateItemCount(-l.getStackSize());
                     l.setStackSize(0);
                     this.saveChanges();
                 }
@@ -399,7 +398,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
 
                 if (mode == Actionable.MODULATE) {
                     l.setStackSize(l.getStackSize() - size);
-                    this.updateItemCount(-size);
                     this.saveChanges();
                 }
             }
@@ -469,17 +467,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         return isEmpty;
     }
 
-    /**
-     * 更新存储单元的物品数量。
-     * 该方法用于增加或减少存储单元中的物品数量，并更新对应的 NBT 标签。
-     *
-     * @param delta 物品数量的增减值
-     */
-    private void updateItemCount(final long delta) {
-        this.storedItemCount += delta;
-        this.tagCompound.setLong(ITEM_COUNT_TAG, this.storedItemCount);
-    }
-
     @Override
     public IAEItemStack getAvailableItem(@NotNull IAEItemStack request, int iteration) {
         IAEItemStack is = this.getCellItems().findPrecise(request);
@@ -503,26 +490,16 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     private void loadCellItems() {
         // 如果物品列表为空，则创建一个新列表
         if (this.cellItems == null) {
-            this.cellItems = AEApi.instance().storage().createPrimitiveItemList();
+            this.cellItems = this.storage.getItems();
+            for (IAEItemStack ais : this.cellItems) {
+                if (ais != null && ais.getStackSize() <= 0) {
+                    ais.reset();
+                }
+            }
         }
 
-        // 重置物品列表的状态
-        this.cellItems.resetStatus();
-
-        // 通过DiskID 从存储单元中获取存储的物品列表
-        IAEItemStack[] storedItems = StorageCellSaveData.getInstance().getStoredItems(this.getDiskID());
-
-        // 如果存储的物品列表不为空，则遍历列表并添加到物品列表中
-        if (storedItems != null) {
-            for (final IAEItemStack ais : storedItems) {
-                if (ais != null && ais.getStackSize() <= 0) {
-                    continue;
-                }
-                this.cellItems.add(ais);
-            }
-            if (this.cellItems.size() != storedItems.length) {
-                this.saveChanges();
-            }
+        if (!this.getDiskID().equals(this.storage.getUUID())) {
+            tagCompound.setString(NBTConstants.DISK_ID, this.storage.getUUID());
         }
     }
 
@@ -530,18 +507,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      * 保存物品更改。
      */
     private void saveChanges() {
-
-        // 更新物品字节数
-//        long itemCount = 0;
-//        for (final IAEItemStack ais : this.cellItems) {
-//            itemCount += ais.getStackSize();
-//        }
-//        this.storedItemCount = itemCount;
-//        if (itemCount == 0) {
-//            this.tagCompound.removeTag(ITEM_COUNT_TAG);
-//        } else {
-//            this.tagCompound.setLong(ITEM_COUNT_TAG, itemCount);
-//        }
 
         // 更新物品类型数量
         this.storedItemTypes = this.cellItems.size();
@@ -551,11 +516,9 @@ public class OreStorageCellInventory implements ITakoCellInventory {
             this.tagCompound.setInteger(ITEM_TYPE_TAG, this.storedItemTypes);
         }
 
-
         if (this.cellItems != null) {
             this.container.saveChanges(this);
         }
-        StorageCellSaveData.getInstance().setStoredItems(this.getDiskID(), this.cellItems);
         StorageCellSaveData.getInstance().markDirty();
     }
 
@@ -573,5 +536,9 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         }
         // 从NBT中获取磁盘ID的字符串值并返回
         return this.tagCompound.getString(NBTConstants.DISK_ID);
+    }
+
+    public DataStorage getStorage() {
+        return StorageCellSaveData.getInstance().getDataStorage(this.getItemStack());
     }
 }
