@@ -2,8 +2,8 @@ package moe.takochan.takotech.client.gui.config;
 
 import com.gtnewhorizon.gtnhlib.config.ConfigException;
 import com.gtnewhorizon.gtnhlib.config.SimpleGuiConfig;
+import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.config.TakoTechConfig;
-import moe.takochan.takotech.reference.Reference;
 import net.minecraft.client.gui.GuiScreen;
 
 /**
