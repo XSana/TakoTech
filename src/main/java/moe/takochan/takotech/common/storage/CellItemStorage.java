@@ -52,7 +52,8 @@ public class CellItemStorage {
      * @return 如果存储元件内没有物品，则返回true
      */
     public boolean isEmpty() {
-        return this.getItems().isEmpty();
+        return this.getItems()
+            .isEmpty();
     }
 
     /**
@@ -92,7 +93,9 @@ public class CellItemStorage {
      * @return 读取的物品列表
      */
     private IItemList<IAEItemStack> readList(final NBTTagList tag) {
-        final IItemList<IAEItemStack> out = AEApi.instance().storage().createItemList();
+        final IItemList<IAEItemStack> out = AEApi.instance()
+            .storage()
+            .createItemList();
 
         if (tag == null) {
             return out;

@@ -42,9 +42,7 @@ import java.util.Set;
 /**
  * 矿物存储元件
  */
-public class ItemOreStorageCell
-    extends BaseAECellItem
-    implements IStorageCell, IItemGroup {
+public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
 
     private final int perType = 1;
     private final double idleDrain;
@@ -81,11 +79,14 @@ public class ItemOreStorageCell
      */
     @SideOnly(Side.CLIENT)
     @Override
-    public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo) {
+    public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
+        final boolean displayMoreInfo) {
         lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC)); // 添加物品的描述
 
         // 获取物品堆栈关联的存储单元库存处理器
-        final IMEInventoryHandler<?> inventory = AEApi.instance().registries().cell()
+        final IMEInventoryHandler<?> inventory = AEApi.instance()
+            .registries()
+            .cell()
             .getCellInventory(stack, null, StorageChannel.ITEMS);
 
         // 检查库存处理器是否是 ICellInventoryHandler 类型
@@ -93,15 +94,21 @@ public class ItemOreStorageCell
             final ITakoCellInventory cellInventory = handler.getCellInv(); // 获取存储单元的库存
 
             if (cellInventory != null) {
-                if (!cellInventory.getDiskID().isEmpty()) {
+                if (!cellInventory.getDiskID()
+                    .isEmpty()) {
                     lines.add(cellInventory.getDiskID());
                 }
 
                 // 显示已存储的物品类型数量和总物品类型数量
-                lines.add(NumberFormat.getInstance().format(cellInventory.getStoredItemTypes()) + " "
-                    + GuiText.Of.getLocal() + ' '
-                    + NumberFormat.getInstance().format(this.getTotalTypes(stack))
-                    + ' ' + GuiText.Types.getLocal());
+                lines.add(
+                    NumberFormat.getInstance()
+                        .format(cellInventory.getStoredItemTypes()) + " "
+                        + GuiText.Of.getLocal()
+                        + ' '
+                        + NumberFormat.getInstance()
+                            .format(this.getTotalTypes(stack))
+                        + ' '
+                        + GuiText.Types.getLocal());
 
                 // 如果存储单元启用了预格式化
                 if (handler.isPreformatted()) {
@@ -122,8 +129,10 @@ public class ItemOreStorageCell
                         // 如果 Shift 键被按下，显示过滤器详细信息
                         if (GuiScreen.isShiftKeyDown()) {
                             lines.add(GuiText.Filter.getLocal() + ": ");
-                            for (int i = 0; i < cellInventory.getConfigInventory().getSizeInventory(); ++i) {
-                                ItemStack s = cellInventory.getConfigInventory().getStackInSlot(i);
+                            for (int i = 0; i < cellInventory.getConfigInventory()
+                                .getSizeInventory(); ++i) {
+                                ItemStack s = cellInventory.getConfigInventory()
+                                    .getStackInSlot(i);
                                 if (s != null) lines.add(s.getDisplayName()); // 显示物品名称
                             }
                         }
@@ -137,7 +146,6 @@ public class ItemOreStorageCell
 
         super.addCheckedInformation(stack, player, lines, displayMoreInfo); // 调用父类方法，添加其他信息
     }
-
 
     /**
      * 获取该存储单元可用的字节大小。
@@ -312,7 +320,8 @@ public class ItemOreStorageCell
      */
     @Override
     public String getOreFilter(ItemStack is) {
-        return Platform.openNbtData(is).getString("OreFilter");
+        return Platform.openNbtData(is)
+            .getString("OreFilter");
     }
 
     /**
@@ -323,7 +332,8 @@ public class ItemOreStorageCell
      */
     @Override
     public void setOreFilter(ItemStack is, String filter) {
-        Platform.openNbtData(is).setString("OreFilter", filter);
+        Platform.openNbtData(is)
+            .setString("OreFilter", filter);
     }
 
     /**

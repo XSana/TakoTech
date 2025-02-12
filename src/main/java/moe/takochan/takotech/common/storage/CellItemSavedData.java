@@ -61,7 +61,8 @@ public class CellItemSavedData extends WorldSavedData {
      */
     public static CellItemSavedData getInstance() {
         if (INSTANCE == null) {
-            throw new IllegalStateException("StorageCellData has not been initialized! Ensure it is initialized during WorldLoad.");
+            throw new IllegalStateException(
+                "StorageCellData has not been initialized! Ensure it is initialized during WorldLoad.");
         }
         return INSTANCE;
     }
@@ -85,13 +86,17 @@ public class CellItemSavedData extends WorldSavedData {
     public void writeToNBT(NBTTagCompound nbt) {
         NBTTagList list = new NBTTagList();
         for (Map.Entry<String, CellItemStorage> entry : disks.entrySet()) {
-            if (entry.getValue() == null || entry.getValue().isEmpty()) {
+            if (entry.getValue() == null || entry.getValue()
+                .isEmpty()) {
                 continue;
             }
 
             NBTTagCompound tag = new NBTTagCompound();
             tag.setString(NBTConstants.DISK_ID, entry.getKey());
-            tag.setTag(NBTConstants.DISK_ITEMS, entry.getValue().writeToNBT());
+            tag.setTag(
+                NBTConstants.DISK_ITEMS,
+                entry.getValue()
+                    .writeToNBT());
             list.appendTag(tag);
         }
         nbt.setTag(NBTConstants.DISK_LIST, list);
@@ -108,7 +113,8 @@ public class CellItemSavedData extends WorldSavedData {
             NBTTagCompound tag = Platform.openNbtData(itemStack);
             String diskId = tag.getString(NBTConstants.DISK_ID);
             if (diskId == null || diskId.isEmpty()) {
-                diskId = UUID.randomUUID().toString();
+                diskId = UUID.randomUUID()
+                    .toString();
             }
             return disks.computeIfAbsent(diskId, CellItemStorage::new);
         }

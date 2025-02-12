@@ -38,8 +38,7 @@ public class TakoCellHandler implements ICellHandler {
         if (isCell(is) && is.getItem() instanceof IBaseAECellItem aci && channel == StorageChannel.ITEMS) {
             try {
                 return new TakoCellInventoryHandler(aci.getCellInv(is, host));
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
         }
         return null;
     }
@@ -79,7 +78,8 @@ public class TakoCellHandler implements ICellHandler {
      * @param chan        存储通道
      */
     @Override
-    public void openChestGui(EntityPlayer player, IChestOrDrive chest, ICellHandler cellHandler, IMEInventoryHandler inv, ItemStack is, StorageChannel chan) {
+    public void openChestGui(EntityPlayer player, IChestOrDrive chest, ICellHandler cellHandler,
+        IMEInventoryHandler inv, ItemStack is, StorageChannel chan) {
         Platform.openGUI(player, (TileEntity) chest, chest.getUp(), GuiBridge.GUI_ME);
     }
 
@@ -112,7 +112,8 @@ public class TakoCellHandler implements ICellHandler {
     @Override
     public double cellIdleDrain(ItemStack is, IMEInventory handler) {
         if (handler instanceof TakoCellInventoryHandler ci) {
-            return ci.getCellInv().getIdleDrain();
+            return ci.getCellInv()
+                .getIdleDrain();
         }
         return 0;
     }

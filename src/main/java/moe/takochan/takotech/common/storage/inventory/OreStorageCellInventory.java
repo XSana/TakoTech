@@ -51,7 +51,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     // 元件的数据存储实例
     protected final CellItemStorage storage;
 
-
     /**
      * 初始化元件的物品堆栈和保存提供器。
      *
@@ -79,7 +78,8 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         this.cellType = (ItemOreStorageCell) this.cellItem.getItem();
 
         // 获取元件的数据存储实例
-        this.storage = CellItemSavedData.getInstance().getDataStorage(this.getItemStack());
+        this.storage = CellItemSavedData.getInstance()
+            .getDataStorage(this.getItemStack());
     }
 
     /**
@@ -305,7 +305,8 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         // 确保注入的物品数量大于0
         if (input.getStackSize() > 0) {
             // 查找元件中是否已有该物品类型
-            final IAEItemStack existingItem = this.getCellItems().findPrecise(input);
+            final IAEItemStack existingItem = this.getCellItems()
+                .findPrecise(input);
             // 如果元件中已有该物品类型，则更新该物品数量
             if (existingItem != null && mode == Actionable.MODULATE) {
                 existingItem.setStackSize(existingItem.getStackSize() + input.getStackSize());
@@ -345,7 +346,8 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         IAEItemStack results = null;
 
         // 查找元件中是否已有该物品类型
-        final IAEItemStack l = this.getCellItems().findPrecise(request);
+        final IAEItemStack l = this.getCellItems()
+            .findPrecise(request);
 
         // 如果物品存在
         if (l != null) {
@@ -396,7 +398,8 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     @Override
     public IAEItemStack getAvailableItem(@NotNull IAEItemStack request, int iteration) {
-        IAEItemStack is = this.getCellItems().findPrecise(request);
+        IAEItemStack is = this.getCellItems()
+            .findPrecise(request);
         if (is != null) {
             return is.copy();
         }
@@ -417,7 +420,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         }
         return out;
     }
-
 
     /**
      * 获取磁盘ID
@@ -450,7 +452,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         return this.cellItems;
     }
 
-
     /**
      * 判断物品是否为有效的元件。
      *
@@ -482,9 +483,11 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      */
     private boolean isEmpty(final IMEInventory<IAEItemStack> meInventory) {
         boolean isEmpty = meInventory.getAvailableItems(
-            AEApi.instance().storage().createItemList(),
-            IterationCounter.incrementGlobalDepth()
-        ).isEmpty();
+            AEApi.instance()
+                .storage()
+                .createItemList(),
+            IterationCounter.incrementGlobalDepth())
+            .isEmpty();
 
         IterationCounter.decrementGlobalDepth();
 
@@ -505,7 +508,8 @@ public class OreStorageCellInventory implements ITakoCellInventory {
             }
         }
 
-        if (!this.getDiskID().equals(this.storage.getDiskID())) {
+        if (!this.getDiskID()
+            .equals(this.storage.getDiskID())) {
             tagCompound.setString(NBTConstants.DISK_ID, this.storage.getDiskID());
         }
     }
@@ -526,6 +530,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         if (this.cellItems != null) {
             this.container.saveChanges(this);
         }
-        CellItemSavedData.getInstance().markDirty();
+        CellItemSavedData.getInstance()
+            .markDirty();
     }
 }

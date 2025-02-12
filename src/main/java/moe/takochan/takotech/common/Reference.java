@@ -41,8 +41,7 @@ public class Reference {
     /**
      * 模组的依赖关系列表。
      */
-    public static final String DEPENDENCIES =
-        "required-after:gtnhlib@[0.2.11,);"
-            + " required-after:appliedenergistics2;"
-            + " after:NotEnoughItems";
+    public static final String DEPENDENCIES = "required-after:gtnhlib@[0.2.11,);"
+        + " required-after:appliedenergistics2;"
+        + " after:NotEnoughItems";
 }

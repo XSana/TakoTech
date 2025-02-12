@@ -11,8 +11,7 @@ import net.minecraft.item.ItemStack;
 
 import java.util.List;
 
-public abstract class BaseAECellItem
-    extends AEBaseItem implements IBaseItem, IBaseAECellItem {
+public abstract class BaseAECellItem extends AEBaseItem implements IBaseItem, IBaseAECellItem {
 
     /**
      * 重写 setUnlocalizedName 方法来设置物品的非本地化名称。
@@ -38,9 +37,9 @@ public abstract class BaseAECellItem
      */
     @Override
     @SideOnly(Side.CLIENT)
-    protected void addCheckedInformation(ItemStack stack, EntityPlayer player, List<String> lines, boolean displayMoreInfo) {
+    protected void addCheckedInformation(ItemStack stack, EntityPlayer player, List<String> lines,
+        boolean displayMoreInfo) {
         super.addCheckedInformation(stack, player, lines, displayMoreInfo);
     }
-
 
 }

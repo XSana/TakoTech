@@ -37,7 +37,7 @@ public abstract class InputFixMixin {
             // 对于非 Windows 平台，处理特殊输入
             if (!IS_WINDOWS && k == 88) {
                 takoTech$handleInputDialog();
-                return;  // 处理完后直接返回
+                return; // 处理完后直接返回
             }
             // 其他情况，直接处理字符输入
             this.keyTyped(c, k);

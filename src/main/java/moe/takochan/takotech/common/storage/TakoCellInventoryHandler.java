@@ -20,8 +20,7 @@ import com.glodblock.github.util.Ae2Reflect;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-public class TakoCellInventoryHandler
-    extends MEInventoryHandler<IAEItemStack>
+public class TakoCellInventoryHandler extends MEInventoryHandler<IAEItemStack>
     implements ITakoCellInventoryHandler, ICellCacheRegistry {
 
     public TakoCellInventoryHandler(IMEInventory<IAEItemStack> meInventory) {
@@ -50,8 +49,7 @@ public class TakoCellInventoryHandler
                             case INVERTER -> hasInverter = true;
                             case ORE_FILTER -> hasOreFilter = true;
                             case STICKY -> hasSticky = true;
-                            default -> {
-                            }
+                            default -> {}
                         }
                     }
                 }
@@ -65,7 +63,9 @@ public class TakoCellInventoryHandler
             if (hasOreFilter && !filter.isEmpty()) {
                 this.setPartitionList(new OreFilteredList(filter));
             } else {
-                final IItemList<IAEItemStack> priorityList = AEApi.instance().storage().createItemList();
+                final IItemList<IAEItemStack> priorityList = AEApi.instance()
+                    .storage()
+                    .createItemList();
                 for (int i = 0; i < config.getSizeInventory(); i++) {
                     final ItemStack is = config.getStackInSlot(i);
                     if (is != null) {
@@ -94,7 +94,8 @@ public class TakoCellInventoryHandler
 
     @Override
     public boolean isPreformatted() {
-        return !Ae2Reflect.getPartitionList(this).isEmpty();
+        return !Ae2Reflect.getPartitionList(this)
+            .isEmpty();
     }
 
     @Override
@@ -114,32 +115,38 @@ public class TakoCellInventoryHandler
 
     @Override
     public long getTotalBytes() {
-        return this.getCellInv().getTotalBytes();
+        return this.getCellInv()
+            .getTotalBytes();
     }
 
     @Override
     public long getFreeBytes() {
-        return this.getCellInv().getFreeBytes();
+        return this.getCellInv()
+            .getFreeBytes();
     }
 
     @Override
     public long getUsedBytes() {
-        return this.getCellInv().getUsedBytes();
+        return this.getCellInv()
+            .getUsedBytes();
     }
 
     @Override
     public long getTotalTypes() {
-        return this.getCellInv().getTotalItemTypes();
+        return this.getCellInv()
+            .getTotalItemTypes();
     }
 
     @Override
     public long getFreeTypes() {
-        return this.getCellInv().getRemainingItemTypes();
+        return this.getCellInv()
+            .getRemainingItemTypes();
     }
 
     @Override
     public long getUsedTypes() {
-        return this.getCellInv().getStoredItemTypes();
+        return this.getCellInv()
+            .getStoredItemTypes();
     }
 
     @Override
@@ -147,14 +154,14 @@ public class TakoCellInventoryHandler
         return this.getStatusForCell();
     }
 
-
     @Override
     public TYPE getCellType() {
         return TYPE.ITEM;
     }
 
     public int getStatusForCell() {
-        int val = this.getCellInv().getStatusForCell();
+        int val = this.getCellInv()
+            .getStatusForCell();
 
         if ((val == 1 || val == 2) && this.isPreformatted()) {
             val = 3;
