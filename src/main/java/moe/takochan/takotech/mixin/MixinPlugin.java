@@ -16,8 +16,7 @@ public class MixinPlugin implements IMixinConfigPlugin {
      * @param mixinPackage Mixin 包名
      */
     @Override
-    public void onLoad(String mixinPackage) {
-    }
+    public void onLoad(String mixinPackage) {}
 
     /**
      * 返回映射器配置的路径。该方法用于指定反向映射配置文件（如果有）。
@@ -53,8 +52,7 @@ public class MixinPlugin implements IMixinConfigPlugin {
      * @param otherTargets 其他插件目标类名集合
      */
     @Override
-    public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
-    }
+    public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {}
 
     /**
      * 返回需要应用的所有 Mixin 类的完整类名列表。该方法会被调用来加载所有 Mixin。
@@ -76,8 +74,7 @@ public class MixinPlugin implements IMixinConfigPlugin {
      * @param iMixinInfo Mixin 信息
      */
     @Override
-    public void preApply(String s, ClassNode classNode, String s1, IMixinInfo iMixinInfo) {
-    }
+    public void preApply(String s, ClassNode classNode, String s1, IMixinInfo iMixinInfo) {}
 
     /**
      * 在 Mixin 应用到目标类之后调用。可以在这里进行后处理操作，例如输出日志或修改类的字节码。
@@ -88,6 +85,5 @@ public class MixinPlugin implements IMixinConfigPlugin {
      * @param iMixinInfo Mixin 信息
      */
     @Override
-    public void postApply(String s, ClassNode classNode, String s1, IMixinInfo iMixinInfo) {
-    }
+    public void postApply(String s, ClassNode classNode, String s1, IMixinInfo iMixinInfo) {}
 }

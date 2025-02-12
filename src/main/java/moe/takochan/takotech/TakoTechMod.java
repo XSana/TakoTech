@@ -22,8 +22,7 @@ import org.apache.logging.log4j.Logger;
     dependencies = Reference.DEPENDENCIES,
     acceptedMinecraftVersions = "[1.7.10]",
     acceptableRemoteVersions = "*",
-    guiFactory = Reference.GUI_FACTORY
-)
+    guiFactory = Reference.GUI_FACTORY)
 public class TakoTechMod {
 
     public static final Logger LOG = LogManager.getLogger(Reference.MODID);
@@ -33,8 +32,7 @@ public class TakoTechMod {
 
     @SidedProxy(
         clientSide = "moe.takochan.takotech.client.ClientProxy",
-        serverSide = "moe.takochan.takotech.common.CommonProxy"
-    )
+        serverSide = "moe.takochan.takotech.common.CommonProxy")
     public static CommonProxy proxy;
 
     @Mod.EventHandler
@@ -56,7 +54,10 @@ public class TakoTechMod {
     // postInit "Handle interaction with other mods, complete your setup based on this." (Remove if not needed)
     public void postInit(FMLPostInitializationEvent event) {
         // 注册CellHandler
-        AEApi.instance().registries().cell().addCellHandler(new TakoCellHandler());
+        AEApi.instance()
+            .registries()
+            .cell()
+            .addCellHandler(new TakoCellHandler());
         proxy.postInit(event);
     }
 
