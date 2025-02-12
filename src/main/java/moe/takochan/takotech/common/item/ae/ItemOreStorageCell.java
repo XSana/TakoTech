@@ -21,7 +21,6 @@ import appeng.util.item.OreReference;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
 import moe.takochan.takotech.common.storage.ITakoCellInventoryHandler;
@@ -210,14 +209,8 @@ public class ItemOreStorageCell
             OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
             if (oreReference != null) {
                 Collection<String> oreDefs = oreReference.getEquivalents();
-                if (oreDefs != null && !oreDefs.isEmpty()) {
-                    String unLocalizedItemName = itemStack.getItemStack().getUnlocalizedName();
-                    for (String oreDef : oreDefs) {
-                        TakoTechMod.LOG.info(oreDef);
-                        // TODO 判断矿典标签,符合条件返回false
-                        return false;
-                    }
-                }
+                // 存在矿典标签，则返回 false，否则返回 true
+                return oreDefs == null || oreDefs.isEmpty();
             }
         }
         return true;
