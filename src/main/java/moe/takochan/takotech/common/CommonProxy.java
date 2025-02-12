@@ -5,7 +5,7 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import moe.takochan.takotech.common.event.WorldEventHandler;
-import moe.takochan.takotech.common.storage.StorageCellSaveData;
+import moe.takochan.takotech.common.storage.CellItemSavedData;
 import net.minecraftforge.common.MinecraftForge;
 
 public class CommonProxy {
@@ -29,7 +29,7 @@ public class CommonProxy {
     }
 
     public void serverStopping(FMLServerStartingEvent event) {
-        StorageCellSaveData cellData = StorageCellSaveData.getInstance();
+        CellItemSavedData cellData = CellItemSavedData.getInstance();
         if (cellData != null) {
             cellData.setDirty(true);
         }
