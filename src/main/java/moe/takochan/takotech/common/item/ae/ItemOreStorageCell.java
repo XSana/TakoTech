@@ -1,4 +1,4 @@
-package moe.takochan.takotech.common.item;
+package moe.takochan.takotech.common.item.ae;
 
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
@@ -15,14 +15,17 @@ import appeng.core.localization.GuiText;
 import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
 import appeng.util.Platform;
+import appeng.util.item.AEItemStack;
+import appeng.util.item.OreHelper;
+import appeng.util.item.OreReference;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
 import moe.takochan.takotech.common.storage.ITakoCellInventoryHandler;
-import moe.takochan.takotech.common.storage.OreStorageCellInventory;
-import moe.takochan.takotech.common.storage.TakoCellInventoryHandler;
+import moe.takochan.takotech.common.storage.inventory.OreStorageCellInventory;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
@@ -32,17 +35,25 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import java.text.NumberFormat;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
+/**
+ * 矿物存储元件
+ */
+public class ItemOreStorageCell
+    extends BaseAECellItem
+    implements IStorageCell, IItemGroup {
 
     private final int perType = 1;
-    private final double idleDrain = 0;
+    private final double idleDrain;
 
     @SuppressWarnings("Guava")
     public ItemOreStorageCell() {
+        idleDrain = 1.14;
+
         this.setMaxStackSize(1);
         this.setUnlocalizedName(NameConstants.ITEM_ORE_STORAGE_CELL);
         this.setTextureName(CommonUtils.resource(NameConstants.ITEM_ORE_STORAGE_CELL));
@@ -50,11 +61,11 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     }
 
     /**
-     * 获取该物品所在组的本地化名称。
+     * 获取物品组未本地化字符串
      *
-     * @param otherItems 其他物品集合
-     * @param is         当前物品
-     * @return 物品组的本地化名称
+     * @param otherItems 其他物品
+     * @param is         物品堆栈
+     * @return 物品组未本地化字符串
      */
     @Override
     public String getUnlocalizedGroupName(Set<ItemStack> otherItems, ItemStack is) {
@@ -62,12 +73,12 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     }
 
     /**
-     * 客户端显示物品的详细信息，主要用于显示物品的工具提示（tooltips）。
+     * 添加物品的详细信息
      *
      * @param stack           物品堆栈
-     * @param player          当前玩家
-     * @param lines           工具提示文本列表
-     * @param displayMoreInfo 是否显示更多信息（由 Shift 键控制）
+     * @param player          玩家实体
+     * @param lines           显示的详细信息
+     * @param displayMoreInfo 是否显示更多信息
      */
     @SideOnly(Side.CLIENT)
     @Override
@@ -130,7 +141,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
 
 
     /**
-     * 获取该存储单元的字节大小。
+     * 获取该存储单元可用的字节大小。
      *
      * @param cellItem 存储单元物品
      * @return 无限容量，返回最大值
@@ -141,7 +152,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     }
 
     /**
-     * 获取该存储单元的字节大小（返回长整型值）。
+     * 获取该存储单元的可用字节大小（返回长整型值）。
      *
      * @param cellItem 存储单元物品
      * @return 无限容量，返回最大值
@@ -194,28 +205,28 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public boolean isBlackListed(ItemStack cellItem, IAEItemStack requestedAddition) {
-//        if (requestedAddition instanceof AEItemStack itemStack) {
-//            // 获取矿物信息
-//            OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
-//            if (oreReference != null) {
-//                Collection<String> oreDefs = oreReference.getEquivalents();
-//                if (oreDefs != null && !oreDefs.isEmpty()) {
-//                    String unLocalizedItemName = itemStack.getItemStack().getUnlocalizedName();
-//                    for (String oreDef : oreDefs) {
-//                        // TODO 判断矿典标签,符合条件返回false
-//                        return false;
-//                    }
-//                }
-//            }
-//        }
-//        return true;
-        return false;
+        if (requestedAddition instanceof AEItemStack itemStack) {
+            // 获取矿物信息
+            OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
+            if (oreReference != null) {
+                Collection<String> oreDefs = oreReference.getEquivalents();
+                if (oreDefs != null && !oreDefs.isEmpty()) {
+                    String unLocalizedItemName = itemStack.getItemStack().getUnlocalizedName();
+                    for (String oreDef : oreDefs) {
+                        TakoTechMod.LOG.info(oreDef);
+                        // TODO 判断矿典标签,符合条件返回false
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     /**
-     * 判断该存储单元是否可以存储物品。
+     * 允许指定此存储单元是否可以存储在其他存储单元中，仅针对像物质炮这样不是通用存储的特殊物品设置。。
      *
-     * @return 如果不可存储，返回 false
+     * @return 如果该存储单元可以存储在其他存储单元中，则返回 true，通常情况下返回 false，除非在特定情况下，例如物质炮。
      */
     @Override
     public boolean storableInStorageCell() {
@@ -226,17 +237,18 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      * 判断该物品是否为存储单元。
      *
      * @param i 物品堆栈
-     * @return 如果是存储单元，返回 true，否则返回 false
+     * @return 不作为默认存储单元
      */
     @Override
     public boolean isStorageCell(ItemStack i) {
+        // 这里恒定为false，使AE再注册元件时不会将该物品注册为标准存储元件，以便于让自定义的CellInventory接管
         return false;
     }
 
     /**
-     * 获取该存储单元的空闲能量消耗（即空闲状态下的能量消耗）。
+     * 旧版空闲消耗 API。在基础 AE2 中未使用。
      *
-     * @return 空闲状态下的能量消耗值
+     * @return 该存储单元将使用的 AE/t 消耗量。
      */
     @Override
     public double getIdleDrain() {
@@ -244,21 +256,21 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     }
 
     /**
-     * 判断该物品是否可以编辑。
+     * 如果返回 false，物品将不会被视为存储单元，且不能插入工作台。
      *
-     * @param is 物品堆栈
-     * @return 如果可编辑，返回 true；否则返回 false
+     * @param is 物品
+     * @return 元件是否可插入元件工作台并编辑
      */
     @Override
     public boolean isEditable(ItemStack is) {
-        return true;
+        return false;
     }
 
     /**
-     * 获取物品的升级物品栏（如果有）。
+     * 获取存储单元的升级槽
      *
      * @param is 物品堆栈
-     * @return 返回该物品的升级物品栏，若没有则返回 null
+     * @return 返回存储单元的升级槽，若没有则返回 null
      */
     @Override
     public IInventory getUpgradesInventory(ItemStack is) {
@@ -266,10 +278,10 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     }
 
     /**
-     * 获取物品的配置物品栏（如果有）。
+     * 用于提取或将工作台的内容镜像到存储单元中。
      *
      * @param is 物品堆栈
-     * @return 返回该物品的配置物品栏，若没有则返回 null
+     * @return 返回存储单元的配置槽，若没有则返回 null
      */
     @Override
     public IInventory getConfigInventory(ItemStack is) {
@@ -299,24 +311,47 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
             .setString("FuzzyMode", fzMode.name());
     }
 
+    /**
+     * 获取矿典过滤器
+     *
+     * @param is 存储单元物品
+     * @return 当前的矿物字典过滤器
+     */
     @Override
     public String getOreFilter(ItemStack is) {
         return Platform.openNbtData(is).getString("OreFilter");
     }
 
+    /**
+     * 设置矿物字典过滤器
+     *
+     * @param is     存储单元物品
+     * @param filter 矿典过滤器字符串
+     */
     @Override
     public void setOreFilter(ItemStack is, String filter) {
         Platform.openNbtData(is).setString("OreFilter", filter);
     }
 
+    /**
+     * 获取库存管理实例
+     *
+     * @param o         物品堆栈
+     * @param container 存储提供者，用于保存和管理数据
+     * @return 库存管理实例
+     * @throws AppEngException 如果无法获取库存或发生错误时抛出该异常
+     */
     @Override
-    public void register() {
-        GameRegistry.registerItem(this, "ore_storage_cell");
-        setCreativeTab(TakoTechTabs.INSTANCE);
+    public OreStorageCellInventory getCellInv(ItemStack o, ISaveProvider container) throws AppEngException {
+        return new OreStorageCellInventory(o, container);
     }
 
+    /**
+     * 注册物品
+     */
     @Override
-    public IMEInventoryHandler<?> getInventoryHandler(ItemStack o, ISaveProvider container) throws AppEngException {
-        return new TakoCellInventoryHandler(new OreStorageCellInventory(o, container));
+    public void register() {
+        GameRegistry.registerItem(this, NameConstants.ITEM_ORE_STORAGE_CELL);
+        setCreativeTab(TakoTechTabs.INSTANCE);
     }
 }

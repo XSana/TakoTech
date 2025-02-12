@@ -8,18 +8,35 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
-import java.util.UUID;
+public class CellItemStorage {
 
-public class DataStorage {
-
+    // 硬盘Id
+    private final String diskID;
+    // 物品列表
     private IItemList<IAEItemStack> items;
 
-    private final UUID uuid;
-
-    public DataStorage(UUID uuid) {
-        this.uuid = uuid;
+    public CellItemStorage(String diskID) {
+        this.diskID = diskID;
     }
 
+    /**
+     * 通过NBT及diskId获取元件存储实例
+     *
+     * @param diskId 存储元件的diskId
+     * @param data   NBT数据
+     * @return 读取的存储实例
+     */
+    public static CellItemStorage readFromNBT(String diskId, NBTTagList data) {
+        CellItemStorage storage = new CellItemStorage(diskId);
+        storage.readFromNBT(data);
+        return storage;
+    }
+
+    /**
+     * 获取存储元件的物品列表，若没有则创建一个新的列表。
+     *
+     * @return 物品列表
+     */
     public IItemList<IAEItemStack> getItems() {
         if (this.items == null) {
             this.items = AEApi.instance()
@@ -29,24 +46,29 @@ public class DataStorage {
         return items;
     }
 
+    /**
+     * 判断存储元件是否为空。
+     *
+     * @return 如果存储元件内没有物品，则返回true
+     */
     public boolean isEmpty() {
         return this.getItems().isEmpty();
     }
 
-    public String getUUID() {
-        return this.uuid.toString();
+    /**
+     * 获取存储元件的ID。
+     *
+     * @return 存储元件的ID
+     */
+    public String getDiskID() {
+        return this.diskID;
     }
 
-    public UUID getRawUUID() {
-        return this.uuid;
-    }
-
-    public static DataStorage readFromNBT(UUID uuid, NBTTagList data) {
-        DataStorage storage = new DataStorage(uuid);
-        storage.readFromNBT(data);
-        return storage;
-    }
-
+    /**
+     * 从NBT数据中读取元件存储实例
+     *
+     * @param data NBT数据
+     */
     public void readFromNBT(NBTTagList data) {
         for (final IAEItemStack ais : this.readList(data)) {
             this.getItems()
@@ -54,15 +76,23 @@ public class DataStorage {
         }
     }
 
+    /**
+     * 将存储元件数据写入NBT。
+     *
+     * @return 存储元件的NBT数据
+     */
     public NBTBase writeToNBT() {
         return writeList(this.getItems());
     }
 
-
+    /**
+     * 从NBT列表读取物品。
+     *
+     * @param tag 存储物品的NBT列表
+     * @return 读取的物品列表
+     */
     private IItemList<IAEItemStack> readList(final NBTTagList tag) {
-        final IItemList<IAEItemStack> out = AEApi.instance()
-            .storage()
-            .createItemList();
+        final IItemList<IAEItemStack> out = AEApi.instance().storage().createItemList();
 
         if (tag == null) {
             return out;
@@ -78,6 +108,12 @@ public class DataStorage {
         return out;
     }
 
+    /**
+     * 将物品列表写入NBT。
+     *
+     * @param myList 要写入的物品列表
+     * @return 存储物品的NBT列表
+     */
     private NBTTagList writeList(final IItemList<IAEItemStack> myList) {
         final NBTTagList out = new NBTTagList();
 
@@ -90,6 +126,12 @@ public class DataStorage {
         return out;
     }
 
+    /**
+     * 将单个物品写入NBT。
+     *
+     * @param item 物品实例
+     * @return 存储物品信息的NBT数据
+     */
     private NBTTagCompound writeItem(final IAEItemStack item) {
         final NBTTagCompound out = new NBTTagCompound();
 
