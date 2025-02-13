@@ -1,6 +1,6 @@
 package moe.takochan.takotech.mixin;
 
-import javax.swing.*;
+import javax.swing.JOptionPane;
 
 import net.minecraft.client.gui.GuiScreen;
 
