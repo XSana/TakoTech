@@ -24,17 +24,17 @@ import moe.takochan.takotech.constants.NBTConstants;
  */
 public class CellItemSavedData extends WorldSavedData {
 
-    private final static String NAME_SUFFIX = "_Cell";
+    private final static String DATA_NAME = Reference.MODID + "_Cell";
 
     private static CellItemSavedData INSTANCE;
     private final Map<String, CellItemStorage> disks = new HashMap<>();
 
     public CellItemSavedData() {
-        this(Reference.MODID + NAME_SUFFIX);
+        this(DATA_NAME);
     }
 
     public CellItemSavedData(String name) {
-        super(name + NAME_SUFFIX);
+        super(name);
     }
 
     /**
@@ -49,7 +49,7 @@ public class CellItemSavedData extends WorldSavedData {
         INSTANCE = null;
 
         MapStorage storage = world.mapStorage;
-        CellItemSavedData data = (CellItemSavedData) storage.loadData(CellItemSavedData.class, Reference.MODID);
+        CellItemSavedData data = (CellItemSavedData) storage.loadData(CellItemSavedData.class, DATA_NAME);
         if (data == null) {
             data = new CellItemSavedData();
             storage.setData(Reference.MODID, data);

@@ -510,6 +510,9 @@ public class OreStorageCellInventory implements ITakoCellInventory {
             }
         }
 
+        // 更新物品类型数量
+        this.updateItemTypes();
+
         if (!this.getDiskID()
             .equals(this.storage.getDiskID())) {
             tagCompound.setString(NBTConstants.DISK_ID, this.storage.getDiskID());
@@ -522,17 +525,21 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     private void saveChanges() {
 
         // 更新物品类型数量
-        this.storedItemTypes = this.cellItems.size();
-        if (this.cellItems.isEmpty()) {
-            this.tagCompound.removeTag(ITEM_TYPE_TAG);
-        } else {
-            this.tagCompound.setInteger(ITEM_TYPE_TAG, this.storedItemTypes);
-        }
+        this.updateItemTypes();
 
         if (this.cellItems != null) {
             this.container.saveChanges(this);
         }
         CellItemSavedData.getInstance()
             .markDirty();
+    }
+
+    private void updateItemTypes() {
+        this.storedItemTypes = this.cellItems.size();
+        if (this.cellItems.isEmpty()) {
+            this.tagCompound.removeTag(ITEM_TYPE_TAG);
+        } else {
+            this.tagCompound.setInteger(ITEM_TYPE_TAG, this.storedItemTypes);
+        }
     }
 }
