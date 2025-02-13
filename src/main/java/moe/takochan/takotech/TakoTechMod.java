@@ -1,5 +1,8 @@
 package moe.takochan.takotech;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import appeng.api.AEApi;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
@@ -12,8 +15,6 @@ import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.item.ModItems;
 import moe.takochan.takotech.common.storage.TakoCellHandler;
 import moe.takochan.takotech.config.TakoTechConfig;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 @Mod(
     modid = Reference.MODID,

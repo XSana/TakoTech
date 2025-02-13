@@ -1,15 +1,16 @@
 package moe.takochan.takotech.common.item.ae;
 
+import java.util.List;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+
 import appeng.items.AEBaseItem;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.item.IBaseItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-
-import java.util.List;
 
 public abstract class BaseAECellItem extends AEBaseItem implements IBaseItem, IBaseAECellItem {
 

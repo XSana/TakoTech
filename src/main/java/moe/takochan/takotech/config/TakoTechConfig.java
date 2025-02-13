@@ -3,6 +3,7 @@ package moe.takochan.takotech.config;
 import com.gtnewhorizon.gtnhlib.config.Config;
 import com.gtnewhorizon.gtnhlib.config.ConfigException;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
+
 import moe.takochan.takotech.common.Reference;
 
 @Config(modid = Reference.MODID, configSubDirectory = "TakoTech", filename = "config")

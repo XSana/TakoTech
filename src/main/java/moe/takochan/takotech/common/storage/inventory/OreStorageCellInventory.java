@@ -1,5 +1,13 @@
 package moe.takochan.takotech.common.storage.inventory;
 
+import static appeng.me.storage.CellInventory.getCell;
+
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
@@ -18,12 +26,6 @@ import moe.takochan.takotech.common.storage.CellItemSavedData;
 import moe.takochan.takotech.common.storage.CellItemStorage;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
 import moe.takochan.takotech.constants.NBTConstants;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import org.jetbrains.annotations.NotNull;
-
-import static appeng.me.storage.CellInventory.getCell;
 
 /**
  * 矿物存储元件库存管理。
@@ -508,6 +510,9 @@ public class OreStorageCellInventory implements ITakoCellInventory {
             }
         }
 
+        // 更新物品类型数量
+        this.updateItemTypes();
+
         if (!this.getDiskID()
             .equals(this.storage.getDiskID())) {
             tagCompound.setString(NBTConstants.DISK_ID, this.storage.getDiskID());
@@ -520,17 +525,21 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     private void saveChanges() {
 
         // 更新物品类型数量
-        this.storedItemTypes = this.cellItems.size();
-        if (this.cellItems.isEmpty()) {
-            this.tagCompound.removeTag(ITEM_TYPE_TAG);
-        } else {
-            this.tagCompound.setInteger(ITEM_TYPE_TAG, this.storedItemTypes);
-        }
+        this.updateItemTypes();
 
         if (this.cellItems != null) {
             this.container.saveChanges(this);
         }
         CellItemSavedData.getInstance()
             .markDirty();
+    }
+
+    private void updateItemTypes() {
+        this.storedItemTypes = this.cellItems.size();
+        if (this.cellItems.isEmpty()) {
+            this.tagCompound.removeTag(ITEM_TYPE_TAG);
+        } else {
+            this.tagCompound.setInteger(ITEM_TYPE_TAG, this.storedItemTypes);
+        }
     }
 }

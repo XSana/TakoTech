@@ -1,5 +1,16 @@
 package moe.takochan.takotech.common.item.ae;
 
+import java.text.NumberFormat;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
+
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
@@ -28,21 +39,17 @@ import moe.takochan.takotech.common.storage.inventory.OreStorageCellInventory;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-
-import java.text.NumberFormat;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * 矿物存储元件
  */
 public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
+
+    private final static String[] ORE_DEFS = { "ore", // 矿石
+        "crushed", // 粉碎，洗净，离心
+        "dustImpure", // 含杂粉
+        "dustPure" // 洁净粉
+    };
 
     private final int perType = 1;
     private final double idleDrain;
@@ -216,9 +223,15 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
             // 获取矿物信息
             OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
             if (oreReference != null) {
+                // 存在矿典标签，获列表
                 Collection<String> oreDefs = oreReference.getEquivalents();
-                // 存在矿典标签，则返回 false，否则返回 true
-                return oreDefs == null || oreDefs.isEmpty();
+                for (String oreDef : oreDefs) {
+                    for (String prefix : ORE_DEFS) {
+                        if (oreDef.startsWith(prefix)) {
+                            return false;
+                        }
+                    }
+                }
             }
         }
         return true;

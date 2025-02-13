@@ -1,7 +1,8 @@
 package moe.takochan.takotech.client.gui.config;
 
-import com.gtnewhorizon.gtnhlib.config.SimpleGuiFactory;
 import net.minecraft.client.gui.GuiScreen;
+
+import com.gtnewhorizon.gtnhlib.config.SimpleGuiFactory;
 
 /**
  * 配置 GUI 的工厂

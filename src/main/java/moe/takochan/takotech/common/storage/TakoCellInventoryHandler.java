@@ -1,5 +1,10 @@
 package moe.takochan.takotech.common.storage;
 
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
+
+import com.glodblock.github.util.Ae2Reflect;
+
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
@@ -16,9 +21,6 @@ import appeng.util.item.AEItemStack;
 import appeng.util.prioitylist.FuzzyPriorityList;
 import appeng.util.prioitylist.OreFilteredList;
 import appeng.util.prioitylist.PrecisePriorityList;
-import com.glodblock.github.util.Ae2Reflect;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
 
 public class TakoCellInventoryHandler extends MEInventoryHandler<IAEItemStack>
     implements ITakoCellInventoryHandler, ICellCacheRegistry {
