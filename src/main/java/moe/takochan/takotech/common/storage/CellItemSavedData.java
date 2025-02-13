@@ -1,9 +1,9 @@
 package moe.takochan.takotech.common.storage;
 
-import appeng.util.Platform;
-import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.item.ae.BaseAECellItem;
-import moe.takochan.takotech.constants.NBTConstants;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -12,9 +12,10 @@ import net.minecraft.world.WorldSavedData;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraftforge.common.util.Constants;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import appeng.util.Platform;
+import moe.takochan.takotech.common.Reference;
+import moe.takochan.takotech.common.item.ae.BaseAECellItem;
+import moe.takochan.takotech.constants.NBTConstants;
 
 /**
  * `StorageComponentSavedData` 类负责管理存储元件数据。

@@ -1,14 +1,15 @@
 package moe.takochan.takotech.mixin;
 
+import javax.swing.*;
+
 import net.minecraft.client.gui.GuiScreen;
+
 import org.lwjgl.LWJGLUtil;
 import org.lwjgl.input.Keyboard;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-
-import javax.swing.*;
 
 @Mixin(GuiScreen.class)
 public abstract class InputFixMixin {

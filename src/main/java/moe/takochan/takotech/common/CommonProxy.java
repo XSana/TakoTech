@@ -1,12 +1,13 @@
 package moe.takochan.takotech.common;
 
+import net.minecraftforge.common.MinecraftForge;
+
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import moe.takochan.takotech.common.event.WorldEventHandler;
 import moe.takochan.takotech.common.storage.CellItemSavedData;
-import net.minecraftforge.common.MinecraftForge;
 
 public class CommonProxy {
 

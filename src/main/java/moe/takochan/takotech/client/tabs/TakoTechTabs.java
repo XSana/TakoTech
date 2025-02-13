@@ -1,9 +1,10 @@
 package moe.takochan.takotech.client.tabs;
 
-import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.item.ModItems;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+
+import moe.takochan.takotech.common.Reference;
+import moe.takochan.takotech.common.item.ModItems;
 
 public class TakoTechTabs extends CreativeTabs {
 
