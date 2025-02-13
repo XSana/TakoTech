@@ -9,6 +9,16 @@ import moe.takochan.takotech.common.Reference;
 @Config(modid = Reference.MODID, configSubDirectory = "TakoTech", filename = "config")
 public class TakoTechConfig {
 
+    @Config.Comment("匹配矿典前缀")
+    @Config.DefaultStringList(
+        value = { "ore", // 矿石，粗矿oreRaw
+            "rawOre", // 粗矿
+            "crushed", // 粉碎，洗净，离心
+            "dustImpure", // 含杂粉
+            "dustPure" // 洁净粉
+        })
+    public static String[] oreDefs;
+
     /**
      * 初始化配置。
      */
