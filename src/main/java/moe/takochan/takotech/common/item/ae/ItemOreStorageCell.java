@@ -36,20 +36,17 @@ import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
 import moe.takochan.takotech.common.storage.ITakoCellInventoryHandler;
 import moe.takochan.takotech.common.storage.inventory.OreStorageCellInventory;
+import moe.takochan.takotech.config.TakoTechConfig;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
 
 /**
  * 矿物存储元件
+ * <p>
+ * 只接受带有矿典的物品
  */
 public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
-
-    private final static String[] ORE_DEFS = { "ore", // 矿石
-        "crushed", // 粉碎，洗净，离心
-        "dustImpure", // 含杂粉
-        "dustPure" // 洁净粉
-    };
 
     private final int perType = 1;
     private final double idleDrain;
@@ -226,7 +223,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                 // 存在矿典标签，获列表
                 Collection<String> oreDefs = oreReference.getEquivalents();
                 for (String oreDef : oreDefs) {
-                    for (String prefix : ORE_DEFS) {
+                    for (String prefix : TakoTechConfig.oreDefs) {
                         if (oreDef.startsWith(prefix)) {
                             return false;
                         }
