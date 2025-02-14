@@ -48,6 +48,8 @@ import moe.takochan.takotech.utils.I18nUtils;
  */
 public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
 
+    private static String oreDefs;
+
     private final int perType = 1;
     private final double idleDrain;
 
@@ -144,6 +146,12 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                         // 显示已设置的矿物过滤器
                         lines.add(GuiText.PartitionedOre.getLocal() + " : " + filter);
                     }
+                }
+
+                String defs = getOreDefs();
+                if (defs != null && !defs.isEmpty()) {
+                    lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC_1) + ": ");
+                    lines.add(defs);
                 }
             }
         }
@@ -285,7 +293,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public IInventory getUpgradesInventory(ItemStack is) {
-        return new CellUpgrades(is, 2);
+        return new CellUpgrades(is, 0);
     }
 
     /**
@@ -323,15 +331,15 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     }
 
     /**
-     * 获取矿典过滤器
+     * 获取矿典过滤器, 需要矿典卡
      *
      * @param is 存储单元物品
      * @return 当前的矿物字典过滤器
      */
     @Override
     public String getOreFilter(ItemStack is) {
-        return Platform.openNbtData(is)
-            .getString("OreFilter");
+        // 不支持元件工作台默认返回空
+        return "";
     }
 
     /**
@@ -342,8 +350,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public void setOreFilter(ItemStack is, String filter) {
-        Platform.openNbtData(is)
-            .setString("OreFilter", filter);
+        // 不支持元件工作台不做处理
     }
 
     /**
@@ -366,5 +373,17 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     public void register() {
         GameRegistry.registerItem(this, NameConstants.ITEM_ORE_STORAGE_CELL);
         setCreativeTab(TakoTechTabs.INSTANCE);
+    }
+
+    private String getOreDefs() {
+        if (oreDefs == null) {
+            if (TakoTechConfig.oreDefs.length > 0) {
+                oreDefs = String.join("*|", TakoTechConfig.oreDefs);
+                oreDefs += "*";
+            } else {
+                oreDefs = "";
+            }
+        }
+        return oreDefs;
     }
 }
