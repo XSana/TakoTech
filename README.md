@@ -10,7 +10,7 @@ TakoTech(塔可科技)，主要用于改善在与我的小伙伴游玩时锁遇�
 ### 目标
 
 - [X] 中文输入修正
-- [ ] 矿物存储元件（qz-miner太强了！存储部分代码来源于[AE2Things](https://github.com/asdflj/AE2Things)）
+- [X] 矿物存储元件（qz-miner太强了！存储部分代码来源于[AE2Things](https://github.com/asdflj/AE2Things)）
 - [ ] 完善合成表
 - [ ] AE网页下单
 - [ ] 加入吉祥物
