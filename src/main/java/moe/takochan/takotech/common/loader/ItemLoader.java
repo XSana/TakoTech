@@ -1,8 +1,8 @@
-package moe.takochan.takotech.common.item;
+package moe.takochan.takotech.common.loader;
 
 import moe.takochan.takotech.common.item.ae.ItemOreStorageCell;
 
-public final class ModItems {
+public final class ItemLoader {
 
     public static final ItemOreStorageCell ITEM_ORE_STORAGE_CELL = new ItemOreStorageCell();
 

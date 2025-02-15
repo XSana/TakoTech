@@ -6,13 +6,10 @@ import org.apache.logging.log4j.Logger;
 import appeng.api.AEApi;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.event.*;
 import moe.takochan.takotech.common.CommonProxy;
 import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.item.ModItems;
+import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.common.storage.TakoCellHandler;
 import moe.takochan.takotech.config.TakoTechConfig;
 
@@ -42,7 +39,7 @@ public class TakoTechMod {
     public void preInit(FMLPreInitializationEvent event) {
         TakoTechConfig.init();
         proxy.preInit(event);
-        ModItems.registerItems();
+        ItemLoader.registerItems();
     }
 
     @Mod.EventHandler
@@ -60,6 +57,11 @@ public class TakoTechMod {
             .cell()
             .addCellHandler(new TakoCellHandler());
         proxy.postInit(event);
+    }
+
+    @Mod.EventHandler
+    public void completeInit(FMLLoadCompleteEvent event) {
+        proxy.complete(event);
     }
 
     @Mod.EventHandler
