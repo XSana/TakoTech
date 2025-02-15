@@ -378,8 +378,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     private String getOreDefs() {
         if (oreDefs == null) {
             if (TakoTechConfig.oreDefs.length > 0) {
-                oreDefs = String.join("*|", TakoTechConfig.oreDefs);
-                oreDefs += "*";
+                oreDefs = String.join(" | ", TakoTechConfig.oreDefs);
             } else {
                 oreDefs = "";
             }

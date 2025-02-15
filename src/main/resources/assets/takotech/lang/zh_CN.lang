@@ -4,4 +4,4 @@ item.takotech.ore_storage_cell.name=ME矿物存储原件
 
 tooltip.takotech.ore_storage_cell.desc=一个近乎无限容量的存储元件，只能用于矿物存储
 
-tooltip.takotech.ore_storage_cell.desc.1=可存储类型
+tooltip.takotech.ore_storage_cell.desc.1=可存入矿典前缀

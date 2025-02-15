@@ -2,11 +2,9 @@ package moe.takochan.takotech.common;
 
 import net.minecraftforge.common.MinecraftForge;
 
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.event.*;
 import moe.takochan.takotech.common.event.WorldEventHandler;
+import moe.takochan.takotech.common.loader.RecipeLoader;
 import moe.takochan.takotech.common.storage.CellItemSavedData;
 
 public class CommonProxy {
@@ -21,7 +19,14 @@ public class CommonProxy {
     public void init(FMLInitializationEvent event) {}
 
     // postInit "Handle interaction with other mods, complete your setup based on this." (Remove if not needed)
-    public void postInit(FMLPostInitializationEvent event) {}
+    public void postInit(FMLPostInitializationEvent event) {
+        RecipeLoader.init();
+        RecipeLoader.registryRecipe();
+    }
+
+    public void complete(FMLLoadCompleteEvent event) {
+
+    }
 
     // register server commands in this event handler (Remove if not needed)
     public void serverStarting(FMLServerStartingEvent event) {}
