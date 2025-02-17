@@ -80,8 +80,8 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         this.cellType = (ItemOreStorageCell) this.cellItem.getItem();
 
         // 获取元件的数据存储实例
-        this.storage = CellItemSavedData.getInstance()
-            .getDataStorage(this.getItemStack());
+        this.storage = Platform.isServer() ? CellItemSavedData.getInstance()
+            .getDataStorage(this.getItemStack()) : null;
     }
 
     /**
