@@ -3,7 +3,6 @@ package moe.takochan.takotech;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import appeng.api.AEApi;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -13,9 +12,6 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import moe.takochan.takotech.common.CommonProxy;
 import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.loader.ItemLoader;
-import moe.takochan.takotech.common.storage.TakoCellHandler;
-import moe.takochan.takotech.config.TakoTechConfig;
 
 @Mod(
     modid = Reference.MODID,
@@ -41,9 +37,7 @@ public class TakoTechMod {
     // preInit "Run before anything else. Read your config, create blocks, items, etc, and register them with the
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
-        TakoTechConfig.init();
         proxy.preInit(event);
-        ItemLoader.registerItems();
     }
 
     @Mod.EventHandler
@@ -55,11 +49,6 @@ public class TakoTechMod {
     @Mod.EventHandler
     // postInit "Handle interaction with other mods, complete your setup based on this." (Remove if not needed)
     public void postInit(FMLPostInitializationEvent event) {
-        // 注册CellHandler
-        AEApi.instance()
-            .registries()
-            .cell()
-            .addCellHandler(new TakoCellHandler());
         proxy.postInit(event);
     }
 
