@@ -534,6 +534,9 @@ public class OreStorageCellInventory implements ITakoCellInventory {
             .markDirty();
     }
 
+    /**
+     * 更新物品类型数量。
+     */
     private void updateItemTypes() {
         this.storedItemTypes = this.cellItems.size();
         if (this.cellItems.isEmpty()) {
