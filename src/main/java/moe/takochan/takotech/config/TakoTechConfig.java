@@ -25,6 +25,7 @@ public class TakoTechConfig {
     public static void init() {
         try {
             ConfigurationManager.registerConfig(TakoTechConfig.class);
+            ConfigurationManager.registerConfig(WebControllerConfig.class);
         } catch (ConfigException e) {
             throw new RuntimeException(e);
         }

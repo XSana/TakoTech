@@ -8,7 +8,7 @@ import moe.takochan.takotech.common.loader.ItemLoader;
 
 public class TakoTechTabs extends CreativeTabs {
 
-    public static final TakoTechTabs INSTANCE = new TakoTechTabs(Reference.MODNAME);
+    private static final TakoTechTabs INSTANCE = new TakoTechTabs(Reference.MODNAME);
 
     public TakoTechTabs(String name) {
         super(name);
@@ -17,5 +17,9 @@ public class TakoTechTabs extends CreativeTabs {
     @Override
     public Item getTabIconItem() {
         return ItemLoader.ITEM_ORE_STORAGE_CELL;
+    }
+
+    public static TakoTechTabs getInstance() {
+        return INSTANCE;
     }
 }
