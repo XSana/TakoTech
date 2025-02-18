@@ -55,10 +55,11 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
 
     @SuppressWarnings("Guava")
     public ItemOreStorageCell() {
+        super(NameConstants.ITEM_ORE_STORAGE_CELL);
+
         idleDrain = 1.14;
 
         this.setMaxStackSize(1);
-        this.setUnlocalizedName(NameConstants.ITEM_ORE_STORAGE_CELL);
         this.setTextureName(CommonUtils.resource(NameConstants.ITEM_ORE_STORAGE_CELL));
         this.setFeature(EnumSet.of(AEFeature.StorageCells));
     }
@@ -372,7 +373,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     @Override
     public void register() {
         GameRegistry.registerItem(this, NameConstants.ITEM_ORE_STORAGE_CELL);
-        setCreativeTab(TakoTechTabs.INSTANCE);
+        setCreativeTab(TakoTechTabs.getInstance());
     }
 
     private String getOreDefs() {
