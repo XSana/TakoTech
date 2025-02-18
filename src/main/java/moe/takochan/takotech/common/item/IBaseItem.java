@@ -1,9 +1,8 @@
 package moe.takochan.takotech.common.item;
 
-public interface IBaseItem {
+import moe.takochan.takotech.common.loader.IRegister;
 
-    /**
-     * 注册物品
-     */
-    void register();
+public interface IBaseItem extends IRegister {
+
+    String getName();
 }
