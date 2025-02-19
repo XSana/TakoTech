@@ -16,7 +16,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.tile.BaseAeTile;
+import moe.takochan.takotech.common.tile.BaseAETile;
 
 public abstract class BaseAETileBlock extends AEBaseTileBlock implements IBaseAETileBlock {
 
@@ -30,11 +30,11 @@ public abstract class BaseAETileBlock extends AEBaseTileBlock implements IBaseAE
      * @param materialIn     方块材质
      * @param tileEntityType 关联的 TileEntity 类型
      */
-    protected BaseAETileBlock(String name, Material materialIn, Class<? extends BaseAeTile> tileEntityType) {
+    protected BaseAETileBlock(String name, Material materialIn, Class<? extends BaseAETile> tileEntityType) {
         super(materialIn);
         this.icons = new IIcon[6];
         this.name = name;
-        this.setBlockName(Reference.MODID + "." + name);
+        this.setBlockName(Reference.RESOURCE_ROOT_ID + "." + name);
         this.setTileEntity(tileEntityType);
     }
 

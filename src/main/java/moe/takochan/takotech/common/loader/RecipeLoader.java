@@ -9,7 +9,10 @@ import appeng.core.ApiDefinitions;
 import appeng.core.api.definitions.ApiMaterials;
 import cpw.mods.fml.common.registry.GameRegistry;
 
-public class RecipeLoader {
+/**
+ * 配方注册
+ */
+public class RecipeLoader implements Runnable {
 
     private static ItemStack BLOCK_COBBLESTONE;
 
@@ -17,8 +20,7 @@ public class RecipeLoader {
 
     private static ItemStack ITEM_AE2_CELL_64_PART;
 
-    public static void init() {
-
+    public RecipeLoader() {
         ApiDefinitions aeDef = (ApiDefinitions) AEApi.instance()
             .definitions();
         ApiMaterials aeMaterials = aeDef.materials();
@@ -27,15 +29,20 @@ public class RecipeLoader {
 
         ITEM_AE2_EMPTY_STORAGE_CELL = aeMaterials.emptyStorageCell()
             .maybeStack(1)
-            .get();
+            .orNull();
 
         ITEM_AE2_CELL_64_PART = aeMaterials.cell64kPart()
             .maybeStack(1)
-            .get();
+            .orNull();
     }
 
-    public static void registryRecipe() {
+    @Override
+    public void run() {
+        registryRecipe();
+    }
 
+    private void registryRecipe() {
+        // 矿物存储元件
         GameRegistry.addRecipe(
             new ShapedOreRecipe(
                 new ItemStack(ItemLoader.ITEM_ORE_STORAGE_CELL, 1),
@@ -49,4 +56,5 @@ public class RecipeLoader {
                 'E',
                 ITEM_AE2_CELL_64_PART));
     }
+
 }

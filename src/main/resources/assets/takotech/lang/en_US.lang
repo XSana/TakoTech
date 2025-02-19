@@ -2,6 +2,7 @@ itemGroup.TakoTech=TakoTech
 
 item.takotech.ore_storage_cell.name=ME Ore Storage Cell
 
-tooltip.takotech.ore_storage_cell.desc=An almost infinite capacity storage component, only usable for mineral storage.
+tile.takotech.web_controller.name=Web Controller
 
+tooltip.takotech.ore_storage_cell.desc=An almost infinite capacity storage component, only usable for mineral storage.
 tooltip.takotech.ore_storage_cell.desc.1=Can store ore dictionary prefixes.
