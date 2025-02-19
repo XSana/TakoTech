@@ -313,10 +313,8 @@ public class OreStorageCellInventory implements ITakoCellInventory {
             if (existingItem != null && mode == Actionable.MODULATE) {
                 existingItem.setStackSize(existingItem.getStackSize() + input.getStackSize());
                 this.saveChanges();
-            }
-
-            // 如果元件中无该物品类型，并且元件中还有剩余空间，则添加该物品类型
-            if (this.canHoldNewItem() && mode == Actionable.MODULATE) {
+            } else if (this.canHoldNewItem() && mode == Actionable.MODULATE) {
+                // 如果元件中无该物品类型，并且元件中还有剩余空间，则添加该物品类型
                 // 确保注入的物品数量大于0
                 this.cellItems.add(input);
                 this.saveChanges();
