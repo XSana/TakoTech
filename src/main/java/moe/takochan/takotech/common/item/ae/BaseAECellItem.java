@@ -31,7 +31,7 @@ public abstract class BaseAECellItem extends AEBaseItem implements IBaseAECellIt
     @Override
     @SideOnly(Side.CLIENT)
     protected void addCheckedInformation(ItemStack stack, EntityPlayer player, List<String> lines,
-                                         boolean displayMoreInfo) {
+        boolean displayMoreInfo) {
         super.addCheckedInformation(stack, player, lines, displayMoreInfo);
     }
 
