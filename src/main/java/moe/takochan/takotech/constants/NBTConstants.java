@@ -7,4 +7,6 @@ public class NBTConstants {
     public static final String DISK_ID = "disk_id";
 
     public static final String DISK_ITEMS = "disk_items";
+
+    public static final String CONTROLLER_ID = "controller_id";
 }
