@@ -1,4 +1,4 @@
-package moe.takochan.takotech.common.tile;
+package moe.takochan.takotech.common.tile.ae;
 
 import java.util.UUID;
 
@@ -6,6 +6,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
+import moe.takochan.takotech.common.tile.BaseAETile;
 import moe.takochan.takotech.constants.NBTConstants;
 
 public class TileWebController extends BaseAETile {

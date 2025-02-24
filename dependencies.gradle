@@ -37,6 +37,7 @@ dependencies {
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:NotEnoughItems:2.6.53-GTNH:dev")
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.8.2:dev')
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:Angelica:1.0.0-beta28:dev')
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:ServerUtilities:2.0.92:dev')
 
     // use GTNH272 version
     // Lib
