@@ -1,4 +1,4 @@
-package moe.takochan.takotech.common.block.ae;
+package moe.takochan.takotech.common.block;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;

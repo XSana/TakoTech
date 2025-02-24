@@ -14,7 +14,7 @@ import net.minecraftforge.common.util.Constants;
 
 import appeng.util.Platform;
 import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.item.ae.BaseAECellItem;
+import moe.takochan.takotech.common.item.BaseAECellItem;
 import moe.takochan.takotech.constants.NBTConstants;
 
 /**
