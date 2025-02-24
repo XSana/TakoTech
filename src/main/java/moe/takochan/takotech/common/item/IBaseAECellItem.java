@@ -1,10 +1,9 @@
-package moe.takochan.takotech.common.item.ae;
+package moe.takochan.takotech.common.item;
 
 import net.minecraft.item.ItemStack;
 
 import appeng.api.exceptions.AppEngException;
 import appeng.api.storage.ISaveProvider;
-import moe.takochan.takotech.common.item.IBaseItem;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
 
 public interface IBaseAECellItem extends IBaseItem {

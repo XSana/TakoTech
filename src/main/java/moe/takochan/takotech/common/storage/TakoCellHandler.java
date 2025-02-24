@@ -14,8 +14,8 @@ import appeng.api.storage.StorageChannel;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.util.Platform;
-import moe.takochan.takotech.common.item.ae.BaseAECellItem;
-import moe.takochan.takotech.common.item.ae.IBaseAECellItem;
+import moe.takochan.takotech.common.item.BaseAECellItem;
+import moe.takochan.takotech.common.item.IBaseAECellItem;
 
 public class TakoCellHandler implements ICellHandler {
 

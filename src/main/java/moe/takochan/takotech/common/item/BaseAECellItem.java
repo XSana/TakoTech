@@ -1,4 +1,4 @@
-package moe.takochan.takotech.common.item.ae;
+package moe.takochan.takotech.common.item;
 
 import java.util.List;
 

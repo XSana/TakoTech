@@ -2,6 +2,7 @@ package moe.takochan.takotech.common.block.ae;
 
 import net.minecraft.block.material.Material;
 
+import moe.takochan.takotech.common.block.BaseAETileBlock;
 import moe.takochan.takotech.common.tile.TileWebController;
 import moe.takochan.takotech.constants.NameConstants;
 
