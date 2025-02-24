@@ -1,16 +1,16 @@
 package moe.takochan.takotech.common.loader;
 
-import moe.takochan.takotech.common.block.ae.BlockWebClient;
+import moe.takochan.takotech.common.block.ae.BlockWebController;
 
 /**
  * 方块注册
  */
 public class BlockLoader implements Runnable {
 
-    public static BlockWebClient BLOCK_WEB_CLIENT;
+    public static BlockWebController BLOCK_WEB_CONTROLLER;
 
     public BlockLoader() {
-        BLOCK_WEB_CLIENT = new BlockWebClient();
+        BLOCK_WEB_CONTROLLER = new BlockWebController();
     }
 
     @Override
@@ -19,6 +19,6 @@ public class BlockLoader implements Runnable {
     }
 
     private void registerBlock() {
-        BLOCK_WEB_CLIENT.register();
+        BLOCK_WEB_CONTROLLER.register();
     }
 }

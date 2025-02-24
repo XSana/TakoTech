@@ -4,13 +4,16 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.resources.IResource;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 
-import appeng.block.AEBaseItemBlock;
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.BlockRenderInfo;
 import appeng.client.texture.FlippableIcon;
+import appeng.core.features.ActivityState;
+import appeng.core.features.BlockStackSrc;
+import appeng.tile.AEBaseTile;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -36,6 +39,12 @@ public abstract class BaseAETileBlock extends AEBaseTileBlock implements IBaseAE
         this.name = name;
         this.setBlockName(Reference.RESOURCE_ROOT_ID + "." + name);
         this.setTileEntity(tileEntityType);
+    }
+
+    @Override
+    protected void setTileEntity(Class<? extends TileEntity> c) {
+        AEBaseTile.registerTileItem(c, new BlockStackSrc(this, 0, ActivityState.Enabled));
+        super.setTileEntity(c);
     }
 
     /**
@@ -72,6 +81,21 @@ public abstract class BaseAETileBlock extends AEBaseTileBlock implements IBaseAE
 
     }
 
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
+    /**
+     * 注册当前方块及其关联的 TileEntity。
+     * 使用 GameRegistry 进行注册以便在游戏中使用。
+     */
+    public void register() {
+        GameRegistry.registerBlock(this, this.getItemBlockClass(), this.getName());
+        GameRegistry.registerTileEntity(this.getTileEntityClass(), this.getName());
+        this.setCreativeTab(TakoTechTabs.getInstance());
+    }
+
     /**
      * 尝试获取并注册指定的图标。如果指定的图标不存在，则使用默认图标（重写AE原有贴图获取逻辑）。
      *
@@ -104,20 +128,5 @@ public abstract class BaseAETileBlock extends AEBaseTileBlock implements IBaseAE
         }
 
         return new FlippableIcon(iconRegister.registerIcon(texturePath));
-    }
-
-    @Override
-    public String getName() {
-        return this.name;
-    }
-
-    /**
-     * 注册当前方块及其关联的 TileEntity。
-     * 使用 GameRegistry 进行注册以便在游戏中使用。
-     */
-    public void register() {
-        GameRegistry.registerBlock(this, AEBaseItemBlock.class, this.getName());
-        GameRegistry.registerTileEntity(this.getTileEntityClass(), this.getName());
-        this.setCreativeTab(TakoTechTabs.getInstance());
     }
 }
