@@ -1,20 +1,19 @@
 package moe.takochan.takotech.common.block.ae;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
 import appeng.block.AEBaseItemBlock;
 import moe.takochan.takotech.common.block.BaseAETileBlock;
-import moe.takochan.takotech.common.tile.BaseAETile;
 import moe.takochan.takotech.common.tile.ae.TileWebController;
-import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.constants.NameConstants;
 
 public class BlockWebController extends BaseAETileBlock {
@@ -30,50 +29,60 @@ public class BlockWebController extends BaseAETileBlock {
 
     @Override
     public ArrayList<ItemStack> getDrops(World world, int x, int y, int z, int metadata, int fortune) {
-        TileWebController te = getTileEntity(world, x, y, z);
-        if (te != null) {
-            ItemStack stack = new ItemStack(this);
-            NBTTagCompound tileData = new NBTTagCompound();
-            tileData.setString(NBTConstants.CONTROLLER_ID, te.getControllerId());
-            stack.setTagCompound(tileData);
-            return new ArrayList<>(Arrays.asList(stack));
-        }
-        return super.getDrops(world, x, y, z, metadata, fortune);
+        ArrayList<ItemStack> drops = new ArrayList<>(1);
+        drops.add(getItemStack(world, x, y, z));
+        return drops;
     }
 
     @Override
     public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z, boolean willHarvest) {
         if (willHarvest) {
-            return true;
+            dropBlockAsItem(world, x, y, z, getItemStack(world, x, y, z));
         }
-        return super.removedByPlayer(world, player, x, y, z, false);
+        super.removedByPlayer(world, player, x, y, z, willHarvest);
+        return false;
     }
 
     @Override
-    public void harvestBlock(World worldIn, EntityPlayer player, int x, int y, int z, int meta) {
-        super.harvestBlock(worldIn, player, x, y, z, meta);
-        worldIn.setBlockToAir(x, y, z);
+    public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z, EntityPlayer player) {
+        return getItemStack(world, x, y, z);
     }
 
     @Override
     public void onBlockPlacedBy(World w, int x, int y, int z, EntityLivingBase player, ItemStack is) {
         super.onBlockPlacedBy(w, x, y, z, player, is);
-        if (is.hasTagCompound() && is.getTagCompound()
-            .hasKey(NBTConstants.CONTROLLER_ID)) {
-            String controllerId = is.getTagCompound()
-                .getString(NBTConstants.CONTROLLER_ID);
-            if (w.getTileEntity(x, y, z) instanceof BaseAETile) {
-                TileWebController tile = getTileEntity(w, x, y, z);
-                if (tile != null) {
-                    tile.setControllerId(controllerId);
-                    tile.markDirty();
-                }
-            }
+
+        TileEntity wte = getTileEntity(w, x, y, z);
+        if (!(wte instanceof TileWebController te)) {
+            return;
         }
+        if (is.hasTagCompound()) {
+            te.readFromNBT(is.getTagCompound());
+        }
+        te.markDirty();
     }
 
     @Override
     public Class<? extends AEBaseItemBlock> getItemBlockClass() {
         return ItemBlockWebController.class;
+    }
+
+    ItemStack getItemStack(World w, int x, int y, int z) {
+        ItemStack drop = new ItemStack(this);
+        TileEntity wte = w.getTileEntity(x, y, z);
+        if (wte instanceof TileWebController te) {
+            NBTTagCompound tag = new NBTTagCompound();
+            te.writeToNBT(tag);
+            tag.removeTag("x");
+            tag.removeTag("y");
+            tag.removeTag("z");
+            tag.removeTag("orientation_up");
+            tag.removeTag("web_controller");
+            tag.removeTag("orientation_forward");
+            tag.removeTag("proxy");
+            tag.removeTag("id");
+            drop.setTagCompound(tag);
+        }
+        return drop;
     }
 }

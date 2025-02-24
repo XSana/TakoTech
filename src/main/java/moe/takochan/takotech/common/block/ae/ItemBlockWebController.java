@@ -17,12 +17,14 @@ public class ItemBlockWebController extends BaseAEItemBlock {
     }
 
     @Override
-    public void addCheckedInformation(ItemStack itemStack, EntityPlayer player, List<String> toolTip,
+    public void addCheckedInformation(ItemStack stack, EntityPlayer player, List<String> toolTip,
         boolean advancedToolTips) {
-        NBTTagCompound tag = itemStack.getTagCompound();
-        String controllerID = tag.getString(NBTConstants.CONTROLLER_ID);
-        if (!controllerID.isEmpty()) {
-            toolTip.add(controllerID);
+        if (stack.hasTagCompound()) {
+            NBTTagCompound tag = stack.getTagCompound();
+            String controllerID = tag.getString(NBTConstants.CONTROLLER_ID);
+            if (!controllerID.isEmpty()) {
+                toolTip.add(controllerID);
+            }
         }
     }
 }
