@@ -1,4 +1,4 @@
-package moe.takochan.takotech.common.storage;
+package moe.takochan.takotech.common.data;
 
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -9,14 +9,14 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.item.AEItemStack;
 
-public class CellItemStorage {
+public class CellItemStorageData {
 
     // 硬盘Id
     private final String diskID;
     // 物品列表
     private IItemList<IAEItemStack> items;
 
-    public CellItemStorage(String diskID) {
+    public CellItemStorageData(String diskID) {
         this.diskID = diskID;
     }
 
@@ -27,8 +27,8 @@ public class CellItemStorage {
      * @param data   NBT数据
      * @return 读取的存储实例
      */
-    public static CellItemStorage readFromNBT(String diskId, NBTTagList data) {
-        CellItemStorage storage = new CellItemStorage(diskId);
+    public static CellItemStorageData readFromNBT(String diskId, NBTTagList data) {
+        CellItemStorageData storage = new CellItemStorageData(diskId);
         storage.readFromNBT(data);
         return storage;
     }

@@ -14,6 +14,7 @@ import net.minecraftforge.common.util.Constants;
 
 import appeng.util.Platform;
 import moe.takochan.takotech.common.Reference;
+import moe.takochan.takotech.common.data.CellItemStorageData;
 import moe.takochan.takotech.common.item.BaseAECellItem;
 import moe.takochan.takotech.constants.NBTConstants;
 
@@ -27,7 +28,7 @@ public class CellItemSavedData extends WorldSavedData {
     private final static String DATA_NAME = Reference.MODID + "_Cell";
 
     private static CellItemSavedData INSTANCE;
-    private final Map<String, CellItemStorage> disks = new HashMap<>();
+    private final Map<String, CellItemStorageData> disks = new HashMap<>();
 
     public CellItemSavedData() {
         this(DATA_NAME);
@@ -70,13 +71,13 @@ public class CellItemSavedData extends WorldSavedData {
 
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
-        Map<String, CellItemStorage> n = new HashMap<>();
+        Map<String, CellItemStorageData> n = new HashMap<>();
         NBTTagList list = nbt.getTagList(NBTConstants.DISK_LIST, Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < list.tagCount(); i++) {
             NBTTagCompound tag = list.getCompoundTagAt(i);
             String diskID = tag.getString(NBTConstants.DISK_ID);
             NBTTagList items = tag.getTagList(NBTConstants.DISK_ITEMS, Constants.NBT.TAG_COMPOUND);
-            CellItemStorage storage = CellItemStorage.readFromNBT(diskID, items);
+            CellItemStorageData storage = CellItemStorageData.readFromNBT(diskID, items);
             n.put(diskID, storage);
         }
         disks.clear();
@@ -86,7 +87,7 @@ public class CellItemSavedData extends WorldSavedData {
     @Override
     public void writeToNBT(NBTTagCompound nbt) {
         NBTTagList list = new NBTTagList();
-        for (Map.Entry<String, CellItemStorage> entry : disks.entrySet()) {
+        for (Map.Entry<String, CellItemStorageData> entry : disks.entrySet()) {
             if (entry.getValue() == null || entry.getValue()
                 .isEmpty()) {
                 continue;
@@ -109,7 +110,7 @@ public class CellItemSavedData extends WorldSavedData {
      * @param itemStack 物品堆栈
      * @return 与存储元件项堆栈关联的 `CellItemStorage` 数据
      */
-    public CellItemStorage getDataStorage(ItemStack itemStack) {
+    public CellItemStorageData getDataStorage(ItemStack itemStack) {
         if (itemStack.getItem() instanceof BaseAECellItem) {
             NBTTagCompound tag = Platform.openNbtData(itemStack);
             String diskId = tag.getString(NBTConstants.DISK_ID);
@@ -117,7 +118,7 @@ public class CellItemSavedData extends WorldSavedData {
                 diskId = UUID.randomUUID()
                     .toString();
             }
-            return disks.computeIfAbsent(diskId, CellItemStorage::new);
+            return disks.computeIfAbsent(diskId, CellItemStorageData::new);
         }
         return null;
     }
