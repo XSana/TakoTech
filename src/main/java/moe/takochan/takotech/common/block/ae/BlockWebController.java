@@ -14,6 +14,7 @@ import net.minecraft.world.World;
 import appeng.block.AEBaseItemBlock;
 import moe.takochan.takotech.common.block.BaseAETileBlock;
 import moe.takochan.takotech.common.tile.ae.TileWebController;
+import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.constants.NameConstants;
 
 public class BlockWebController extends BaseAETileBlock {
@@ -50,16 +51,16 @@ public class BlockWebController extends BaseAETileBlock {
 
     @Override
     public void onBlockPlacedBy(World w, int x, int y, int z, EntityLivingBase player, ItemStack is) {
-        super.onBlockPlacedBy(w, x, y, z, player, is);
-
-        TileEntity wte = getTileEntity(w, x, y, z);
+        TileEntity wte = w.getTileEntity(x, y, z);
         if (!(wte instanceof TileWebController te)) {
             return;
         }
         if (is.hasTagCompound()) {
-            te.readFromNBT(is.getTagCompound());
+            te.getData()
+                .readFormNBT(is.getTagCompound());
         }
         te.markDirty();
+        super.onBlockPlacedBy(w, x, y, z, player, is);
     }
 
     @Override
@@ -73,15 +74,7 @@ public class BlockWebController extends BaseAETileBlock {
         if (wte instanceof TileWebController te) {
             NBTTagCompound tag = new NBTTagCompound();
             te.writeToNBT(tag);
-            tag.removeTag("x");
-            tag.removeTag("y");
-            tag.removeTag("z");
-            tag.removeTag("orientation_up");
-            tag.removeTag("web_controller");
-            tag.removeTag("orientation_forward");
-            tag.removeTag("proxy");
-            tag.removeTag("id");
-            drop.setTagCompound(tag);
+            drop.setTagCompound(tag.getCompoundTag(NBTConstants.DATA));
         }
         return drop;
     }
