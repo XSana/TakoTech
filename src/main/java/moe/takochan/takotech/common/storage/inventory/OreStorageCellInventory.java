@@ -21,9 +21,9 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
+import moe.takochan.takotech.common.data.CellItemStorageData;
 import moe.takochan.takotech.common.item.ae.ItemOreStorageCell;
 import moe.takochan.takotech.common.storage.CellItemSavedData;
-import moe.takochan.takotech.common.storage.CellItemStorage;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
 import moe.takochan.takotech.constants.NBTConstants;
 
@@ -51,7 +51,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     private IItemList<IAEItemStack> cellItems;
 
     // 元件的数据存储实例
-    protected final CellItemStorage storage;
+    protected final CellItemStorageData storageData;
 
     /**
      * 初始化元件的物品堆栈和保存提供器。
@@ -80,7 +80,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         this.cellType = (ItemOreStorageCell) this.cellItem.getItem();
 
         // 获取元件的数据存储实例
-        this.storage = Platform.isServer() ? CellItemSavedData.getInstance()
+        this.storageData = Platform.isServer() ? CellItemSavedData.getInstance()
             .getDataStorage(this.getItemStack()) : null;
     }
 
@@ -500,7 +500,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     private void loadCellItems() {
         // 如果物品列表为空，则创建一个新列表
         if (this.cellItems == null) {
-            this.cellItems = this.storage.getItems();
+            this.cellItems = this.storageData.getItems();
             for (IAEItemStack ais : this.cellItems) {
                 if (ais != null && ais.getStackSize() <= 0) {
                     ais.reset();
@@ -512,8 +512,8 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         this.updateItemTypes();
 
         if (!this.getDiskID()
-            .equals(this.storage.getDiskID())) {
-            tagCompound.setString(NBTConstants.DISK_ID, this.storage.getDiskID());
+            .equals(this.storageData.getDiskID())) {
+            tagCompound.setString(NBTConstants.DISK_ID, this.storageData.getDiskID());
         }
     }
 
