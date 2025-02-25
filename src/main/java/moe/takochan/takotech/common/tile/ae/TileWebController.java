@@ -6,48 +6,60 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
+import moe.takochan.takotech.common.data.WebControllerData;
 import moe.takochan.takotech.common.tile.BaseAETile;
 import moe.takochan.takotech.constants.NBTConstants;
 
 public class TileWebController extends BaseAETile {
 
-    private String controllerId;
+    private final WebControllerData data;
 
     public TileWebController() {
         this.getProxy()
             .setIdlePowerUsage(0);
+
+        this.data = new WebControllerData();
     }
 
     @Override
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_AENetwork(final NBTTagCompound data) {
         super.readFromNBT_AENetwork(data);
-        this.setControllerId(data.getString(NBTConstants.CONTROLLER_ID));
+        NBTTagCompound tag = data.getCompoundTag(NBTConstants.DATA);
+        if (tag != null) {
+            this.getData()
+                .readFormNBT(tag);
+        }
     }
 
     @Override
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_AENetwork(final NBTTagCompound data) {
         super.writeToNBT_AENetwork(data);
-        data.setString(NBTConstants.CONTROLLER_ID, this.getControllerId());
+
+        NBTTagCompound dataTag = new NBTTagCompound();
+        this.getData()
+            .writeToNBT(dataTag);
+        data.setTag(NBTConstants.DATA, dataTag);
     }
 
     @Override
     public void onReady() {
         super.onReady();
-        if (getControllerId() == null || getControllerId().isEmpty()) {
-            this.setControllerId(
-                UUID.randomUUID()
-                    .toString());
+        if (this.getData()
+            .getControllerId() == null || this.getData()
+                .getControllerId()
+                .isEmpty()) {
+            this.getData()
+                .setControllerId(
+                    UUID.randomUUID()
+                        .toString());
             this.markDirty();
         }
     }
 
-    public String getControllerId() {
-        return this.controllerId;
+    public WebControllerData getData() {
+        return data;
     }
 
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 }
