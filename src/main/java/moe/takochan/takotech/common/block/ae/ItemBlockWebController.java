@@ -9,6 +9,8 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import moe.takochan.takotech.common.block.BaseAEItemBlock;
 import moe.takochan.takotech.constants.NBTConstants;
+import moe.takochan.takotech.constants.NameConstants;
+import moe.takochan.takotech.utils.I18nUtils;
 
 public class ItemBlockWebController extends BaseAEItemBlock {
 
@@ -23,7 +25,7 @@ public class ItemBlockWebController extends BaseAEItemBlock {
             NBTTagCompound tag = stack.getTagCompound();
             String controllerID = tag.getString(NBTConstants.CONTROLLER_ID);
             if (!controllerID.isEmpty()) {
-                toolTip.add(controllerID);
+                toolTip.add(I18nUtils.tooltip(NameConstants.BLOCK_WEB_CONTROLLER_DESC_1) + " : " + controllerID);
             }
         }
     }
