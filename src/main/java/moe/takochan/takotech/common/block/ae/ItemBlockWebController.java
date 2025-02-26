@@ -19,7 +19,7 @@ public class ItemBlockWebController extends BaseAEItemBlock {
 
     @Override
     public void addCheckedInformation(ItemStack stack, EntityPlayer player, List<String> toolTip,
-                                      boolean advancedToolTips) {
+        boolean advancedToolTips) {
         if (stack.hasTagCompound()) {
             WebControllerData data = new WebControllerData();
             data.readFormNBT(stack.getTagCompound());
