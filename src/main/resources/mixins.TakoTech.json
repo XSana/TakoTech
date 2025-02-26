@@ -8,8 +8,6 @@
   "compatibilityLevel": "JAVA_8",
   "priority": 999,
   "mixins": [],
-  "client": [
-    "InputFixMixin"
-  ],
+  "client": [],
   "server": []
 }
