@@ -4,7 +4,7 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 
 import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.loader.ItemLoader;
+import moe.takochan.takotech.common.loader.BlockLoader;
 
 public class TakoTechTabs extends CreativeTabs {
 
@@ -16,7 +16,7 @@ public class TakoTechTabs extends CreativeTabs {
 
     @Override
     public Item getTabIconItem() {
-        return ItemLoader.ITEM_ORE_STORAGE_CELL;
+        return Item.getItemFromBlock(BlockLoader.BLOCK_WEB_CONTROLLER);
     }
 
     public static TakoTechTabs getInstance() {
