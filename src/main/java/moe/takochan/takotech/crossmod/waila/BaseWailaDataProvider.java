@@ -12,6 +12,11 @@ import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 import mcp.mobius.waila.api.IWailaDataProvider;
 
+/**
+ * WAILA数据提供者抽象基类
+ * 为具体实现类提供默认空实现，简化子类开发
+ * 采用模板方法模式，子类只需覆盖需要定制的方法
+ */
 public abstract class BaseWailaDataProvider implements IWailaDataProvider {
 
     @Override
