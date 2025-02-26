@@ -25,7 +25,7 @@ public class TileWebController extends BaseAETile {
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_AENetwork(final NBTTagCompound data) {
         super.readFromNBT_AENetwork(data);
-        NBTTagCompound tag = data.getCompoundTag(NBTConstants.DATA);
+        NBTTagCompound tag = data.getCompoundTag(NBTConstants.CONTROLLER_DATA);
         if (tag != null) {
             this.getData()
                 .readFormNBT(tag);
@@ -40,7 +40,7 @@ public class TileWebController extends BaseAETile {
         NBTTagCompound dataTag = new NBTTagCompound();
         this.getData()
             .writeToNBT(dataTag);
-        data.setTag(NBTConstants.DATA, dataTag);
+        data.setTag(NBTConstants.CONTROLLER_DATA, dataTag);
     }
 
     @Override

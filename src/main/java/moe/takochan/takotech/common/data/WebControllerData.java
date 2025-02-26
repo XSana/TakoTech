@@ -2,9 +2,9 @@ package moe.takochan.takotech.common.data;
 
 import net.minecraft.nbt.NBTTagCompound;
 
-import moe.takochan.takotech.constants.NBTConstants;
-
 public class WebControllerData {
+
+    public static final String CONTROLLER_ID = "controller_id";
 
     private String controllerId;
 
@@ -17,10 +17,12 @@ public class WebControllerData {
     }
 
     public void writeToNBT(NBTTagCompound data) {
-        data.setString(NBTConstants.CONTROLLER_ID, controllerId);
+        data.setString(CONTROLLER_ID, controllerId);
     }
 
     public void readFormNBT(NBTTagCompound nbt) {
-        controllerId = nbt.getString(NBTConstants.CONTROLLER_ID);
+        if (nbt != null) {
+            controllerId = nbt.getString(CONTROLLER_ID);
+        }
     }
 }

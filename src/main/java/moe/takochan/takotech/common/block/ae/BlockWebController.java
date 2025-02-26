@@ -74,7 +74,7 @@ public class BlockWebController extends BaseAETileBlock {
         if (wte instanceof TileWebController te) {
             NBTTagCompound tag = new NBTTagCompound();
             te.writeToNBT(tag);
-            drop.setTagCompound(tag.getCompoundTag(NBTConstants.DATA));
+            drop.setTagCompound(tag.getCompoundTag(NBTConstants.CONTROLLER_DATA));
         }
         return drop;
     }
