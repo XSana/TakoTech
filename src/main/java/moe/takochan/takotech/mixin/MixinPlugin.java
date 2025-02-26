@@ -1,12 +1,14 @@
 package moe.takochan.takotech.mixin;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.spongepowered.asm.lib.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
+
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 
 public class MixinPlugin implements IMixinConfigPlugin {
 
@@ -38,11 +40,7 @@ public class MixinPlugin implements IMixinConfigPlugin {
      */
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if ("net.minecraft.client.gui.GuiScreen".equals(targetClassName)
-            && "moe.takochan.takotech.mixin.InputFixMixin".equals(mixinClassName)) {
-            return true;
-        }
-        return false;
+        return true;
     }
 
     /**
@@ -61,8 +59,14 @@ public class MixinPlugin implements IMixinConfigPlugin {
      */
     @Override
     public List<String> getMixins() {
+        List<String> mixins = new ArrayList<>();
+
+        if (FMLLaunchHandler.side()
+            .isClient()) {
+            mixins.add("InputFixMixin");
+        }
         // 返回要应用的 Mixin 类名
-        return Collections.emptyList();
+        return mixins;
     }
 
     /**
