@@ -2,16 +2,12 @@ package moe.takochan.takotech.mixin;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.spongepowered.asm.lib.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
-
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.ModContainer;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 
 public class MixinPlugin implements IMixinConfigPlugin {
 
@@ -64,13 +60,12 @@ public class MixinPlugin implements IMixinConfigPlugin {
     public List<String> getMixins() {
         List<String> mixins = new ArrayList<>();
 
-        Map<String, ModContainer> mods = Loader.instance()
-            .getIndexedModList();
-
-        if (!mods.containsKey("InputFix") && FMLLaunchHandler.side()
-            .isClient()) {
+        // 如果已经加了InputFix，或LWJGL3ify（Java17+）则不执行Mixin修复
+        if (Stream.of("lain.mods.inputfix.InputFix", "me.eigenraven.lwjgl3ify.core.Lwjgl3ifyCoremod")
+            .noneMatch(this::isClassExistSafe)) {
             mixins.add("InputFixMixin");
         }
+
         // 返回要应用的 Mixin 类名
         return mixins;
     }
@@ -96,4 +91,13 @@ public class MixinPlugin implements IMixinConfigPlugin {
      */
     @Override
     public void postApply(String s, ClassNode classNode, String s1, IMixinInfo iMixinInfo) {}
+
+    private boolean isClassExistSafe(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
 }
