@@ -2,12 +2,15 @@ package moe.takochan.takotech.mixin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.spongepowered.asm.lib.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 
 public class MixinPlugin implements IMixinConfigPlugin {
@@ -61,7 +64,10 @@ public class MixinPlugin implements IMixinConfigPlugin {
     public List<String> getMixins() {
         List<String> mixins = new ArrayList<>();
 
-        if (FMLLaunchHandler.side()
+        Map<String, ModContainer> mods = Loader.instance()
+            .getIndexedModList();
+
+        if (!mods.containsKey("InputFix") && FMLLaunchHandler.side()
             .isClient()) {
             mixins.add("InputFixMixin");
         }
