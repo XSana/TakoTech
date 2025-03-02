@@ -18,4 +18,8 @@ public class I18nUtils {
     public static String tooltip(String key) {
         return I18n.format("tooltip.takotech." + key);
     }
+
+    public static String key(String key) {
+        return I18n.format("key.takotech." + key);
+    }
 }
