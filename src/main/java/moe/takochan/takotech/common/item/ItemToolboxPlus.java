@@ -1,8 +1,10 @@
 package moe.takochan.takotech.common.item;
 
+import moe.takochan.takotech.TakoTechMod;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -37,13 +39,35 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
         return EnumRarity.uncommon;
     }
 
-    public IHasGui getInventory(EntityPlayer entityPlayer, ItemStack itemStack) {
-        return new HandHeldToolbox(entityPlayer, itemStack, 9);
-    }
 
     @Override
     public void register() {
         GameRegistry.registerItem(this, NameConstants.ITEM_TOOLBOX_PLUS);
         setCreativeTab(TakoTechTabs.getInstance());
+    }
+
+    public IHasGui getInventory(EntityPlayer entityPlayer, ItemStack itemStack) {
+        return new HandHeldToolbox(entityPlayer, itemStack, 9);
+    }
+
+
+    public static void processSelection(EntityPlayer player, int index) {
+        ItemStack stack = player.getHeldItem();
+        if (stack.getItem() instanceof ItemToolboxPlus) {
+            NBTTagCompound nbt = stack.getTagCompound();
+            if (nbt == null) nbt = new NBTTagCompound();
+
+            nbt.setInteger("selected", index);
+            stack.setTagCompound(nbt);
+
+            // 执行后续物品切换逻辑
+            updateToolboxContents(player, index);
+        }
+    }
+
+
+    private static void updateToolboxContents(EntityPlayer player, int index) {
+        // 根据索引更新手持物品逻辑
+        TakoTechMod.LOG.info("selected toolbox: {}", index);
     }
 }

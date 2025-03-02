@@ -1,5 +1,6 @@
 package moe.takochan.takotech;
 
+import moe.takochan.takotech.network.NetworkHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,8 +27,6 @@ public class TakoTechMod {
 
     public static final Logger LOG = LogManager.getLogger(Reference.MODID);
 
-    public static final SimpleNetworkWrapper NETWORK = NetworkRegistry.INSTANCE.newSimpleChannel("takotech");
-
     @Mod.Instance(Reference.MODID)
     public static TakoTechMod instance;
 
@@ -41,6 +40,7 @@ public class TakoTechMod {
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
         proxy.preInit(event);
+        NetworkHandler.init();
     }
 
     @Mod.EventHandler
