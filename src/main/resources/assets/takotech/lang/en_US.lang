@@ -1,6 +1,7 @@
 itemGroup.TakoTech=TakoTech
 
 item.takotech.ore_storage_cell.name=ME Ore Storage Cell
+item.takotech.toolbox_plus.name=Tool Box Plus
 
 tile.takotech.web_controller.name=Web Controller
 
@@ -9,3 +10,6 @@ tooltip.takotech.ore_storage_cell.desc.1=Can store ore dictionary prefixes.
 
 tooltip.takotech.web_controller.desc=
 tooltip.takotech.web_controller.desc.1=Controller Id
+
+key.takotech.category=Tako Tech
+key.takotech.toolbox_plus.desc=Selector Tool (Toolbox Plus)

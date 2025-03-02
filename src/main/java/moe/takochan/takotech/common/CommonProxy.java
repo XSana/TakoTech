@@ -7,6 +7,7 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import moe.takochan.takotech.client.gui.GuiType;
 import moe.takochan.takotech.common.event.WorldEventHandler;
 import moe.takochan.takotech.common.loader.BlockLoader;
 import moe.takochan.takotech.common.loader.ItemLoader;
@@ -45,6 +46,7 @@ public class CommonProxy {
     // postInit "Handle interaction with other mods, complete your setup based on this." (Remove if not needed)
     public void postInit(FMLPostInitializationEvent event) {
 
+        GuiType.register();
         // 注册CellHandler
         AEApi.instance()
             .registries()

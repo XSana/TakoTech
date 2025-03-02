@@ -9,6 +9,8 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import moe.takochan.takotech.common.CommonProxy;
 import moe.takochan.takotech.common.Reference;
 
@@ -23,6 +25,8 @@ import moe.takochan.takotech.common.Reference;
 public class TakoTechMod {
 
     public static final Logger LOG = LogManager.getLogger(Reference.MODID);
+
+    public static final SimpleNetworkWrapper NETWORK = NetworkRegistry.INSTANCE.newSimpleChannel("takotech");
 
     @Mod.Instance(Reference.MODID)
     public static TakoTechMod instance;
