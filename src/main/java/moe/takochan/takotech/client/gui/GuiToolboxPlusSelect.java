@@ -9,6 +9,8 @@ import java.util.List;
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.TaggedInventoryArea;
+import moe.takochan.takotech.network.NetworkHandler;
+import moe.takochan.takotech.network.ToolboxSelectionPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -31,6 +33,9 @@ import moe.takochan.takotech.client.gui.shader.ShaderProgram;
 import moe.takochan.takotech.common.Reference;
 
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
+
+    private int lastSelected = -1;
+
 
     private static final ShaderProgram SHADER = new ShaderProgram(
         Reference.RESOURCE_ROOT_ID,
@@ -56,7 +61,6 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         super(container);
         this.xSize = mc.displayWidth;
         this.ySize = mc.displayHeight;
-        // this.xSize = 256;
 
         this.stack = itemStack;
         loadItemsFromNBT();
@@ -120,8 +124,13 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
                 this.handleKeyboardInput();
             }
             if (!Keyboard.isKeyDown(GameSettings.selectTool.getKeyCode())) {
-                // TakoTechMod.NETWORK
-                // .sendToServer(new MultiItemToolMessage(updateMode(Mouse.getX(), Mouse.getY())));
+                int selected = selection(Mouse.getX(), Mouse.getY());
+                if (selected >= 0 && selected != lastSelected) {
+                    lastSelected = selected;
+                    NetworkHandler.NETWORK.sendToServer(
+                        new ToolboxSelectionPacket(selected)
+                    );
+                }
                 mc.thePlayer.closeScreen();
             }
         }
@@ -164,37 +173,31 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
         GL11.glPushMatrix();
-        float innerRadius = 20.0f;
-        float outerRadius = 45.0f;
-        int centerX = mc.displayWidth / 2;
-        int centerY = mc.displayHeight / 2;
-        float sectorSize = (float) (2 * Math.PI) / sectorCount;
-        float startAngleOffset = (float) (3 * Math.PI + Math.PI / 6);
+        final float centerX = mc.displayWidth / 2f;
+        final float centerY = mc.displayHeight / 2f;
+        final float radius = 32f * scaleFactor;
 
-        // 遍历所有扇区
-        for (short i = 0; i < sectorCount; i++) {
-            float centerAngle = startAngleOffset + i * sectorSize;
-            float iconRadius = (innerRadius + outerRadius) / 2;
-            int iconX = centerX + (int) (iconRadius * Math.cos(-centerAngle));
-            int iconY = centerY - (int) (iconRadius * Math.sin(-centerAngle));
+        // 统一角度计算基准（从正上方开始）
+        final float startAngle = (float) (Math.PI / 2);
+        final float sectorAngle = (float) (2 * Math.PI / sectorCount);
 
+        for (int i = 0; i < sectorCount; i++) {
+
+            // 计算当前扇区中心角度
+            float currentAngle = startAngle - i * sectorAngle;
+
+            // 计算图标位置
+            float iconX = centerX + (float) (radius * Math.cos(currentAngle));
+            float iconY = centerY - (float) (radius * Math.sin(currentAngle)); // Y轴反转
+
+            // 渲染逻辑
             if (i < itemsTagList.tagCount()) {
-                NBTTagCompound itemTag = itemsTagList.getCompoundTagAt(i);
-                ItemStack itemStack = ItemStack.loadItemStackFromNBT(itemTag);
-                // 渲染物品
-                itemRender.renderItemAndEffectIntoGUI(
-                    this.fontRendererObj,
-                    mc.getTextureManager(),
-                    itemStack,
-                    iconX - 8,
-                    iconY - 8);
+                // 渲染物品栏物品
+                ItemStack item = ItemStack.loadItemStackFromNBT(itemsTagList.getCompoundTagAt(i));
+                renderItemAt(item, (int) iconX - 8, (int) iconY - 8);
             } else {
-                itemRender.renderItemAndEffectIntoGUI(
-                    this.fontRendererObj,
-                    mc.getTextureManager(),
-                    this.stack,
-                    iconX - 8,
-                    iconY - 8);
+                // 渲染当前手持物品
+                renderItemAt(stack, (int) iconX - 8, (int) iconY - 8);
             }
         }
 
@@ -225,5 +228,35 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     @Override
     public boolean hideItemPanelSlot(GuiContainer gui, int x, int y, int w, int h) {
         return true;
+    }
+
+    private void renderItemAt(ItemStack stack, int x, int y) {
+        itemRender.renderItemAndEffectIntoGUI(
+            fontRendererObj,
+            mc.getTextureManager(),
+            stack,
+            x,
+            y
+        );
+    }
+
+    private short selection(int mouseX, int mouseY) {
+        int x = mc.displayWidth / 2, y = mc.displayHeight / 2;
+        if (!(mouseX == x && mouseY == y)) {
+            double deltaX = x - mouseX;
+            double deltaY = mouseY - y;
+            double length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            if (length < 20 * scaleFactor) {
+                return -1;
+            }
+            double radians = Math.atan2(deltaY, deltaX);
+            double degrees = Math.toDegrees(radians);
+            if (degrees < 0) {
+                degrees += 360;
+            }
+
+            return (short) (degrees / (360D / sectorCount));
+        }
+        return -1;
     }
 }
