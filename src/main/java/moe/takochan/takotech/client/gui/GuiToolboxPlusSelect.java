@@ -1,140 +1,82 @@
 package moe.takochan.takotech.client.gui;
 
-import static org.lwjgl.BufferUtils.createFloatBuffer;
-import static org.lwjgl.opengl.GL11.*;
-
-import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.List;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.common.util.Constants;
 
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.TaggedInventoryArea;
-import moe.takochan.takotech.network.NetworkHandler;
-import moe.takochan.takotech.network.ToolboxSelectionPacket;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.Constants;
-
-import org.lwjgl.BufferUtils;
-import org.lwjgl.input.Keyboard;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import gregtech.api.items.MetaGeneratedTool;
+import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
+import moe.takochan.takotech.utils.MathUtils;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL20;
-
-import cpw.mods.fml.common.Loader;
-import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
-import moe.takochan.takotech.client.gui.settings.GameSettings;
-import moe.takochan.takotech.client.gui.shader.ShaderProgram;
-import moe.takochan.takotech.common.Reference;
 
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
 
-    private int lastSelected = -1;
-
-
-    private static final ShaderProgram SHADER = new ShaderProgram(
-        Reference.RESOURCE_ROOT_ID,
-        Reference.RESOURCE_ROOT_ID,
-        "shaders/ToolboxPlusSelectGui.vert",
-        "shaders/ToolboxPlusSelectGui.frag");
-
-    // 顶点缓冲区对象 (VBO)
-    private static final int VBO = GL15.glGenBuffers();
-    private final ItemStack stack;
     private static final Minecraft mc = Minecraft.getMinecraft();
+    // toolbox plus
+    private final ItemStack toolboxStack;
+    private final List<ItemStack> items = new ArrayList<>();
 
-    // 缩放因子（根据分辨率动态计算）
-    private int scaleFactor = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();
-    private static final boolean hasLwjgl3 = Loader.isModLoaded("lwjgl3ify");
+    // 用于在前景层绘制工具提示时缓存鼠标悬停的物品
+    private ItemStack tooltipItem = null;
 
-    // !!! 需要修改：将固定6扇区改为动态值，建议从配置或着色器参数获取 !!!
-    private int sectorCount = 0; // 此处应替换为动态值，例如从配置读取
+    private boolean closing;
+    private boolean doneClosing;
+    private double startAnimation;
 
-    private NBTTagList itemsTagList; // 存储从 NBT 中读取的物品列表
+    private int selectedItem = -1;
+    private boolean keyCycleBeforeL = false;
+    private boolean keyCycleBeforeR = false;
 
     public GuiToolboxPlusSelect(ContainerToolboxPlusSelect container, ItemStack itemStack) {
         super(container);
+        // 设置 GUI 尺寸（可根据实际需求调整）
         this.xSize = mc.displayWidth;
         this.ySize = mc.displayHeight;
 
-        this.stack = itemStack;
+        this.toolboxStack = itemStack;
         loadItemsFromNBT();
 
-        if (sectorCount <= 1) {
-            // 立即关闭GUI
-            Minecraft.getMinecraft()
-                .displayGuiScreen(this);
-        }
+        this.startAnimation = Minecraft.getMinecraft().theWorld.getTotalWorldTime();
     }
 
     private void loadItemsFromNBT() {
-        NBTTagCompound nbt = this.stack.getTagCompound();
+        NBTTagCompound nbt = this.toolboxStack.getTagCompound();
         if (nbt != null && nbt.hasKey("Items", Constants.NBT.TAG_LIST)) {
-            itemsTagList = nbt.getTagList("Items", Constants.NBT.TAG_COMPOUND);
-            sectorCount = itemsTagList.tagCount() + 1;
+            NBTTagList itemsTagList = nbt.getTagList("Items", Constants.NBT.TAG_COMPOUND);
+            if (itemsTagList != null && itemsTagList.tagCount() > 0) {
+                for (int i = 0; i < itemsTagList.tagCount(); i++) {
+                    ItemStack itemStack = ItemStack.loadItemStackFromNBT(itemsTagList.getCompoundTagAt(i));
+                    if (itemStack != null && itemStack.getItem() instanceof MetaGeneratedTool) {
+                        items.add(itemStack);
+                    }
+                }
+            }
         } else {
-            itemsTagList = new NBTTagList(); // 空列表
-            sectorCount = 0;
+            items.clear();
         }
     }
+
 
     @Override
     public void initGui() {
         super.initGui();
-
-        scaleFactor = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();
-        float x = mc.displayWidth, y = mc.displayHeight;
-        float[] vertices = {0, 0, 0, y, x, y, x, 0};
-
-        FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(vertices.length)
-            .put(vertices);
-        vertexBuffer.flip();
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, VBO);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-
-        FloatBuffer buf1 = createFloatBuffer(16);
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf1);
-        FloatBuffer buf2 = createFloatBuffer(16);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, buf2);
-        SHADER.use();
-        GL20.glUniformMatrix4(GL20.glGetUniformLocation(SHADER.getProgram(), "modelview"), false, buf1);
-        GL20.glUniformMatrix4(GL20.glGetUniformLocation(SHADER.getProgram(), "projection"), false, buf2);
-        GL20.glUniform2f(GL20.glGetUniformLocation(SHADER.getProgram(), "iResolution"), x, y);
-        GL20.glUniform1f(GL20.glGetUniformLocation(SHADER.getProgram(), "scaleFactor"), scaleFactor);
-        GL20.glUniform1f(GL20.glGetUniformLocation(SHADER.getProgram(), "sectorCount"), sectorCount);
-        SHADER.clear();
     }
 
-    @Override
-    public void handleInput() {
-        if (Mouse.isCreated()) {
-            while (Mouse.next()) {
-                this.handleMouseInput();
-            }
-        }
-
-        if (Keyboard.isCreated()) {
-            while (Keyboard.next()) {
-                this.handleKeyboardInput();
-            }
-            if (!Keyboard.isKeyDown(GameSettings.selectTool.getKeyCode())) {
-                int selected = selection(Mouse.getX(), Mouse.getY());
-                if (selected >= 0 && selected != lastSelected) {
-                    lastSelected = selected;
-                    NetworkHandler.NETWORK.sendToServer(
-                        new ToolboxSelectionPacket(selected)
-                    );
-                }
-                mc.thePlayer.closeScreen();
-            }
-        }
-    }
 
     @Override
     public void onGuiClosed() {
@@ -146,64 +88,121 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+        if (items.isEmpty())
+            return;
+
+        ItemStack inHand = Minecraft.getMinecraft().thePlayer.getHeldItem();
+        boolean hasAddButton = false;
+        int numItems = items.size();
+
+
+        // 计算动画进度（使用世界总时间，不含部分插值）
+        final float OPEN_ANIMATION_LENGTH = 2.5F;
+        long currentTime = Minecraft.getMinecraft().theWorld.getTotalWorldTime();
+        float openAnimation = closing
+            ? (1F - ((currentTime - (float) startAnimation) / OPEN_ANIMATION_LENGTH))
+            : ((currentTime - (float) startAnimation) / OPEN_ANIMATION_LENGTH);
+        if (closing && openAnimation <= 0F)
+            doneClosing = true;
+        float animProgress = MathUtils.clamp_float(openAnimation, 0F, 1F);
+        float radiusIn = Math.max(0.1F, 30F * animProgress);
+        float radiusOut = radiusIn * 2F;
+        float itemRadius = (radiusIn + radiusOut) * 0.5F;
+        float animTop = (1F - animProgress) * (height / 2F);
+
+        int x = width / 2;
+        int y = height / 2;
+
+        // 依靠鼠标位置确定当前选中的扇区
+        double dx = mouseX - x;
+        double dy = mouseY - y;
+        double a = Math.toDegrees(Math.atan2(dy, dx));
+        double d = Math.sqrt(dx * dx + dy * dy);
+        float s0 = (((0F - 0.5F) / (float) numItems) + 0.25F) * 360F;
+        if (a < s0)
+            a += 360D;
+        selectedItem = -1;
+        for (int i = 0; i < numItems; i++) {
+            float s = (((i - 0.5F) / (float) numItems) + 0.25F) * 360F;
+            float e = (((i + 0.5F) / (float) numItems) + 0.25F) * 360F;
+            if (a >= s && a < e && d >= radiusIn && d < radiusOut) {
+                selectedItem = i;
+                break;
+            }
+        }
+
+        // 开始绘制
         GL11.glPushMatrix();
+        GL11.glDisable(GL11.GL_ALPHA_TEST);
         GL11.glEnable(GL11.GL_BLEND);
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        SHADER.use();
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glColor4f(1F, 1F, 1F, 1F);
+        GL11.glTranslatef(0F, animTop, 0F);
 
-        GL20.glUniform2f(GL20.glGetUniformLocation(SHADER.getProgram(), "iMouse"), Mouse.getX(), Mouse.getY());
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
 
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, VBO);
-        GL20.glEnableVertexAttribArray(0);
-        GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 0, 0);
+        tooltipItem = null;
+        boolean hasMouseOver = false;
+        // 绘制每个扇形区
+        for (int i = 0; i < numItems; i++) {
+            float s = (((i - 0.5F) / (float) numItems) + 0.25F) * 360F;
+            float e = (((i + 0.5F) / (float) numItems) + 0.25F) * 360F;
+            if (selectedItem == i) {
+                // 选中扇区使用白色半透明高亮
+                drawPieArc(tessellator, x, y, zLevel, radiusIn, radiusOut, s, e, 255, 255, 255, 64);
+                hasMouseOver = true;
+                tooltipItem = items.get(i);
+            } else {
+                // 非选中扇区使用黑色半透明
+                drawPieArc(tessellator, x, y, zLevel, radiusIn, radiusOut, s, e, 0, 0, 0, 64);
+            }
+        }
 
-        GL11.glDrawArrays(GL_QUADS, 0, 4);
+        tessellator.draw();
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
 
-        GL20.glDisableVertexAttribArray(0);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        if (hasMouseOver) {
+            if (inHand != null && inHand.stackSize > 0) {
+                if (tooltipItem != null && tooltipItem.stackSize > 0) {
+//                    drawCenteredString(fontRendererObj, I18n.format("text.toolbelt.swap"),
+//                        width / 2, (height - fontRendererObj.FONT_HEIGHT) / 2, 0xFFFFFFFF);
+                } else {
+//                    drawCenteredString(fontRendererObj, I18n.format("text.toolbelt.insert"),
+//                        width / 2, (height - fontRendererObj.FONT_HEIGHT) / 2, 0xFFFFFFFF);
+                }
+            } else if (tooltipItem != null && tooltipItem.stackSize > 0) {
+//                drawCenteredString(fontRendererObj, I18n.format("text.toolbelt.extract"),
+//                    width / 2, (height - fontRendererObj.FONT_HEIGHT) / 2, 0xFFFFFFFF);
+            }
+        }
 
-        SHADER.clear();
+        // 绘制扇形区域中的物品图标
+        RenderHelper.enableGUIStandardItemLighting();
+        for (int i = 0; i < numItems; i++) {
+            float angle1 = (((i) / (float) numItems) + 0.25F) * 2F * (float) Math.PI;
+            float posX = x - 8 + itemRadius * (float) Math.cos(angle1);
+            float posY = y - 8 + itemRadius * (float) Math.sin(angle1);
+            ItemStack inSlot = items.get(i);
+            if (inSlot != null && inSlot.stackSize > 0) {
+                itemRender.renderItemAndEffectIntoGUI(fontRendererObj, Minecraft.getMinecraft().getTextureManager(), inSlot, (int) posX, (int) posY);
+                itemRender.renderItemOverlayIntoGUI(fontRendererObj, Minecraft.getMinecraft().getTextureManager(), inSlot, (int) posX, (int) posY, "");
 
-        glDisable(GL11.GL_BLEND);
-        glEnable(GL11.GL_DEPTH_TEST);
+            }
+        }
+        RenderHelper.disableStandardItemLighting();
 
         GL11.glPopMatrix();
     }
 
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-        GL11.glPushMatrix();
-        final float centerX = mc.displayWidth / 2f;
-        final float centerY = mc.displayHeight / 2f;
-        final float radius = 32f * scaleFactor;
-
-        // 统一角度计算基准（从正上方开始）
-        final float startAngle = (float) (Math.PI / 2);
-        final float sectorAngle = (float) (2 * Math.PI / sectorCount);
-
-        for (int i = 0; i < sectorCount; i++) {
-
-            // 计算当前扇区中心角度
-            float currentAngle = startAngle - i * sectorAngle;
-
-            // 计算图标位置
-            float iconX = centerX + (float) (radius * Math.cos(currentAngle));
-            float iconY = centerY - (float) (radius * Math.sin(currentAngle)); // Y轴反转
-
-            // 渲染逻辑
-            if (i < itemsTagList.tagCount()) {
-                // 渲染物品栏物品
-                ItemStack item = ItemStack.loadItemStackFromNBT(itemsTagList.getCompoundTagAt(i));
-                renderItemAt(item, (int) iconX - 8, (int) iconY - 8);
-            } else {
-                // 渲染当前手持物品
-                renderItemAt(stack, (int) iconX - 8, (int) iconY - 8);
-            }
-        }
-
-        GL11.glPopMatrix();
+        // 若存在工具提示物品则绘制其提示文本
+        if (tooltipItem != null)
+            renderToolTip(tooltipItem, mouseX, mouseY);
     }
 
+    // region NEI
     @Override
     public VisiblityData modifyVisiblity(GuiContainer gui, VisiblityData currentVisibility) {
         currentVisibility.showNEI = false;
@@ -229,34 +228,76 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     public boolean hideItemPanelSlot(GuiContainer gui, int x, int y, int w, int h) {
         return true;
     }
+    // endregion
 
-    private void renderItemAt(ItemStack stack, int x, int y) {
-        itemRender.renderItemAndEffectIntoGUI(
-            fontRendererObj,
-            mc.getTextureManager(),
-            stack,
-            x,
-            y
-        );
-    }
-
-    private short selection(int mouseX, int mouseY) {
-        int x = mc.displayWidth / 2, y = mc.displayHeight / 2;
-        if (!(mouseX == x && mouseY == y)) {
-            double deltaX = x - mouseX;
-            double deltaY = mouseY - y;
-            double length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            if (length < 20 * scaleFactor) {
-                return -1;
-            }
-            double radians = Math.atan2(deltaY, deltaX);
-            double degrees = Math.toDegrees(radians);
-            if (degrees < 0) {
-                degrees += 360;
-            }
-
-            return (short) (degrees / (360D / sectorCount));
+    /**
+     * 取消渲染 HUD 时的准星（仅当当前 GUI 为径向菜单时）。
+     * 注意：1.7.10 中订阅事件需通过注册至 MinecraftForge.EVENT_BUS。
+     */
+    @SubscribeEvent
+    public void onRenderGameOverlay(RenderGameOverlayEvent.Pre event) {
+        if (event.type != RenderGameOverlayEvent.ElementType.CROSSHAIRS)
+            return;
+        if (Minecraft.getMinecraft().currentScreen instanceof GuiToolboxPlusSelect) {
+            event.setCanceled(true);
         }
-        return -1;
     }
+
+
+    /**
+     * 根据给定的坐标设置鼠标位置（转换为屏幕坐标）
+     *
+     * @param x 新的 x 坐标
+     * @param y 新的 y 坐标
+     */
+    private void setMousePosition(double x, double y) {
+        Mouse.setCursorPosition((int) (x * mc.displayWidth / width), (int) (y * mc.displayHeight / width));
+    }
+
+    private static final float PRECISION = 5;
+
+    /**
+     * 绘制圆环扇形（Pie Arc）
+     *
+     * @param tessellator 用于绘制的 Tessellator 实例
+     * @param x           圆心 x 坐标
+     * @param y           圆心 y 坐标
+     * @param z           z 轴高度
+     * @param radiusIn    内半径
+     * @param radiusOut   外半径
+     * @param startAngle  起始角度（度数）
+     * @param endAngle    结束角度（度数）
+     * @param r           红色通道值
+     * @param g           绿色通道值
+     * @param b           蓝色通道值
+     * @param a           透明度
+     */
+    private void drawPieArc(Tessellator tessellator, int x, int y, float z,
+                            float radiusIn, float radiusOut, float startAngle, float endAngle,
+                            int r, int g, int b, int a) {
+        float angle = endAngle - startAngle;
+        int sections = Math.max(1, MathUtils.ceiling_float_int(angle / PRECISION));
+        startAngle = (float) Math.toRadians(startAngle);
+        endAngle = (float) Math.toRadians(endAngle);
+        angle = endAngle - startAngle;
+        for (int i = 0; i < sections; i++) {
+            float angle1 = startAngle + (i / (float) sections) * angle;
+            float angle2 = startAngle + ((i + 1) / (float) sections) * angle;
+            float pos1InX = x + radiusIn * (float) Math.cos(angle1);
+            float pos1InY = y + radiusIn * (float) Math.sin(angle1);
+            float pos1OutX = x + radiusOut * (float) Math.cos(angle1);
+            float pos1OutY = y + radiusOut * (float) Math.sin(angle1);
+            float pos2OutX = x + radiusOut * (float) Math.cos(angle2);
+            float pos2OutY = y + radiusOut * (float) Math.sin(angle2);
+            float pos2InX = x + radiusIn * (float) Math.cos(angle2);
+            float pos2InY = y + radiusIn * (float) Math.sin(angle2);
+
+            tessellator.setColorRGBA_F(r / 255F, g / 255F, b / 255F, a / 255F);
+            tessellator.addVertex(pos1OutX, pos1OutY, z);
+            tessellator.addVertex(pos1InX, pos1InY, z);
+            tessellator.addVertex(pos2InX, pos2InY, z);
+            tessellator.addVertex(pos2OutX, pos2OutY, z);
+        }
+    }
+    //endregion
 }
