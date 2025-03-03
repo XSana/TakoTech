@@ -1,6 +1,5 @@
 package moe.takochan.takotech;
 
-import moe.takochan.takotech.network.NetworkHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,10 +9,9 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
-import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import moe.takochan.takotech.common.CommonProxy;
 import moe.takochan.takotech.common.Reference;
+import moe.takochan.takotech.network.NetworkHandler;
 
 @Mod(
     modid = Reference.MODID,

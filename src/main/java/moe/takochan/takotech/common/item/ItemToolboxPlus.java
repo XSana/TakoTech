@@ -1,6 +1,5 @@
 package moe.takochan.takotech.common.item;
 
-import moe.takochan.takotech.TakoTechMod;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
@@ -14,6 +13,7 @@ import ic2.core.IC2;
 import ic2.core.IHasGui;
 import ic2.core.item.IHandHeldInventory;
 import ic2.core.item.tool.HandHeldToolbox;
+import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
@@ -39,7 +39,6 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
         return EnumRarity.uncommon;
     }
 
-
     @Override
     public void register() {
         GameRegistry.registerItem(this, NameConstants.ITEM_TOOLBOX_PLUS);
@@ -49,7 +48,6 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
     public IHasGui getInventory(EntityPlayer entityPlayer, ItemStack itemStack) {
         return new HandHeldToolbox(entityPlayer, itemStack, 9);
     }
-
 
     public static void processSelection(EntityPlayer player, int index) {
         ItemStack stack = player.getHeldItem();
@@ -64,7 +62,6 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
             updateToolboxContents(player, index);
         }
     }
-
 
     private static void updateToolboxContents(EntityPlayer player, int index) {
         // 根据索引更新手持物品逻辑

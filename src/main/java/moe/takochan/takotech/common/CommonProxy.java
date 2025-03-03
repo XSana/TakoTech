@@ -8,6 +8,7 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import moe.takochan.takotech.client.gui.GuiType;
+import moe.takochan.takotech.common.event.RenderGameOverlayEventHandler;
 import moe.takochan.takotech.common.event.WorldEventHandler;
 import moe.takochan.takotech.common.loader.BlockLoader;
 import moe.takochan.takotech.common.loader.ItemLoader;
@@ -24,6 +25,7 @@ public class CommonProxy {
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
+        MinecraftForge.EVENT_BUS.register(new RenderGameOverlayEventHandler());
         // 配置初始化
         TakoTechConfig.init();
         // ModLoader

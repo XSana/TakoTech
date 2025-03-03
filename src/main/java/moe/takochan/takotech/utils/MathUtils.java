@@ -14,7 +14,6 @@ public class MathUtils extends MathHelper {
         return pValue > (float) i ? i + 1 : i;
     }
 
-
     /**
      * Returns the value of the first parameter, clamped to be within the lower and upper limits given by the second and
      * third parameters.
