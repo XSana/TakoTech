@@ -5,11 +5,9 @@ import io.netty.buffer.ByteBuf;
 
 public class ToolboxSelectionPacket implements IMessage {
 
-
     private int selectedIndex;
 
-    public ToolboxSelectionPacket() {
-    }
+    public ToolboxSelectionPacket() {}
 
     public ToolboxSelectionPacket(int index) {
         this.selectedIndex = index;
@@ -24,7 +22,6 @@ public class ToolboxSelectionPacket implements IMessage {
     public void toBytes(ByteBuf buf) {
         buf.writeInt(selectedIndex);
     }
-
 
     public int getSelectedIndex() {
         return selectedIndex;
