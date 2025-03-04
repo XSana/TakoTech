@@ -10,8 +10,7 @@ public class ToolboxSelectionPacket implements IMessage {
 
     private ItemStack stack;
 
-    public ToolboxSelectionPacket() {
-    }
+    public ToolboxSelectionPacket() {}
 
     public ToolboxSelectionPacket(ItemStack stack) {
         this.stack = stack;
