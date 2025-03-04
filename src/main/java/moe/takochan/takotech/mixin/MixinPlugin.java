@@ -1,8 +1,9 @@
 package moe.takochan.takotech.mixin;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.spongepowered.asm.lib.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -38,11 +39,7 @@ public class MixinPlugin implements IMixinConfigPlugin {
      */
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if ("net.minecraft.client.gui.GuiScreen".equals(targetClassName)
-            && "moe.takochan.takotech.mixin.InputFixMixin".equals(mixinClassName)) {
-            return true;
-        }
-        return false;
+        return true;
     }
 
     /**
@@ -61,8 +58,16 @@ public class MixinPlugin implements IMixinConfigPlugin {
      */
     @Override
     public List<String> getMixins() {
+        List<String> mixins = new ArrayList<>();
+
+        // 如果已经加了InputFix，或LWJGL3ify（Java17+）则不执行Mixin修复
+        if (Stream.of("lain.mods.inputfix.InputFix", "me.eigenraven.lwjgl3ify.core.Lwjgl3ifyCoremod")
+            .noneMatch(this::isClassExistSafe)) {
+            mixins.add("InputFixMixin");
+        }
+
         // 返回要应用的 Mixin 类名
-        return Collections.emptyList();
+        return mixins;
     }
 
     /**
@@ -86,4 +91,13 @@ public class MixinPlugin implements IMixinConfigPlugin {
      */
     @Override
     public void postApply(String s, ClassNode classNode, String s1, IMixinInfo iMixinInfo) {}
+
+    private boolean isClassExistSafe(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
 }
