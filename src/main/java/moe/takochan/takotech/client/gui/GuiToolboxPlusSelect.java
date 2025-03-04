@@ -9,6 +9,9 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
 
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.GL11;
+
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.TaggedInventoryArea;
@@ -19,13 +22,11 @@ import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.network.NetworkHandler;
 import moe.takochan.takotech.network.ToolboxSelectionPacket;
 import moe.takochan.takotech.utils.MathUtils;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
 
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
 
     // 界面尺寸参数
-    private final static float RADIUS_IN = 30F;          // 内圈半径
+    private final static float RADIUS_IN = 30F; // 内圈半径
     private final static float RADIUS_OUT = RADIUS_IN * 2F; // 外圈半径
     private final static float ITEM_RADIUS = (RADIUS_IN + RADIUS_OUT) * 0.5F; // 物品显示位置半径
     // 每5度分割一次圆弧
@@ -37,11 +38,11 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     // 获取当前游戏
     private final static Minecraft mc = Minecraft.getMinecraft();
 
-    private final ItemStack toolboxStack;  // 当前工具箱物品堆
+    private final ItemStack toolboxStack; // 当前工具箱物品堆
     private final List<ItemStack> items = new ArrayList<>(); // 存储的可选物品列表
 
     // 用于工具提示的临时存储
-    private ItemStack selectedItemStack = null;   // 当前鼠标悬停的物品
+    private ItemStack selectedItemStack = null; // 当前鼠标悬停的物品
 
     public GuiToolboxPlusSelect(ContainerToolboxPlusSelect container, ItemStack itemStack) {
         super(container);
@@ -219,7 +220,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      * @param color       颜色（ARGB格式）
      */
     private void drawSector(Tessellator tessellator, int x, int y, float radiusIn, float radiusOut, float startAngle,
-                            float endAngle, int color) {
+        float endAngle, int color) {
         // 解析颜色分量
         int r = (color >> 24) & 0xFF;
         int g = (color >> 16) & 0xFF;
@@ -228,7 +229,6 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
         drawPieArc(tessellator, x, y, zLevel, radiusIn, radiusOut, startAngle, endAngle, r, g, b, a);
     }
-
 
     /**
      * 绘制圆环扇形（Pie Arc）
@@ -247,7 +247,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      * @param a           透明度
      */
     private void drawPieArc(Tessellator tessellator, int x, int y, float z, float radiusIn, float radiusOut,
-                            float startAngle, float endAngle, int r, int g, int b, int a) {
+        float startAngle, float endAngle, int r, int g, int b, int a) {
         float angle = endAngle - startAngle;
 
         // 计算需要分割的段数（保证每段不超过PRECISION度）
@@ -276,8 +276,8 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             // 设置颜色并添加四边形顶点
             tessellator.setColorRGBA_F(r / 255F, g / 255F, b / 255F, a / 255F);
             tessellator.addVertex(pos1OutX, pos1OutY, z); // 外圈起点
-            tessellator.addVertex(pos1InX, pos1InY, z);   // 内圈起点
-            tessellator.addVertex(pos2InX, pos2InY, z);   // 内圈终点
+            tessellator.addVertex(pos1InX, pos1InY, z); // 内圈起点
+            tessellator.addVertex(pos2InX, pos2InY, z); // 内圈终点
             tessellator.addVertex(pos2OutX, pos2OutY, z); // 外圈终点
         }
     }

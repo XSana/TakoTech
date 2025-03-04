@@ -4,7 +4,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-
 import net.minecraftforge.common.util.ForgeDirection;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -23,7 +22,9 @@ public class KeyHandler {
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
             World world = Minecraft.getMinecraft().theWorld;
             ItemStack heldItem = player.getHeldItem();
-            if (heldItem != null && heldItem.getItem() instanceof ItemToolboxPlus && !ItemToolboxPlus.getToolItems(heldItem).isEmpty()) {
+            if (heldItem != null && heldItem.getItem() instanceof ItemToolboxPlus
+                && !ItemToolboxPlus.getToolItems(heldItem)
+                    .isEmpty()) {
                 GuiType.openGuiWithClient(
                     GuiType.TOOLBOX_PLUS_SELECT,
                     player,

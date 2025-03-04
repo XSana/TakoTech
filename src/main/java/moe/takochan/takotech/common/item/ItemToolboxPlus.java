@@ -15,12 +15,14 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
-
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.util.Constants;
 
-import appeng.util.Platform;
+import org.lwjgl.opengl.GL11;
+
 import com.gtnewhorizons.modularui.api.GlStateManager;
+
+import appeng.util.Platform;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -35,7 +37,6 @@ import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
-import org.lwjgl.opengl.GL11;
 
 public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
 
@@ -88,7 +89,8 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
     private void renderInventory(ItemStack stack, ItemStack selectedStack, int selectedIndex) {
         Minecraft mc = Minecraft.getMinecraft();
         // 绑定物品贴图
-        mc.getTextureManager().bindTexture(TextureMap.locationItemsTexture);
+        mc.getTextureManager()
+            .bindTexture(TextureMap.locationItemsTexture);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F); // 重置颜色为纯白
         if (selectedStack == null) {
             // 如果没有选中物品，则直接绘制默认图标
@@ -155,7 +157,6 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
         return baseIcon;
     }
 
-
     public static List<ItemStack> getToolItems(ItemStack stack) {
         List<ItemStack> list = new ArrayList<>();
         NBTTagCompound nbt = stack.getTagCompound();
@@ -182,7 +183,8 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
             int index = -1;
             if (!(selectedStack.getItem() instanceof ItemToolboxPlus)) {
                 for (int i = 0; i < toolItems.size(); i++) {
-                    if (toolItems.get(i).isItemEqual(selectedStack)) {
+                    if (toolItems.get(i)
+                        .isItemEqual(selectedStack)) {
                         index = i;
                         break;
                     }
