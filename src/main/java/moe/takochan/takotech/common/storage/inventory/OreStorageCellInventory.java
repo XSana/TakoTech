@@ -525,7 +525,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         // 更新物品类型数量
         this.updateItemTypes();
 
-        if (this.cellItems != null) {
+        if (this.container != null) {
             this.container.saveChanges(this);
         }
         CellItemSavedData.getInstance()
