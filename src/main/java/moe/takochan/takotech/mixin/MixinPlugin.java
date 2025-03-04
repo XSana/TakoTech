@@ -9,6 +9,8 @@ import org.spongepowered.asm.lib.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+
 public class MixinPlugin implements IMixinConfigPlugin {
 
     /**
@@ -60,8 +62,11 @@ public class MixinPlugin implements IMixinConfigPlugin {
     public List<String> getMixins() {
         List<String> mixins = new ArrayList<>();
 
+        boolean isClient = FMLLaunchHandler.side()
+            .isClient();
+
         // 如果已经加了InputFix，或LWJGL3ify（Java17+）则不执行Mixin修复
-        if (Stream.of("lain.mods.inputfix.InputFix", "me.eigenraven.lwjgl3ify.core.Lwjgl3ifyCoremod")
+        if (isClient && Stream.of("lain.mods.inputfix.InputFix", "me.eigenraven.lwjgl3ify.core.Lwjgl3ifyCoremod")
             .noneMatch(this::isClassExistSafe)) {
             mixins.add("InputFixMixin");
         }
