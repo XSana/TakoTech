@@ -8,20 +8,19 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.Constants;
-
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
 
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.TaggedInventoryArea;
-import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
 import moe.takochan.takotech.client.gui.settings.GameSettings;
+import moe.takochan.takotech.common.item.ItemToolboxPlus;
+import moe.takochan.takotech.common.loader.ItemLoader;
+import moe.takochan.takotech.network.NetworkHandler;
+import moe.takochan.takotech.network.ToolboxSelectionPacket;
 import moe.takochan.takotech.utils.MathUtils;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.GL11;
 
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
 
@@ -30,15 +29,19 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     private final static float RADIUS_OUT = RADIUS_IN * 2F; // 外圈半径
     private final static float ITEM_RADIUS = (RADIUS_IN + RADIUS_OUT) * 0.5F; // 物品显示位置半径
     // 每5度分割一次圆弧
-    private static final float PRECISION = 5;
+    private final static float PRECISION = 5;
 
-    private static final Minecraft mc = Minecraft.getMinecraft();
+    // 定义默认物品
+    private final static ItemStack DEFAULT_ITEM = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
+
+    // 获取当前游戏
+    private final static Minecraft mc = Minecraft.getMinecraft();
+
     private final ItemStack toolboxStack;  // 当前工具箱物品堆
     private final List<ItemStack> items = new ArrayList<>(); // 存储的可选物品列表
 
     // 用于工具提示的临时存储
     private ItemStack selectedItemStack = null;   // 当前鼠标悬停的物品
-    private int selectedItem = -1;         // 当前选中的物品索引
 
     public GuiToolboxPlusSelect(ContainerToolboxPlusSelect container, ItemStack itemStack) {
         super(container);
@@ -54,20 +57,14 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      * 加载可用工具列表
      */
     private void loadItemsFromNBT() {
-        NBTTagCompound nbt = this.toolboxStack.getTagCompound();
-        if (nbt != null && nbt.hasKey("Items", Constants.NBT.TAG_LIST)) {
-            NBTTagList itemsTagList = nbt.getTagList("Items", Constants.NBT.TAG_COMPOUND);
-            if (itemsTagList != null && itemsTagList.tagCount() > 0) {
-                items.add(toolboxStack);
-                for (int i = 0; i < itemsTagList.tagCount(); i++) {
-                    ItemStack itemStack = ItemStack.loadItemStackFromNBT(itemsTagList.getCompoundTagAt(i));
-                    if (itemStack != null && itemStack.getItem() instanceof MetaGeneratedTool) {
-                        items.add(itemStack);
-                    }
-                }
+        if (toolboxStack != null && toolboxStack.getItem() instanceof ItemToolboxPlus) {
+            List<ItemStack> toolItems = ItemToolboxPlus.getToolItems(toolboxStack);
+            if (!toolItems.isEmpty()) {
+                items.add(DEFAULT_ITEM);
+                items.addAll(toolItems);
+            } else {
+                items.clear();
             }
-        } else {
-            items.clear();
         }
     }
 
@@ -76,6 +73,10 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      */
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+        // 初始化选中状态为 null
+        selectedItemStack = null;
+
+        // 如果没有可选物品则返回
         if (items.isEmpty()) return;
 
         // 计算选中项
@@ -88,8 +89,8 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         double angle = Math.toDegrees(Math.atan2(dy, dx));
         double distance = Math.sqrt(dx * dx + dy * dy);
 
-        // 确定选中的物品索引
-        selectedItem = -1;
+        // 当前选中的物品索引
+        int selectedItem = -1;
         for (int i = 0; i < items.size(); i++) {
             float sectorStart = (((i - 0.5F) / items.size()) + 0.25F) * 360F;
             float sectorEnd = (((i + 0.5F) / items.size()) + 0.25F) * 360F;
@@ -118,11 +119,10 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             int color;
             // 根据选中状态设置颜色（RGBA格式）
             if (i == selectedItem) {
-                color = 0xFFFFFF40;
+                color = 0xFFFFDD60;
                 selectedItemStack = items.get(i);
             } else {
-                color = 0x00000040;
-                selectedItemStack = null;
+                color = 0x33333380;
             }
             drawSector(tess, xCenter, yCenter, RADIUS_IN, RADIUS_OUT, sectorStart, sectorEnd, color);
         }
@@ -138,6 +138,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             float posY = yCenter - 8 + ITEM_RADIUS * (float) Math.sin(angleRad);
 
             ItemStack stack = items.get(i);
+
             if (stack != null) {
                 // 渲染物品图标和效果
                 itemRender
@@ -168,7 +169,9 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             }
             // 当选择按键松开时执行选择操作
             if (!Keyboard.isKeyDown(GameSettings.selectTool.getKeyCode())) {
-                // NetworkHandler.NETWORK.sendToServer(new ToolboxSelectionPacket(selectedItem));
+                if (selectedItemStack != null) {
+                    NetworkHandler.NETWORK.sendToServer(new ToolboxSelectionPacket(selectedItemStack));
+                }
                 mc.thePlayer.closeScreen();
             }
         }

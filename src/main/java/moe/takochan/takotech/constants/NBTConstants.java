@@ -9,4 +9,6 @@ public class NBTConstants {
     public static final String DISK_ITEMS = "disk_items";
 
     public static final String CONTROLLER_DATA = "controller_data";
+
+    public static final String SELECTED_INDEX = "selected_index";
 }

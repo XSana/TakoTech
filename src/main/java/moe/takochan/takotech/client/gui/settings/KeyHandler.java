@@ -3,10 +3,8 @@ package moe.takochan.takotech.client.gui.settings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants;
+
 import net.minecraftforge.common.util.ForgeDirection;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -25,22 +23,15 @@ public class KeyHandler {
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
             World world = Minecraft.getMinecraft().theWorld;
             ItemStack heldItem = player.getHeldItem();
-            if (heldItem != null && heldItem.getItem() instanceof ItemToolboxPlus) {
-                NBTTagCompound nbt = heldItem.getTagCompound();
-                if (nbt != null && nbt.hasKey("Items", Constants.NBT.TAG_LIST)) {
-                    NBTTagList list = nbt.getTagList("Items", Constants.NBT.TAG_COMPOUND);
-                    if (list.tagCount() <= 0) {
-                        return;
-                    }
-                    GuiType.openGuiWithClient(
-                        GuiType.TOOLBOX_PLUS_SELECT,
-                        player,
-                        world,
-                        ForgeDirection.UNKNOWN,
-                        (int) player.posX,
-                        (int) player.posY,
-                        (int) player.posZ);
-                }
+            if (heldItem != null && heldItem.getItem() instanceof ItemToolboxPlus && !ItemToolboxPlus.getToolItems(heldItem).isEmpty()) {
+                GuiType.openGuiWithClient(
+                    GuiType.TOOLBOX_PLUS_SELECT,
+                    player,
+                    world,
+                    ForgeDirection.UNKNOWN,
+                    (int) player.posX,
+                    (int) player.posY,
+                    (int) player.posZ);
             }
         }
     }

@@ -1,29 +1,33 @@
 package moe.takochan.takotech.network;
 
+import net.minecraft.item.ItemStack;
+
+import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import io.netty.buffer.ByteBuf;
 
 public class ToolboxSelectionPacket implements IMessage {
 
-    private int selectedIndex;
+    private ItemStack stack;
 
-    public ToolboxSelectionPacket() {}
+    public ToolboxSelectionPacket() {
+    }
 
-    public ToolboxSelectionPacket(int index) {
-        this.selectedIndex = index;
+    public ToolboxSelectionPacket(ItemStack stack) {
+        this.stack = stack;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        selectedIndex = buf.readInt();
+        stack = ByteBufUtils.readItemStack(buf);
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeInt(selectedIndex);
+        ByteBufUtils.writeItemStack(buf, stack);
     }
 
-    public int getSelectedIndex() {
-        return selectedIndex;
+    public ItemStack getStack() {
+        return stack;
     }
 }
