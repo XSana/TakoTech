@@ -23,7 +23,6 @@ import ic2.core.IC2;
 import ic2.core.IHasGui;
 import ic2.core.item.IHandHeldInventory;
 import ic2.core.item.tool.HandHeldToolbox;
-import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.client.render.ToolboxPlusRenderer;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.constants.NBTConstants;
@@ -61,7 +60,7 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
     }
 
     @SideOnly(Side.CLIENT)
-    public EnumRarity getRarity(ItemStack stack) {
+    public EnumRarity getRarity(ItemStack itemStack) {
         return EnumRarity.uncommon;
     }
 
@@ -77,11 +76,11 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
         return new HandHeldToolbox(entityPlayer, itemStack, 9);
     }
 
-    public int getSelectedIndex(ItemStack stack) {
-        if (stack.hasTagCompound()) {
-            NBTTagCompound nbt = stack.getTagCompound();
-            if (nbt.hasKey(NBTConstants.SELECTED_INDEX)) {
-                return nbt.getInteger(NBTConstants.SELECTED_INDEX);
+    public int getSelectedIndex(ItemStack itemStack) {
+        if (itemStack.hasTagCompound()) {
+            NBTTagCompound nbt = CommonUtils.openNbtData(itemStack);
+            if (nbt.hasKey(NBTConstants.TOOLBOX_SELECTED_INDEX)) {
+                return nbt.getInteger(NBTConstants.TOOLBOX_SELECTED_INDEX);
             }
         }
         return -1;
@@ -102,16 +101,16 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
         return baseIcon;
     }
 
-    public static List<ItemStack> getToolItems(ItemStack stack) {
+    public static List<ItemStack> getToolItems(ItemStack itemStack) {
         List<ItemStack> list = new ArrayList<>();
-        NBTTagCompound nbt = stack.getTagCompound();
-        if (nbt != null && nbt.hasKey("Items", Constants.NBT.TAG_LIST)) {
-            NBTTagList itemsTagList = nbt.getTagList("Items", Constants.NBT.TAG_COMPOUND);
+        NBTTagCompound nbt = CommonUtils.openNbtData(itemStack);
+        if (nbt.hasKey(NBTConstants.TOOLBOX_ITEMS, Constants.NBT.TAG_LIST)) {
+            NBTTagList itemsTagList = nbt.getTagList(NBTConstants.TOOLBOX_ITEMS, Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < itemsTagList.tagCount(); i++) {
                 NBTTagCompound itemTag = itemsTagList.getCompoundTagAt(i);
-                ItemStack itemStack = ItemStack.loadItemStackFromNBT(itemTag);
-                if (itemStack != null && itemStack.getItem() instanceof MetaGeneratedTool) {
-                    list.add(itemStack);
+                ItemStack toolStack = ItemStack.loadItemStackFromNBT(itemTag);
+                if (toolStack != null && toolStack.getItem() instanceof MetaGeneratedTool) {
+                    list.add(toolStack);
                 }
             }
         }
@@ -121,9 +120,9 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
     public static void processSelection(EntityPlayer player, ItemStack selectedStack) {
         if (CommonUtils.isClient()) return;
         if (selectedStack == null) return;
-        ItemStack stack = player.getHeldItem();
-        if (stack.getItem() instanceof ItemToolboxPlus) {
-            List<ItemStack> toolItems = getToolItems(stack);
+        ItemStack itemStack = player.getHeldItem();
+        if (itemStack.getItem() instanceof ItemToolboxPlus) {
+            List<ItemStack> toolItems = getToolItems(itemStack);
 
             int index = -1;
             if (!(selectedStack.getItem() instanceof ItemToolboxPlus)) {
@@ -136,23 +135,19 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
                 }
             }
             // 执行后续物品切换逻辑
-            updateToolboxContents(stack, player, index);
+            updateToolboxContents(itemStack, player, index);
         }
     }
 
-    private static void updateToolboxContents(ItemStack stack, EntityPlayer player, int index) {
-        NBTTagCompound nbt = stack.getTagCompound();
-        if (nbt == null) {
-            nbt = new NBTTagCompound();
-            stack.setTagCompound(nbt);
-        }
+    private static void updateToolboxContents(ItemStack itemStack, EntityPlayer player, int index) {
+        NBTTagCompound nbt = CommonUtils.openNbtData(itemStack);
         // 根据索引更新手持物品逻辑
-        TakoTechMod.LOG.info("selected toolbox: {}", index);
         if (index == -1) {
-            nbt.removeTag(NBTConstants.SELECTED_INDEX);
+            nbt.removeTag(NBTConstants.TOOLBOX_SELECTED_INDEX);
         } else {
-            nbt.setInteger(NBTConstants.SELECTED_INDEX, index);
+            nbt.setInteger(NBTConstants.TOOLBOX_SELECTED_INDEX, index);
         }
+
         player.inventory.markDirty();
 
         // 同步容器数据给客户端

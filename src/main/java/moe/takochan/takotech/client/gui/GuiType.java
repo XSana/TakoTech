@@ -16,11 +16,8 @@ import moe.takochan.takotech.utils.CommonUtils;
 
 public enum GuiType implements IGuiHandler {
 
-    TOOLBOX_PLUS_SELECT(
-        (player, world, x, y, z) -> new ContainerToolboxPlusSelect(player, player.inventory.getCurrentItem()),
-        (player, world, x, y, z) -> new GuiToolboxPlusSelect(
-            new ContainerToolboxPlusSelect(player, player.inventory.getCurrentItem()),
-            player.inventory.getCurrentItem()));
+    TOOLBOX_PLUS_SELECT((player, world, x, y, z) -> new ContainerToolboxPlusSelect(), (player, world, x, y,
+        z) -> new GuiToolboxPlusSelect(new ContainerToolboxPlusSelect(), player.inventory.getCurrentItem()));
 
     private final ContainerProvider containerProvider;
     private final GuiProvider guiProvider;

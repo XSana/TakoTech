@@ -10,5 +10,7 @@ public class NBTConstants {
 
     public static final String CONTROLLER_DATA = "controller_data";
 
-    public static final String SELECTED_INDEX = "selected_index";
+    public static final String TOOLBOX_SELECTED_INDEX = "selected_index";
+
+    public static final String TOOLBOX_ITEMS = "Items";
 }

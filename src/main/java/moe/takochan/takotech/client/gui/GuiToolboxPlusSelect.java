@@ -138,12 +138,16 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             float posX = xCenter - 8 + ITEM_RADIUS * (float) Math.cos(angleRad);
             float posY = yCenter - 8 + ITEM_RADIUS * (float) Math.sin(angleRad);
 
-            ItemStack stack = items.get(i);
+            ItemStack toolItemStack = items.get(i);
 
-            if (stack != null) {
+            if (toolItemStack != null) {
                 // 渲染物品图标和效果
-                itemRender
-                    .renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), stack, (int) posX, (int) posY);
+                itemRender.renderItemAndEffectIntoGUI(
+                    mc.fontRenderer,
+                    mc.getTextureManager(),
+                    toolItemStack,
+                    (int) posX,
+                    (int) posY);
             }
         }
         RenderHelper.disableStandardItemLighting();

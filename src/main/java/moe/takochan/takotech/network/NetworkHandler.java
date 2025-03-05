@@ -29,7 +29,7 @@ public class NetworkHandler {
             // 在主服务端线程执行
             if (player.getHeldItem() != null && player.getHeldItem()
                 .getItem() instanceof ItemToolboxPlus) {
-                ItemToolboxPlus.processSelection(player, message.getStack());
+                ItemToolboxPlus.processSelection(player, message.getItemStack());
             }
 
             return null;

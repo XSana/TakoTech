@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import moe.takochan.takotech.common.block.BaseAEItemBlock;
 import moe.takochan.takotech.common.data.WebControllerData;
 import moe.takochan.takotech.constants.NameConstants;
+import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
 
 /**
@@ -25,17 +26,17 @@ public class ItemBlockWebController extends BaseAEItemBlock {
      * 添加物品详细信息（工具提示）
      * 当玩家悬停查看物品时显示控制器ID信息
      *
-     * @param stack            当前物品堆栈
+     * @param itemStack        当前物品堆栈
      * @param player           当前玩家对象
      * @param toolTip          工具提示内容列表
      * @param advancedToolTips 是否显示高级信息（F3+H模式）
      */
     @Override
-    public void addCheckedInformation(ItemStack stack, EntityPlayer player, List<String> toolTip,
+    public void addCheckedInformation(ItemStack itemStack, EntityPlayer player, List<String> toolTip,
         boolean advancedToolTips) {
-        if (stack.hasTagCompound()) {
+        if (itemStack.hasTagCompound()) {
             WebControllerData data = new WebControllerData();
-            data.readFormNBT(stack.getTagCompound());
+            data.readFormNBT(CommonUtils.openNbtData(itemStack));
 
             String controllerID = data.getControllerId();
             if (controllerID != null && !controllerID.isEmpty()) {
