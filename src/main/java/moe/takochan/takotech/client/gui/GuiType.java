@@ -6,13 +6,13 @@ import net.minecraft.inventory.Container;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.util.Platform;
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
+import moe.takochan.takotech.utils.CommonUtils;
 
 public enum GuiType implements IGuiHandler {
 
@@ -66,7 +66,7 @@ public enum GuiType implements IGuiHandler {
 
     public static void openGui(GuiType type, EntityPlayer player, World world, ForgeDirection face, int x, int y, int z,
         boolean force) {
-        if (!force && Platform.isClient()) {
+        if (!force && CommonUtils.isClient()) {
             return;
         }
         player.openGui(TakoTechMod.instance, type.ordinal(), world, player.inventory.currentItem, 0, 0);
