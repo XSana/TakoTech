@@ -17,4 +17,6 @@ public class NBTConstants {
     public static final String TOOLBOX_DATA = "toolbox_data";
 
     public static final String TOOLBOX_SELECTED = "selected";
+
+    public static final String TOOLBOX_TOOLS_SLOT = "Slot";
 }
