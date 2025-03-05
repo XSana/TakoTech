@@ -1,4 +1,4 @@
-package moe.takochan.takotech.mixin;
+package moe.takochan.takotech;
 
 import java.util.ArrayList;
 import java.util.List;

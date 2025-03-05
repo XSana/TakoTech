@@ -1,6 +1,7 @@
 package moe.takochan.takotech.network;
 
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
@@ -8,6 +9,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.relauncher.Side;
+import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.item.ItemToolboxPlus;
 
@@ -27,9 +29,11 @@ public class NetworkHandler {
             EntityPlayerMP player = ctx.getServerHandler().playerEntity;
 
             // 在主服务端线程执行
-            if (player.getHeldItem() != null && player.getHeldItem()
-                .getItem() instanceof ItemToolboxPlus) {
-                ItemToolboxPlus.processSelection(player, message.getItemStack());
+            ItemStack heldItem = player.getHeldItem();
+            if (heldItem != null) {
+                if (heldItem.getItem() instanceof ItemToolboxPlus || heldItem.getItem() instanceof MetaGeneratedTool) {
+                    ItemToolboxPlus.processSelection(player, message.getItemStack());
+                }
             }
 
             return null;

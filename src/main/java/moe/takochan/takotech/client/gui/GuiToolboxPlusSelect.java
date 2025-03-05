@@ -8,6 +8,8 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -15,12 +17,15 @@ import org.lwjgl.opengl.GL11;
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.TaggedInventoryArea;
+import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
 import moe.takochan.takotech.client.gui.settings.GameSettings;
 import moe.takochan.takotech.common.item.ItemToolboxPlus;
 import moe.takochan.takotech.common.loader.ItemLoader;
+import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.network.NetworkHandler;
 import moe.takochan.takotech.network.ToolboxSelectionPacket;
+import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.MathUtils;
 
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
@@ -38,7 +43,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     // 获取当前游戏
     private final static Minecraft mc = Minecraft.getMinecraft();
 
-    private final ItemStack toolboxStack; // 当前工具箱物品堆
+    private final ItemStack handItemStack; // 当前工具箱物品堆
     private final List<ItemStack> items = new ArrayList<>(); // 存储的可选物品列表
 
     // 用于工具提示的临时存储
@@ -50,7 +55,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         this.xSize = mc.displayWidth;
         this.ySize = mc.displayHeight;
 
-        this.toolboxStack = itemStack;
+        this.handItemStack = itemStack;
         loadItemsFromNBT();
     }
 
@@ -58,13 +63,27 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      * 加载可用工具列表
      */
     private void loadItemsFromNBT() {
-        if (toolboxStack != null && toolboxStack.getItem() instanceof ItemToolboxPlus) {
-            List<ItemStack> toolItems = ItemToolboxPlus.getToolItems(toolboxStack);
+        if (handItemStack != null) {
+            ItemStack toolbox = null;
+            if (handItemStack.getItem() instanceof ItemToolboxPlus) {
+                toolbox = handItemStack;
+            } else if (handItemStack.getItem() instanceof MetaGeneratedTool) {
+                NBTTagCompound nbt = CommonUtils.openNbtData(handItemStack);
+                if (nbt.hasKey(NBTConstants.TOOLBOX_DATA)) {
+                    toolbox = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
+                    CommonUtils.openNbtData(toolbox)
+                        .setTag(
+                            NBTConstants.TOOLBOX_ITEMS,
+                            nbt.getTagList(NBTConstants.TOOLBOX_DATA, Constants.NBT.TAG_COMPOUND));
+                    items.add(DEFAULT_ITEM);
+                }
+            }
+
+            if (toolbox == null) return;
+
+            List<ItemStack> toolItems = ItemToolboxPlus.getToolItems(toolbox);
             if (!toolItems.isEmpty()) {
-                items.add(DEFAULT_ITEM);
                 items.addAll(toolItems);
-            } else {
-                items.clear();
             }
         }
     }
