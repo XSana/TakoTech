@@ -3,6 +3,7 @@ package moe.takochan.takotech.client.gui.settings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -10,8 +11,11 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.client.gui.GuiType;
 import moe.takochan.takotech.common.item.ItemToolboxPlus;
+import moe.takochan.takotech.constants.NBTConstants;
+import moe.takochan.takotech.utils.CommonUtils;
 
 public class KeyHandler {
 
@@ -22,9 +26,7 @@ public class KeyHandler {
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
             World world = Minecraft.getMinecraft().theWorld;
             ItemStack heldItem = player.getHeldItem();
-            if (heldItem != null && heldItem.getItem() instanceof ItemToolboxPlus
-                && !ItemToolboxPlus.getToolItems(heldItem)
-                    .isEmpty()) {
+            if (isToolbox(heldItem)) {
                 GuiType.openGuiWithClient(
                     GuiType.TOOLBOX_PLUS_SELECT,
                     player,
@@ -35,5 +37,22 @@ public class KeyHandler {
                     (int) player.posZ);
             }
         }
+    }
+
+    private boolean isToolbox(ItemStack itemStack) {
+        if (itemStack == null) {
+            return false;
+        }
+
+        Object item = itemStack.getItem();
+        if (item instanceof ItemToolboxPlus) {
+            return !ItemToolboxPlus.getToolItems(itemStack)
+                .isEmpty();
+        } else if (item instanceof MetaGeneratedTool) {
+            NBTTagCompound nbt = CommonUtils.openNbtData(itemStack);
+            return nbt.hasKey(NBTConstants.TOOLBOX_DATA);
+        }
+
+        return false;
     }
 }
