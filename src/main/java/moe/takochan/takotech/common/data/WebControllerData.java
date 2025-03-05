@@ -47,8 +47,6 @@ public class WebControllerData {
      * @param nbt 来源NBT标签，允许为null（此时不执行读取）
      */
     public void readFormNBT(NBTTagCompound nbt) {
-        if (nbt != null) {
-            controllerId = nbt.getString(CONTROLLER_ID);
-        }
+        controllerId = nbt.getString(CONTROLLER_ID);
     }
 }

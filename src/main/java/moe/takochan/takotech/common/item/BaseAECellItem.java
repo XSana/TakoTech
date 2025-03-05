@@ -23,16 +23,16 @@ public abstract class BaseAECellItem extends AEBaseItem implements IBaseAECellIt
      * 客户端显示物品的额外信息（如提示）。
      * 这个方法仅在客户端侧调用。
      *
-     * @param stack           当前物品的堆叠
+     * @param itemStack       当前物品的堆叠
      * @param player          当前玩家实例
      * @param lines           信息列表，用于显示物品描述
      * @param displayMoreInfo 是否显示更多信息
      */
     @Override
     @SideOnly(Side.CLIENT)
-    protected void addCheckedInformation(ItemStack stack, EntityPlayer player, List<String> lines,
+    protected void addCheckedInformation(ItemStack itemStack, EntityPlayer player, List<String> lines,
         boolean displayMoreInfo) {
-        super.addCheckedInformation(stack, player, lines, displayMoreInfo);
+        super.addCheckedInformation(itemStack, player, lines, displayMoreInfo);
     }
 
     @Override

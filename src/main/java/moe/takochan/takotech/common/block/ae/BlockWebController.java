@@ -16,6 +16,7 @@ import moe.takochan.takotech.common.block.BaseAETileBlock;
 import moe.takochan.takotech.common.tile.ae.TileWebController;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.constants.NameConstants;
+import moe.takochan.takotech.utils.CommonUtils;
 
 public class BlockWebController extends BaseAETileBlock {
 
@@ -88,25 +89,25 @@ public class BlockWebController extends BaseAETileBlock {
     /**
      * 放置方块时调用
      *
-     * @param world  当前世界
-     * @param x      X 坐标
-     * @param y      Y 坐标
-     * @param z      Z 坐标
-     * @param player 当前玩家
-     * @param stack  物品堆栈
+     * @param world     当前世界
+     * @param x         X 坐标
+     * @param y         Y 坐标
+     * @param z         Z 坐标
+     * @param player    当前玩家
+     * @param itemStack 物品堆栈
      */
     @Override
-    public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase player, ItemStack stack) {
+    public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase player, ItemStack itemStack) {
         TileEntity wte = world.getTileEntity(x, y, z);
         if (!(wte instanceof TileWebController te)) {
             return;
         }
-        if (stack.hasTagCompound()) {
+        if (itemStack.hasTagCompound()) {
             te.getData()
-                .readFormNBT(stack.getTagCompound());
+                .readFormNBT(CommonUtils.openNbtData(itemStack));
         }
         te.markDirty();
-        super.onBlockPlacedBy(world, x, y, z, player, stack);
+        super.onBlockPlacedBy(world, x, y, z, player, itemStack);
     }
 
     /**

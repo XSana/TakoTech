@@ -16,21 +16,21 @@ public class ToolboxPlusRenderer extends MetaGeneratedToolRenderer {
     public ToolboxPlusRenderer() {}
 
     @Override
-    public boolean handleRenderType(ItemStack stack, ItemRenderType type) {
-        return super.handleRenderType(stack, type);
+    public boolean handleRenderType(ItemStack itemStack, ItemRenderType type) {
+        return super.handleRenderType(itemStack, type);
     }
 
     @Override
-    public boolean shouldUseRenderHelper(ItemRenderType type, ItemStack stack, ItemRendererHelper helper) {
-        return super.shouldUseRenderHelper(type, stack, helper);
+    public boolean shouldUseRenderHelper(ItemRenderType type, ItemStack itemStack, ItemRendererHelper helper) {
+        return super.shouldUseRenderHelper(type, itemStack, helper);
     }
 
     @Override
-    public void renderItem(ItemRenderType type, ItemStack stack, Object... data) {
-        if (stack != null && stack.getItem() instanceof ItemToolboxPlus item) {
-            int index = item.getSelectedIndex(stack);
+    public void renderItem(ItemRenderType type, ItemStack itemStack, Object... data) {
+        if (itemStack != null && itemStack.getItem() instanceof ItemToolboxPlus item) {
+            int index = item.getSelectedIndex(itemStack);
             if (index >= 0) {
-                ItemStack selected = item.getSelectedItemStack(stack, index);
+                ItemStack selected = item.getSelectedItemStack(itemStack, index);
                 if (selected != null) {
                     super.renderItem(type, selected, data);
                 }

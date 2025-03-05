@@ -79,14 +79,14 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     /**
      * 添加物品的详细信息
      *
-     * @param stack           物品堆栈
+     * @param itemStack       物品堆栈
      * @param player          玩家实体
      * @param lines           显示的详细信息
      * @param displayMoreInfo 是否显示更多信息
      */
     @SideOnly(Side.CLIENT)
     @Override
-    public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
+    public void addCheckedInformation(final ItemStack itemStack, final EntityPlayer player, final List<String> lines,
         final boolean displayMoreInfo) {
         lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC)); // 添加物品的描述
 
@@ -94,7 +94,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
         final IMEInventoryHandler<?> inventory = AEApi.instance()
             .registries()
             .cell()
-            .getCellInventory(stack, null, StorageChannel.ITEMS);
+            .getCellInventory(itemStack, null, StorageChannel.ITEMS);
 
         // 检查库存处理器是否是 ICellInventoryHandler 类型
         if (inventory instanceof ITakoCellInventoryHandler handler) {
@@ -113,7 +113,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                         + GuiText.Of.getLocal()
                         + ' '
                         + NumberFormat.getInstance()
-                            .format(this.getTotalTypes(stack))
+                            .format(this.getTotalTypes(itemStack))
                         + ' '
                         + GuiText.Types.getLocal());
 
@@ -157,7 +157,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
             }
         }
 
-        super.addCheckedInformation(stack, player, lines, displayMoreInfo); // 调用父类方法，添加其他信息
+        super.addCheckedInformation(itemStack, player, lines, displayMoreInfo); // 调用父类方法，添加其他信息
     }
 
     /**

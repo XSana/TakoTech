@@ -21,11 +21,11 @@ public class CommonUtils {
             .isClient();
     }
 
-    public static NBTTagCompound openNbtData(final ItemStack i) {
-        NBTTagCompound compound = i.getTagCompound();
+    public static NBTTagCompound openNbtData(final ItemStack itemStack) {
+        NBTTagCompound compound = itemStack.getTagCompound();
 
         if (compound == null) {
-            i.setTagCompound(compound = new NBTTagCompound());
+            itemStack.setTagCompound(compound = new NBTTagCompound());
         }
 
         return compound;
