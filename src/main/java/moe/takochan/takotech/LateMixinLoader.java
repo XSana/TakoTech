@@ -30,9 +30,12 @@ public class LateMixinLoader implements ILateMixinLoader {
         Map<String, ModContainer> map = Loader.instance()
             .getIndexedModList();
 
-        if (isClient && map.containsKey("gregtech")) {
-            mixins.add("gt.MetaGeneratedToolRendererMixin");
-            mixins.add("gt.MetaBaseItemMixin");
+        if (map.containsKey("gregtech")) {
+            if (isClient) {
+                mixins.add("gt.MetaGeneratedToolRendererMixin");
+                mixins.add("gt.MetaBaseItemMixin");
+            }
+            mixins.add("gt.MetaGeneratedToolMixin");
         }
 
         return mixins;

@@ -24,7 +24,7 @@ import moe.takochan.takotech.utils.I18nUtils;
 @Mixin(MetaBaseItem.class)
 public abstract class MetaBaseItemMixin {
 
-    @Inject(method = "addInformation", at = @At("RETURN"), remap = false)
+    @Inject(method = "addInformation", at = @At("RETURN"))
     public final void addInformation(ItemStack aStack, EntityPlayer aPlayer, List<String> aList, boolean aF3_H,
         CallbackInfo ci) {
         if (aStack.getItem() instanceof MetaGeneratedTool) {
