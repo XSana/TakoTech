@@ -1,9 +1,12 @@
 package moe.takochan.takotech.common.item;
 
+import static moe.takochan.takotech.client.gui.settings.GameSettings.selectTool;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
@@ -26,6 +29,7 @@ import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
+import moe.takochan.takotech.utils.I18nUtils;
 
 public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
 
@@ -36,6 +40,16 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
         super(NameConstants.ITEM_TOOLBOX_PLUS);
         this.setMaxStackSize(1);
         this.setTextureName(CommonUtils.resource(NameConstants.ITEM_TOOLBOX_PLUS));
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(final ItemStack itemStack, final EntityPlayer player, final List<String> lines,
+        final boolean displayMoreInfo) {
+        lines.add(
+            I18nUtils.tooltip(
+                NameConstants.ITEM_TOOLBOX_PLUS_DESC,
+                GameSettings.getKeyDisplayString(selectTool.getKeyCode())));
     }
 
     @Override

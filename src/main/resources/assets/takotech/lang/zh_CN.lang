@@ -11,5 +11,7 @@ tooltip.takotech.ore_storage_cell.desc.1=可存入矿典前缀
 tooltip.takotech.web_controller.desc=
 tooltip.takotech.web_controller.desc.1=控制器Id
 
+tooltip.takotech.toolbox_plus.desc=§r按 §6[%s] §r键切换工具
+
 key.takotech.category=塔可科技
 key.takotech.toolbox_plus.desc=切换工具（高级工具箱）
