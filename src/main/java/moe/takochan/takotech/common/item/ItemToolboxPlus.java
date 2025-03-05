@@ -3,11 +3,8 @@ package moe.takochan.takotech.common.item;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
@@ -18,11 +15,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.util.Constants;
 
-import org.lwjgl.opengl.GL11;
-
-import com.gtnewhorizons.modularui.api.GlStateManager;
-
-import appeng.util.Platform;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -60,7 +52,8 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
     }
 
     public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
-        if (IC2.platform.isSimulating()) {
+        int index = getSelectedIndex(itemStack);
+        if (index >= 0 && IC2.platform.isSimulating()) {
             IC2.platform.launchGui(entityPlayer, this.getInventory(entityPlayer, itemStack));
         }
 
@@ -82,54 +75,6 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
 
     public IHasGui getInventory(EntityPlayer entityPlayer, ItemStack itemStack) {
         return new HandHeldToolbox(entityPlayer, itemStack, 9);
-    }
-
-    // 渲染物品栏图标
-    @SideOnly(Side.CLIENT)
-    private void renderInventory(ItemStack stack, ItemStack selectedStack, int selectedIndex) {
-        Minecraft mc = Minecraft.getMinecraft();
-        // 绑定物品贴图
-        mc.getTextureManager()
-            .bindTexture(TextureMap.locationItemsTexture);
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F); // 重置颜色为纯白
-        if (selectedStack == null) {
-            // 如果没有选中物品，则直接绘制默认图标
-            Tessellator tessellator = Tessellator.instance;
-            tessellator.startDrawingQuads();
-            tessellator.addVertexWithUV(0, 16, 0, baseIcon.getMinU(), baseIcon.getMaxV());
-            tessellator.addVertexWithUV(16, 16, 0, baseIcon.getMaxU(), baseIcon.getMaxV());
-            tessellator.addVertexWithUV(16, 0, 0, baseIcon.getMaxU(), baseIcon.getMinV());
-            tessellator.addVertexWithUV(0, 0, 0, baseIcon.getMinU(), baseIcon.getMinV());
-            tessellator.draw();
-        } else {
-            // 先渲染选中物品的图标
-            renderItem.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), selectedStack, 0, 0);
-            // 再在左下角绘制缩小后的默认图标
-            GlStateManager.pushMatrix();
-            float scale = 0.5F;
-            GlStateManager.scale(scale, scale, scale);
-            // 注意：这里坐标需要根据实际情况进行微调，本例简单使用(0,0)作为左下角起点
-            Tessellator tessellator = Tessellator.instance;
-            tessellator.startDrawingQuads();
-            tessellator.addVertexWithUV(0, 16, 0, baseIcon.getMinU(), baseIcon.getMaxV());
-            tessellator.addVertexWithUV(16, 16, 0, baseIcon.getMaxU(), baseIcon.getMaxV());
-            tessellator.addVertexWithUV(16, 0, 0, baseIcon.getMaxU(), baseIcon.getMinV());
-            tessellator.addVertexWithUV(0, 0, 0, baseIcon.getMinU(), baseIcon.getMinV());
-            tessellator.draw();
-            GlStateManager.popMatrix();
-        }
-    }
-
-    @SideOnly(Side.CLIENT)
-    private void renderHandheld(ItemStack stack, ItemStack selectedStack, int selectedIndex) {
-        Minecraft mc = Minecraft.getMinecraft();
-        if (selectedStack == null) {
-            // 如果没有选中物品，则使用MC默认的手持物品渲染逻辑
-            renderItem.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), stack, 0, 0);
-        } else {
-            // 如果有选中物品，则仅渲染选中物品（不显示缩小的默认图标）
-            renderItem.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), selectedStack, 0, 0);
-        }
     }
 
     public int getSelectedIndex(ItemStack stack) {
@@ -174,7 +119,7 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
     }
 
     public static void processSelection(EntityPlayer player, ItemStack selectedStack) {
-        if (Platform.isClient()) return;
+        if (CommonUtils.isClient()) return;
         if (selectedStack == null) return;
         ItemStack stack = player.getHeldItem();
         if (stack.getItem() instanceof ItemToolboxPlus) {

@@ -26,6 +26,7 @@ import moe.takochan.takotech.common.item.ae.ItemOreStorageCell;
 import moe.takochan.takotech.common.storage.CellItemSavedData;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
 import moe.takochan.takotech.constants.NBTConstants;
+import moe.takochan.takotech.utils.CommonUtils;
 
 /**
  * 矿物存储元件库存管理。
@@ -80,7 +81,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         this.cellType = (ItemOreStorageCell) this.cellItem.getItem();
 
         // 获取元件的数据存储实例
-        this.storageData = Platform.isServer() ? CellItemSavedData.getInstance()
+        this.storageData = CommonUtils.isServer() ? CellItemSavedData.getInstance()
             .getDataStorage(this.getItemStack()) : null;
     }
 

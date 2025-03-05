@@ -2,10 +2,10 @@ package moe.takochan.takotech.common.event;
 
 import net.minecraftforge.event.world.WorldEvent;
 
-import appeng.util.Platform;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.common.storage.CellItemSavedData;
+import moe.takochan.takotech.utils.CommonUtils;
 
 public class WorldEventHandler {
 
@@ -14,7 +14,7 @@ public class WorldEventHandler {
      */
     @SubscribeEvent
     public void worldLoad(WorldEvent.Load event) {
-        if (Platform.isServer() && event.world.provider.dimensionId == 0) {
+        if (CommonUtils.isServer() && event.world.provider.dimensionId == 0) {
             CellItemSavedData.init(event.world);
             TakoTechMod.LOG.info("StorageCellData initialized successfully!");
         }
