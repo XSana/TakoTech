@@ -12,11 +12,11 @@ import net.minecraft.world.WorldSavedData;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraftforge.common.util.Constants;
 
-import appeng.util.Platform;
 import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.data.CellItemStorageData;
 import moe.takochan.takotech.common.item.BaseAECellItem;
 import moe.takochan.takotech.constants.NBTConstants;
+import moe.takochan.takotech.utils.CommonUtils;
 
 /**
  * `StorageComponentSavedData` 类负责管理存储元件数据。
@@ -112,7 +112,7 @@ public class CellItemSavedData extends WorldSavedData {
      */
     public CellItemStorageData getDataStorage(ItemStack itemStack) {
         if (itemStack.getItem() instanceof BaseAECellItem) {
-            NBTTagCompound tag = Platform.openNbtData(itemStack);
+            NBTTagCompound tag = CommonUtils.openNbtData(itemStack);
             String diskId = tag.getString(NBTConstants.DISK_ID);
             if (diskId == null || diskId.isEmpty()) {
                 diskId = UUID.randomUUID()
