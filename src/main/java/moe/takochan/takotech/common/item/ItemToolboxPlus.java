@@ -45,17 +45,17 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
         this.baseIcon = register.registerIcon(this.getIconString());
     }
 
+    @SideOnly(Side.CLIENT)
+    public EnumRarity getRarity(ItemStack itemStack) {
+        return EnumRarity.uncommon;
+    }
+
     @Override
     public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer player) {
         if (CommonUtils.isServer()) {
             IC2.platform.launchGui(player, this.getInventory(player, itemStack));
         }
         return itemStack;
-    }
-
-    @SideOnly(Side.CLIENT)
-    public EnumRarity getRarity(ItemStack itemStack) {
-        return EnumRarity.uncommon;
     }
 
     @Override
@@ -90,9 +90,9 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
         return list;
     }
 
-    public static ItemStack getSelectedItemStack(ItemStack toolboxStack, int selectedIndex) {
+    public static ItemStack getSelectedItemStack(ItemStack itemStack, int selectedIndex) {
         if (selectedIndex >= 0) {
-            List<ItemStack> tools = getToolItems(toolboxStack);
+            List<ItemStack> tools = getToolItems(itemStack);
             if (selectedIndex < tools.size()) {
                 return tools.get(selectedIndex);
             }
@@ -101,18 +101,17 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
     }
 
     public static void processSelection(EntityPlayer player, ItemStack selectedStack) {
-        if (CommonUtils.isClient()) return;
-        if (selectedStack == null) return;
+        if (CommonUtils.isClient() || selectedStack == null) return;
 
-        ItemStack itemStack = player.getHeldItem();
-        if (itemStack == null) return;
+        ItemStack heldItem = player.getHeldItem();
+        if (heldItem == null) return;
 
         ItemStack toolbox = null;
 
-        if (itemStack.getItem() instanceof ItemToolboxPlus) {
-            toolbox = itemStack;
-        } else if (itemStack.getItem() instanceof MetaGeneratedTool) {
-            NBTTagCompound nbt = CommonUtils.openNbtData(itemStack);
+        if (heldItem.getItem() instanceof ItemToolboxPlus) {
+            toolbox = heldItem;
+        } else if (heldItem.getItem() instanceof MetaGeneratedTool) {
+            NBTTagCompound nbt = CommonUtils.openNbtData(heldItem);
             if (nbt.hasKey(NBTConstants.TOOLBOX_DATA)) {
                 NBTTagList itemsTagList = (NBTTagList) nbt
                     .getTagList(NBTConstants.TOOLBOX_DATA, Constants.NBT.TAG_COMPOUND)
@@ -124,7 +123,7 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
                     selectedItem.removeTag(NBTConstants.TOOLBOX_SELECTED);
                     nbt.removeTag(NBTConstants.TOOLBOX_DATA);
                     nbt.removeTag(NBTConstants.TOOLBOX_SELECTED_INDEX);
-                    itemStack.writeToNBT(selectedItem);
+                    heldItem.writeToNBT(selectedItem);
                 } else {
                     return;
                 }
@@ -173,8 +172,8 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
             NBTTagCompound tempNbt = new NBTTagCompound();
             tempNbt.setBoolean(NBTConstants.TOOLBOX_SELECTED, true);
             byte slot = itemsTagList.getCompoundTagAt(index)
-                .getByte("Slot");
-            tempNbt.setByte("Slot", slot);
+                .getByte(NBTConstants.TOOLBOX_TOOLS_SLOT);
+            tempNbt.setByte(NBTConstants.TOOLBOX_TOOLS_SLOT, slot);
             // 将占位NBT替换到指定位置
             itemsTagList.func_150304_a(index, tempNbt);
 

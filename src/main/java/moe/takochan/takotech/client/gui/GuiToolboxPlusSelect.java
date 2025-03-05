@@ -1,7 +1,10 @@
 package moe.takochan.takotech.client.gui;
 
-import java.util.ArrayList;
-import java.util.List;
+import static moe.takochan.takotech.utils.SectorVertexUtils.DEFAULT_SECTOR_VERTEX_DATA;
+import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_IN;
+import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_OUT;
+
+import java.util.*;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -26,16 +29,10 @@ import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.network.NetworkHandler;
 import moe.takochan.takotech.network.ToolboxSelectionPacket;
 import moe.takochan.takotech.utils.CommonUtils;
-import moe.takochan.takotech.utils.MathUtils;
 
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
 
-    // 界面尺寸参数
-    private final static float RADIUS_IN = 30F; // 内圈半径
-    private final static float RADIUS_OUT = RADIUS_IN * 2F; // 外圈半径
-    private final static float ITEM_RADIUS = (RADIUS_IN + RADIUS_OUT) * 0.5F; // 物品显示位置半径
-    // 每5度分割一次圆弧
-    private final static float PRECISION = 5;
+    public final static float ITEM_RADIUS = (RADIUS_IN + RADIUS_OUT) * 0.5F; // 物品显示位置半径
 
     // 定义默认物品
     private final static ItemStack DEFAULT_ITEM = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
@@ -63,27 +60,20 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      * 加载可用工具列表
      */
     private void loadItemsFromNBT() {
-        if (handItemStack != null) {
-            ItemStack toolbox = null;
-            if (handItemStack.getItem() instanceof ItemToolboxPlus) {
-                toolbox = handItemStack;
-            } else if (handItemStack.getItem() instanceof MetaGeneratedTool) {
-                NBTTagCompound nbt = CommonUtils.openNbtData(handItemStack);
-                if (nbt.hasKey(NBTConstants.TOOLBOX_DATA)) {
-                    toolbox = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
-                    CommonUtils.openNbtData(toolbox)
-                        .setTag(
-                            NBTConstants.TOOLBOX_ITEMS,
-                            nbt.getTagList(NBTConstants.TOOLBOX_DATA, Constants.NBT.TAG_COMPOUND));
-                    items.add(DEFAULT_ITEM);
-                }
-            }
+        if (handItemStack == null) return;
 
-            if (toolbox == null) return;
-
-            List<ItemStack> toolItems = ItemToolboxPlus.getToolItems(toolbox);
-            if (!toolItems.isEmpty()) {
-                items.addAll(toolItems);
+        if (handItemStack.getItem() instanceof ItemToolboxPlus) {
+            items.addAll(ItemToolboxPlus.getToolItems(handItemStack));
+        } else if (handItemStack.getItem() instanceof MetaGeneratedTool) {
+            NBTTagCompound nbt = CommonUtils.openNbtData(handItemStack);
+            if (nbt.hasKey(NBTConstants.TOOLBOX_DATA)) {
+                ItemStack toolbox = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
+                CommonUtils.openNbtData(toolbox)
+                    .setTag(
+                        NBTConstants.TOOLBOX_ITEMS,
+                        nbt.getTagList(NBTConstants.TOOLBOX_DATA, Constants.NBT.TAG_COMPOUND));
+                items.add(DEFAULT_ITEM);
+                items.addAll(ItemToolboxPlus.getToolItems(toolbox));
             }
         }
     }
@@ -111,9 +101,10 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
         // 当前选中的物品索引
         int selectedItem = -1;
+        int n = items.size();
         for (int i = 0; i < items.size(); i++) {
-            float sectorStart = (((i - 0.5F) / items.size()) + 0.25F) * 360F;
-            float sectorEnd = (((i + 0.5F) / items.size()) + 0.25F) * 360F;
+            float sectorStart = (((i - 0.5F) / n) + 0.25F) * 360F;
+            float sectorEnd = (((i + 0.5F) / n) + 0.25F) * 360F;
 
             if (angle < sectorStart) angle += 360;
             if (angle >= sectorStart && angle < sectorEnd && distance >= RADIUS_IN && distance < RADIUS_OUT) {
@@ -132,19 +123,33 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         Tessellator tess = Tessellator.instance;
         tess.startDrawingQuads();
 
-        // 绘制每个物品对应的扇形区域
-        for (int i = 0; i < items.size(); i++) {
-            float sectorStart = (((i - 0.5F) / items.size()) + 0.25F) * 360F;
-            float sectorEnd = (((i + 0.5F) / items.size()) + 0.25F) * 360F;
-            int color;
-            // 根据选中状态设置颜色（RGBA格式）
-            if (i == selectedItem) {
-                color = 0xFFFFDD60;
-                selectedItemStack = items.get(i);
-            } else {
-                color = 0x33333380;
+        // 使用预计算数据绘制扇区
+        if (n <= 9) {
+            List<List<float[][]>> sectors = DEFAULT_SECTOR_VERTEX_DATA.get(n);
+            if (sectors != null) {
+                for (int i = 0; i < n; i++) {
+                    int color = (i == selectedItem) ? 0xFFFFDD60 : 0x33333380;
+                    int r = (color >> 24) & 0xFF;
+                    int g = (color >> 16) & 0xFF;
+                    int b = (color >> 8) & 0xFF;
+                    int a = color & 0xFF;
+                    tess.setColorRGBA_F(r / 255F, g / 255F, b / 255F, a / 255F);
+
+                    List<float[][]> segments = sectors.get(i);
+                    for (float[][] segment : segments) {
+                        float[] pos1Out = segment[0];
+                        float[] pos1In = segment[1];
+                        float[] pos2In = segment[2];
+                        float[] pos2Out = segment[3];
+
+                        tess.addVertex(xCenter + pos1Out[0], yCenter + pos1Out[1], zLevel);
+                        tess.addVertex(xCenter + pos1In[0], yCenter + pos1In[1], zLevel);
+                        tess.addVertex(xCenter + pos2In[0], yCenter + pos2In[1], zLevel);
+                        tess.addVertex(xCenter + pos2Out[0], yCenter + pos2Out[1], zLevel);
+                    }
+                    if (i == selectedItem) selectedItemStack = items.get(i);
+                }
             }
-            drawSector(tess, xCenter, yCenter, RADIUS_IN, RADIUS_OUT, sectorStart, sectorEnd, color);
         }
 
         tess.draw();
@@ -229,79 +234,4 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         return true;
     }
     // endregion
-
-    /**
-     * 绘制扇形区域
-     *
-     * @param tessellator 顶点缓冲器
-     * @param x           圆心X坐标
-     * @param y           圆心Y坐标
-     * @param radiusIn    内半径
-     * @param radiusOut   外半径
-     * @param startAngle  起始角度（度数）
-     * @param endAngle    结束角度（度数）
-     * @param color       颜色（ARGB格式）
-     */
-    private void drawSector(Tessellator tessellator, int x, int y, float radiusIn, float radiusOut, float startAngle,
-        float endAngle, int color) {
-        // 解析颜色分量
-        int r = (color >> 24) & 0xFF;
-        int g = (color >> 16) & 0xFF;
-        int b = (color >> 8) & 0xFF;
-        int a = color & 0xFF;
-
-        drawPieArc(tessellator, x, y, zLevel, radiusIn, radiusOut, startAngle, endAngle, r, g, b, a);
-    }
-
-    /**
-     * 绘制圆环扇形（Pie Arc）
-     *
-     * @param tessellator 用于绘制的 Tessellator 实例
-     * @param x           圆心 x 坐标
-     * @param y           圆心 y 坐标
-     * @param z           z 轴高度
-     * @param radiusIn    内半径
-     * @param radiusOut   外半径
-     * @param startAngle  起始角度（度数）
-     * @param endAngle    结束角度（度数）
-     * @param r           红色通道值
-     * @param g           绿色通道值
-     * @param b           蓝色通道值
-     * @param a           透明度
-     */
-    private void drawPieArc(Tessellator tessellator, int x, int y, float z, float radiusIn, float radiusOut,
-        float startAngle, float endAngle, int r, int g, int b, int a) {
-        float angle = endAngle - startAngle;
-
-        // 计算需要分割的段数（保证每段不超过PRECISION度）
-        int sections = Math.max(1, MathUtils.ceiling_float_int(angle / PRECISION));
-
-        // 角度转换（度数转弧度）
-        startAngle = (float) Math.toRadians(startAngle);
-        endAngle = (float) Math.toRadians(endAngle);
-        angle = endAngle - startAngle;
-
-        // 分段绘制圆弧
-        for (int i = 0; i < sections; i++) {
-            // 计算当前段的起始和结束角度
-            float angle1 = startAngle + (i / (float) sections) * angle;
-            float angle2 = startAngle + ((i + 1) / (float) sections) * angle;
-            // 计算四个顶点的坐标
-            float pos1InX = x + radiusIn * (float) Math.cos(angle1);
-            float pos1InY = y + radiusIn * (float) Math.sin(angle1);
-            float pos1OutX = x + radiusOut * (float) Math.cos(angle1);
-            float pos1OutY = y + radiusOut * (float) Math.sin(angle1);
-            float pos2OutX = x + radiusOut * (float) Math.cos(angle2);
-            float pos2OutY = y + radiusOut * (float) Math.sin(angle2);
-            float pos2InX = x + radiusIn * (float) Math.cos(angle2);
-            float pos2InY = y + radiusIn * (float) Math.sin(angle2);
-
-            // 设置颜色并添加四边形顶点
-            tessellator.setColorRGBA_F(r / 255F, g / 255F, b / 255F, a / 255F);
-            tessellator.addVertex(pos1OutX, pos1OutY, z); // 外圈起点
-            tessellator.addVertex(pos1InX, pos1InY, z); // 内圈起点
-            tessellator.addVertex(pos2InX, pos2InY, z); // 内圈终点
-            tessellator.addVertex(pos2OutX, pos2OutY, z); // 外圈终点
-        }
-    }
 }

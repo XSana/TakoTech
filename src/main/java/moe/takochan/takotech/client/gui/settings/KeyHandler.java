@@ -3,7 +3,6 @@ package moe.takochan.takotech.client.gui.settings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -24,35 +23,35 @@ public class KeyHandler {
     public void onKeyPress(InputEvent.KeyInputEvent event) {
         if (GameSettings.selectTool.isPressed()) {
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-            World world = Minecraft.getMinecraft().theWorld;
             ItemStack heldItem = player.getHeldItem();
-            if (isToolbox(heldItem)) {
-                GuiType.openGuiWithClient(
-                    GuiType.TOOLBOX_PLUS_SELECT,
-                    player,
-                    world,
-                    ForgeDirection.UNKNOWN,
-                    (int) player.posX,
-                    (int) player.posY,
-                    (int) player.posZ);
+            if (isValidToolbox(heldItem)) {
+                openToolboxGUI(player);
             }
         }
     }
 
-    private boolean isToolbox(ItemStack itemStack) {
-        if (itemStack == null) {
-            return false;
-        }
+    private boolean isValidToolbox(ItemStack stack) {
+        if (stack == null) return false;
 
-        Object item = itemStack.getItem();
-        if (item instanceof ItemToolboxPlus) {
-            return !ItemToolboxPlus.getToolItems(itemStack)
+        if (stack.getItem() instanceof ItemToolboxPlus) {
+            return !ItemToolboxPlus.getToolItems(stack)
                 .isEmpty();
-        } else if (item instanceof MetaGeneratedTool) {
-            NBTTagCompound nbt = CommonUtils.openNbtData(itemStack);
-            return nbt.hasKey(NBTConstants.TOOLBOX_DATA);
+        } else if (stack.getItem() instanceof MetaGeneratedTool) {
+            return CommonUtils.openNbtData(stack)
+                .hasKey(NBTConstants.TOOLBOX_DATA);
         }
-
         return false;
+    }
+
+    private void openToolboxGUI(EntityPlayer player) {
+        World world = Minecraft.getMinecraft().theWorld;
+        GuiType.openGuiWithClient(
+            GuiType.TOOLBOX_PLUS_SELECT,
+            player,
+            world,
+            ForgeDirection.UNKNOWN,
+            (int) player.posX,
+            (int) player.posY,
+            (int) player.posZ);
     }
 }
