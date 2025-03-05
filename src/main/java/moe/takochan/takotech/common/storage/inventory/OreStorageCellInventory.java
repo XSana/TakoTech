@@ -20,7 +20,6 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
-import appeng.util.Platform;
 import moe.takochan.takotech.common.data.CellItemStorageData;
 import moe.takochan.takotech.common.item.ae.ItemOreStorageCell;
 import moe.takochan.takotech.common.storage.CellItemSavedData;
@@ -71,7 +70,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         this.container = container;
 
         // 读取NBT数据
-        this.tagCompound = Platform.openNbtData(cellItem);
+        this.tagCompound = CommonUtils.openNbtData(cellItem);
 
         // 从NBT数据中读取存储的物品数量和类型
         this.storedItemTypes = tagCompound.getInteger(ITEM_TYPE_TAG);

@@ -1,5 +1,7 @@
 package moe.takochan.takotech.utils;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -17,6 +19,16 @@ public class CommonUtils {
         return FMLCommonHandler.instance()
             .getEffectiveSide()
             .isClient();
+    }
+
+    public static NBTTagCompound openNbtData(final ItemStack i) {
+        NBTTagCompound compound = i.getTagCompound();
+
+        if (compound == null) {
+            i.setTagCompound(compound = new NBTTagCompound());
+        }
+
+        return compound;
     }
 
     public static String resource(String name) {

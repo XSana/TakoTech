@@ -53,7 +53,7 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
 
     public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
         int index = getSelectedIndex(itemStack);
-        if (index >= 0 && IC2.platform.isSimulating()) {
+        if (index >= 0 && CommonUtils.isServer()) {
             IC2.platform.launchGui(entityPlayer, this.getInventory(entityPlayer, itemStack));
         }
 

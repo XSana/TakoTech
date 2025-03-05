@@ -25,7 +25,6 @@ import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
-import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
@@ -328,7 +327,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public void setFuzzyMode(ItemStack is, FuzzyMode fzMode) {
-        Platform.openNbtData(is)
+        CommonUtils.openNbtData(is)
             .setString("FuzzyMode", fzMode.name());
     }
 
