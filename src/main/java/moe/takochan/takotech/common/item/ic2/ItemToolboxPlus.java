@@ -8,19 +8,16 @@ import java.util.List;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.items.MetaGeneratedTool;
-import ic2.core.IC2;
 import ic2.core.IHasGui;
 import ic2.core.item.IHandHeldInventory;
 import ic2.core.item.tool.HandHeldToolbox;
@@ -65,9 +62,6 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
         setCreativeTab(TakoTechTabs.getInstance());
     }
 
-    public IHasGui getInventory(EntityPlayer entityPlayer, ItemStack itemStack) {
-        return new HandHeldToolbox(entityPlayer, itemStack, 9);
-    }
 
     @SideOnly(Side.CLIENT)
     public IIcon getBaseIcon() {

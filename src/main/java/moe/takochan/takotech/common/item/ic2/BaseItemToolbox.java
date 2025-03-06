@@ -1,48 +1,66 @@
 package moe.takochan.takotech.common.item.ic2;
 
-import net.minecraftforge.common.util.EnumHelper;
-
-import ic2.core.init.InternalName;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import ic2.core.item.IHandHeldInventory;
 import ic2.core.item.ItemToolbox;
 import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.item.IBaseItem;
+import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.StatCollector;
 
-public abstract class BaseItemToolbox extends ItemToolbox implements IHandHeldInventory, IBaseItem {
+public abstract class BaseItemToolbox extends ItemToolbox implements IBaseItem {
 
-    static {
-        // 添加新枚举值 itemToolboxPlus
-        EnumHelper.addEnum(
-            InternalName.class, // 目标枚举类
-            "itemToolboxPlus", // 新枚举项名称
-            new Class<?>[0], // 额外参数类型（空数组）
-            new Object[0] // 额外参数值（空数组）
-        );
-    }
+    private String unlocalizedName;
 
     protected String name;
 
     public BaseItemToolbox(String name) {
-        super(getInternalName()); // 使用新枚举值
+        super(null);
 
         this.name = name;
         this.setUnlocalizedName(Reference.RESOURCE_ROOT_ID + "." + name);
+
     }
 
     public String getName() {
         return name;
     }
 
+
+    @SideOnly(Side.CLIENT)
     @Override
-    public String getUnlocalizedName() {
-        return super.getUnlocalizedName().replace("ic2.", "");
+    public void registerIcons(IIconRegister register) {
+        this.itemIcon = register.registerIcon(this.getIconString());
     }
 
-    private static InternalName getInternalName() {
-        try {
-            return InternalName.valueOf("itemToolboxPlus");
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Failed to find InternalName." + "itemToolboxPlus", e);
-        }
+    @SideOnly(Side.CLIENT)
+    @Override
+    public IIcon getIconFromDamage(int p_77617_1_) {
+        return this.itemIcon;
+    }
+
+    @Override
+    public String getUnlocalizedName() {
+        return "item." + this.unlocalizedName;
+    }
+
+    @Override
+    public String getUnlocalizedName(ItemStack itemStack) {
+        return this.getUnlocalizedName();
+    }
+
+    @Override
+    public Item setUnlocalizedName(String unlocalizedName) {
+        this.unlocalizedName = unlocalizedName;
+        return super.setUnlocalizedName(unlocalizedName);
+    }
+
+    @Override
+    public String getItemStackDisplayName(ItemStack itemStack) {
+        return ("" + StatCollector.translateToLocal(this.getUnlocalizedNameInefficiently(itemStack) + ".name")).trim();
     }
 }

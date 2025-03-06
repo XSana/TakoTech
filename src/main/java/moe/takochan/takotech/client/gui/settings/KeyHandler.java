@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+
 import net.minecraftforge.common.util.ForgeDirection;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -24,13 +25,13 @@ public class KeyHandler {
         if (GameSettings.selectTool.isPressed()) {
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
             ItemStack heldItem = player.getHeldItem();
-            if (isValidToolbox(heldItem)) {
+            if (isValidToolbox(player, heldItem)) {
                 openToolboxGUI(player);
             }
         }
     }
 
-    private boolean isValidToolbox(ItemStack stack) {
+    private boolean isValidToolbox(EntityPlayer player, ItemStack stack) {
         if (stack == null) return false;
 
         if (stack.getItem() instanceof ItemToolboxPlus) {
