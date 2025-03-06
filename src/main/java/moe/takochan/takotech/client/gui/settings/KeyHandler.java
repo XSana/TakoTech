@@ -12,7 +12,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.client.gui.GuiType;
-import moe.takochan.takotech.common.item.ItemToolboxPlus;
+import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 

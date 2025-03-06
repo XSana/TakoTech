@@ -1,7 +1,7 @@
 package moe.takochan.takotech.common.loader;
 
-import moe.takochan.takotech.common.item.ItemToolboxPlus;
 import moe.takochan.takotech.common.item.ae.ItemOreStorageCell;
+import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 
 /**
  * 物品注册

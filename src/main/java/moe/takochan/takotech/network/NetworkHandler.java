@@ -11,7 +11,7 @@ import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.relauncher.Side;
 import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.item.ItemToolboxPlus;
+import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 
 public class NetworkHandler {
 

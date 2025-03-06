@@ -1,4 +1,4 @@
-package moe.takochan.takotech.mixin.gt;
+package moe.takochan.takotech.coremod.mixin.gt;
 
 import static moe.takochan.takotech.client.gui.settings.GameSettings.selectTool;
 

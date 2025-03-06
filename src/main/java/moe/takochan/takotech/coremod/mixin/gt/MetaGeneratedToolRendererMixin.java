@@ -1,4 +1,4 @@
-package moe.takochan.takotech.mixin.gt;
+package moe.takochan.takotech.coremod.mixin.gt;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureMap;
