@@ -1,4 +1,4 @@
-package moe.takochan.takotech;
+package moe.takochan.takotech.coremod;
 
 import java.util.ArrayList;
 import java.util.List;

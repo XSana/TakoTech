@@ -4,7 +4,8 @@ import static moe.takochan.takotech.utils.SectorVertexUtils.DEFAULT_SECTOR_VERTE
 import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_IN;
 import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_OUT;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -23,7 +24,7 @@ import codechicken.nei.api.TaggedInventoryArea;
 import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
 import moe.takochan.takotech.client.gui.settings.GameSettings;
-import moe.takochan.takotech.common.item.ItemToolboxPlus;
+import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.network.NetworkHandler;

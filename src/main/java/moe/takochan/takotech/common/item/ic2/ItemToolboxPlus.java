@@ -1,4 +1,4 @@
-package moe.takochan.takotech.common.item;
+package moe.takochan.takotech.common.item.ic2;
 
 import static moe.takochan.takotech.client.gui.settings.GameSettings.selectTool;
 
@@ -31,7 +31,7 @@ import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
 
-public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
+public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInventory {
 
     @SideOnly(Side.CLIENT)
     private IIcon baseIcon;
@@ -57,19 +57,6 @@ public class ItemToolboxPlus extends BaseItem implements IHandHeldInventory {
     public void registerIcons(IIconRegister register) {
         super.registerIcons(register);
         this.baseIcon = register.registerIcon(this.getIconString());
-    }
-
-    @SideOnly(Side.CLIENT)
-    public EnumRarity getRarity(ItemStack itemStack) {
-        return EnumRarity.uncommon;
-    }
-
-    @Override
-    public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer player) {
-        if (CommonUtils.isServer()) {
-            IC2.platform.launchGui(player, this.getInventory(player, itemStack));
-        }
-        return itemStack;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package moe.takochan.takotech.mixin;
+package moe.takochan.takotech.coremod.mixin;
 
 import javax.swing.JOptionPane;
 
