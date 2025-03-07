@@ -1,73 +1,91 @@
 package moe.takochan.takotech.coremod.mixin.gt;
 
-import static gregtech.api.items.MetaGeneratedTool.getToolDamage;
-import static gregtech.api.items.MetaGeneratedTool.getToolMaxDamage;
-import static gregtech.api.items.MetaGeneratedTool.setToolDamage;
-
+import gregtech.api.items.MetaGeneratedTool;
+import moe.takochan.takotech.common.loader.ItemLoader;
+import moe.takochan.takotech.constants.NBTConstants;
+import moe.takochan.takotech.utils.CommonUtils;
 import net.minecraft.item.ItemStack;
-
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.gen.Accessor;
-
-import gregtech.api.interfaces.IToolStats;
-import gregtech.api.items.MetaBaseItem;
-import gregtech.api.items.MetaGeneratedTool;
-import gregtech.api.util.GTUtility;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(value = MetaGeneratedTool.class, remap = false)
 public abstract class MetaGeneratedToolMixin {
 
-    @Shadow
-    public abstract boolean isItemStackUsable(ItemStack aStack);
-
-    @Shadow
-    public abstract Long[] getElectricStats(ItemStack aStack);
-
-    @Shadow
-    public abstract IToolStats getToolStats(ItemStack aStack);
-
-    @Accessor("playSound")
-    public abstract boolean getPlaySound();
+    @Invoker("getContainerItem")
+    public abstract ItemStack invokerGetContainerItem(ItemStack aStack, boolean playSound);
 
     /**
+     * 覆写容器物品存在判断逻辑
+     * 当工具耐久耗尽且包含工具箱数据时返回true
+     *
      * @author XSana
-     * @reason 针对工具箱情况处理工具损坏
+     * @reason 支持工具箱系统特殊逻辑
      */
     @Overwrite
-    public final boolean doDamage(ItemStack aStack, long aAmount) {
-        if (!isItemStackUsable(aStack)) return false;
-        Long[] tElectric = getElectricStats(aStack);
-        if (tElectric == null) {
-            long tNewDamage = getToolDamage(aStack) + aAmount;
-            setToolDamage(aStack, tNewDamage);
-            if (tNewDamage >= getToolMaxDamage(aStack)) {
-                IToolStats tStats = getToolStats(aStack);
-                if (tStats == null || GTUtility.setStack(aStack, tStats.getBrokenItem(aStack)) == null) {
-                    if (tStats != null && getPlaySound()) GTUtility.doSoundAtClient(tStats.getBreakingSound(), 1, 1.0F);
-                    if (aStack.stackSize > 0) aStack.stackSize--;
-                }
-            }
-            return true;
+    public final boolean hasContainerItem(ItemStack aStack) {
+        final ItemStack simulatedResult = invokerGetContainerItem(aStack, false);
+
+        // 当原版容器物品不存在时检查工具箱数据
+        if ((simulatedResult == null || simulatedResult.stackSize <= 0)) {
+            final NBTTagCompound rootTag = CommonUtils.openNbtData(aStack);
+            return rootTag.hasKey(NBTConstants.TOOLBOX_DATA);
         }
 
-        if (((MetaBaseItem) (Object) this).use(aStack, (int) aAmount, null)) {
-            if (java.util.concurrent.ThreadLocalRandom.current()
-                .nextInt(0, 25) == 0) {
-                long tNewDamage = getToolDamage(aStack) + aAmount;
-                setToolDamage(aStack, tNewDamage);
-                if (tNewDamage >= getToolMaxDamage(aStack)) {
-                    IToolStats tStats = getToolStats(aStack);
-                    if (tStats == null || GTUtility.setStack(aStack, tStats.getBrokenItem(aStack)) == null) {
-                        if (tStats != null && getPlaySound())
-                            GTUtility.doSoundAtClient(tStats.getBreakingSound(), 1, 1.0F);
-                        if (aStack.stackSize > 0) aStack.stackSize--;
-                    }
-                }
+        return true;
+    }
+
+    /**
+     * 覆写获取容器物品逻辑
+     * 当耐久耗尽时返回配置的工具箱物品
+     *
+     * @author XSana
+     * @reason 实现工具箱物品自动回收功能
+     */
+    @Overwrite
+    public final ItemStack getContainerItem(ItemStack aStack) {
+        final ItemStack vanillaResult = invokerGetContainerItem(aStack, true);
+
+        // 仅当原版容器物品无效时处理工具箱逻辑
+        if (vanillaResult == null || vanillaResult.stackSize <= 0) {
+            final NBTTagCompound rootTag = CommonUtils.openNbtData(aStack);
+
+            if (rootTag.hasKey(NBTConstants.TOOLBOX_DATA)) {
+                final NBTTagList toolboxItems = rootTag.getTagList(
+                    NBTConstants.TOOLBOX_DATA,
+                    Constants.NBT.TAG_COMPOUND
+                );
+
+                // 创建新的工具箱物品
+                final ItemStack toolbox = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
+                final NBTTagCompound newTag = CommonUtils.openNbtData(toolbox);
+
+                // 清理选择状态后保存数据
+                takotech$removeSelectionTags(toolboxItems);
+                newTag.setTag(NBTConstants.TOOLBOX_ITEMS, toolboxItems);
+
+                return toolbox;
             }
-            return true;
         }
-        return false;
+
+        return vanillaResult;
+    }
+
+    /**
+     * 移除工具箱物品的选择状态标记
+     */
+    @Unique
+    private void takotech$removeSelectionTags(NBTTagList toolboxItems) {
+        // 倒序遍历避免索引错位
+        for (int i = toolboxItems.tagCount() - 1; i >= 0; i--) {
+            final NBTTagCompound toolTag = toolboxItems.getCompoundTagAt(i);
+            if (toolTag.hasKey(NBTConstants.TOOLBOX_SELECTED)) {
+                toolTag.removeTag(NBTConstants.TOOLBOX_SELECTED);
+            }
+        }
     }
 }
