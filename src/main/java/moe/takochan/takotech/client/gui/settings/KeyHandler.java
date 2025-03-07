@@ -15,6 +15,8 @@ import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.client.gui.GuiType;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.constants.NBTConstants;
+import moe.takochan.takotech.network.NetworkHandler;
+import moe.takochan.takotech.network.PacketOpenToolboxSelectGUI;
 import moe.takochan.takotech.utils.CommonUtils;
 
 public class KeyHandler {
@@ -26,7 +28,7 @@ public class KeyHandler {
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
             ItemStack heldItem = player.getHeldItem();
             if (isValidToolbox(player, heldItem)) {
-                openToolboxGUI(player);
+                NetworkHandler.NETWORK.sendToServer(new PacketOpenToolboxSelectGUI());
             }
         }
     }
@@ -44,15 +46,15 @@ public class KeyHandler {
         return false;
     }
 
-    private void openToolboxGUI(EntityPlayer player) {
-        World world = Minecraft.getMinecraft().theWorld;
-        GuiType.openGuiWithClient(
-            GuiType.TOOLBOX_PLUS_SELECT,
-            player,
-            world,
-            ForgeDirection.UNKNOWN,
-            (int) player.posX,
-            (int) player.posY,
-            (int) player.posZ);
-    }
+    //    private void openToolboxGUI(EntityPlayer player) {
+    //        World world = Minecraft.getMinecraft().theWorld;
+    //        GuiType.openGuiWithClient(
+    //            GuiType.TOOLBOX_PLUS_SELECT,
+    //            player,
+    //            world,
+    //            ForgeDirection.UNKNOWN,
+    //            (int) player.posX,
+    //            (int) player.posY,
+    //            (int) player.posZ);
+    //    }
 }
