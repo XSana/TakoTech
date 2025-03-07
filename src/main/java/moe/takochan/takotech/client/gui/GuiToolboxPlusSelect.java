@@ -13,8 +13,12 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+
 import net.minecraftforge.common.util.Constants;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import ic2.core.item.tool.ContainerToolbox;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
@@ -28,9 +32,10 @@ import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.network.NetworkHandler;
-import moe.takochan.takotech.network.ToolboxSelectionPacket;
+import moe.takochan.takotech.network.PacketToolboxSelection;
 import moe.takochan.takotech.utils.CommonUtils;
 
+@SideOnly(Side.CLIENT)
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
 
     public final static float ITEM_RADIUS = (RADIUS_IN + RADIUS_OUT) * 0.5F; // 物品显示位置半径
@@ -47,13 +52,16 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     // 用于工具提示的临时存储
     private ItemStack selectedItemStack = null; // 当前鼠标悬停的物品
 
-    public GuiToolboxPlusSelect(ContainerToolboxPlusSelect container, ItemStack itemStack) {
+    private final ContainerToolboxPlusSelect container;
+
+    public GuiToolboxPlusSelect(ContainerToolboxPlusSelect container) {
         super(container);
         // 设置 GUI 尺寸（可根据实际需求调整）
         this.xSize = mc.displayWidth;
         this.ySize = mc.displayHeight;
 
-        this.handItemStack = itemStack;
+        this.container = container;
+        this.handItemStack = this.container.getPlayer().inventory.getCurrentItem();
         loadItemsFromNBT();
     }
 
@@ -200,7 +208,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             // 当选择按键松开时执行选择操作
             if (!Keyboard.isKeyDown(GameSettings.selectTool.getKeyCode())) {
                 if (selectedItemStack != null) {
-                    NetworkHandler.NETWORK.sendToServer(new ToolboxSelectionPacket(selectedItemStack));
+                    NetworkHandler.NETWORK.sendToServer(new PacketToolboxSelection(selectedItemStack));
                 }
                 mc.thePlayer.closeScreen();
             }
