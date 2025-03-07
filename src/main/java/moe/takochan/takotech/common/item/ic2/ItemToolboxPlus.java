@@ -18,9 +18,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.items.MetaGeneratedTool;
-import ic2.core.IHasGui;
 import ic2.core.item.IHandHeldInventory;
-import ic2.core.item.tool.HandHeldToolbox;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.constants.NBTConstants;
@@ -61,7 +59,6 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
         GameRegistry.registerItem(this, NameConstants.ITEM_TOOLBOX_PLUS);
         setCreativeTab(TakoTechTabs.getInstance());
     }
-
 
     @SideOnly(Side.CLIENT)
     public IIcon getBaseIcon() {

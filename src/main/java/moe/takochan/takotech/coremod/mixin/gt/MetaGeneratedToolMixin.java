@@ -1,24 +1,20 @@
 package moe.takochan.takotech.coremod.mixin.gt;
 
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.item.ItemStack;
-
-import gregtech.api.interfaces.IToolStats;
-import gregtech.api.items.MetaBaseItem;
-import gregtech.api.util.GTUtility;
-import moe.takochan.takotech.common.loader.ItemLoader;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-
-import gregtech.api.items.MetaGeneratedTool;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.asm.mixin.gen.Invoker;
-
 import static gregtech.api.items.MetaGeneratedTool.getToolDamage;
 import static gregtech.api.items.MetaGeneratedTool.getToolMaxDamage;
 import static gregtech.api.items.MetaGeneratedTool.setToolDamage;
+
+import net.minecraft.item.ItemStack;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Accessor;
+
+import gregtech.api.interfaces.IToolStats;
+import gregtech.api.items.MetaBaseItem;
+import gregtech.api.items.MetaGeneratedTool;
+import gregtech.api.util.GTUtility;
 
 @Mixin(value = MetaGeneratedTool.class, remap = false)
 public abstract class MetaGeneratedToolMixin {
@@ -31,7 +27,6 @@ public abstract class MetaGeneratedToolMixin {
 
     @Shadow
     public abstract IToolStats getToolStats(ItemStack aStack);
-
 
     @Accessor("playSound")
     public abstract boolean getPlaySound();
@@ -57,7 +52,7 @@ public abstract class MetaGeneratedToolMixin {
             return true;
         }
 
-        if (((MetaBaseItem)(Object)this).use(aStack, (int) aAmount, null)) {
+        if (((MetaBaseItem) (Object) this).use(aStack, (int) aAmount, null)) {
             if (java.util.concurrent.ThreadLocalRandom.current()
                 .nextInt(0, 25) == 0) {
                 long tNewDamage = getToolDamage(aStack) + aAmount;

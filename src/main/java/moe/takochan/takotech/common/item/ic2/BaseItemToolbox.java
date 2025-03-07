@@ -1,16 +1,16 @@
 package moe.takochan.takotech.common.item.ic2;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-import ic2.core.item.IHandHeldInventory;
-import ic2.core.item.ItemToolbox;
-import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.item.IBaseItem;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
+
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import ic2.core.item.ItemToolbox;
+import moe.takochan.takotech.common.Reference;
+import moe.takochan.takotech.common.item.IBaseItem;
 
 public abstract class BaseItemToolbox extends ItemToolbox implements IBaseItem {
 
@@ -29,7 +29,6 @@ public abstract class BaseItemToolbox extends ItemToolbox implements IBaseItem {
     public String getName() {
         return name;
     }
-
 
     @SideOnly(Side.CLIENT)
     @Override
