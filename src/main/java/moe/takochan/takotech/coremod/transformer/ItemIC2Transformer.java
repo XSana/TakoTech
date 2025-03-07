@@ -1,6 +1,8 @@
 package moe.takochan.takotech.coremod.transformer;
 
-import moe.takochan.takotech.TakoTechMod;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import net.minecraft.launchwrapper.IClassTransformer;
 
 import org.objectweb.asm.ClassReader;
@@ -24,7 +26,7 @@ public class ItemIC2Transformer implements IClassTransformer {
 
             @Override
             public MethodVisitor visitMethod(int access, String name, String desc, String signature,
-                                             String[] exceptions) {
+                String[] exceptions) {
                 MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
                 if ("<init>".equals(name)) {
                     return new ItemIC2ConstructorTransformer(mv, access, name, desc);
@@ -47,7 +49,7 @@ public class ItemIC2Transformer implements IClassTransformer {
             // 构造方法的局部变量：
             // index 0 -> this
             // index 1 -> InternalName 参数
-            // 调用 internalName.name() 与 "itemToolboxPlus" 比较
+            // 调用 internalName.name() 与 null 比较
 
             // 加载参数 internalName
             mv.visitVarInsn(ALOAD, 1);

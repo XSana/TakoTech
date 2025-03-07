@@ -10,9 +10,7 @@ public class FMLPlugin implements IFMLLoadingPlugin {
 
     @Override
     public String[] getASMTransformerClass() {
-        return new String[]{
-            "moe.takochan.takotech.coremod.transformer.ItemIC2Transformer"
-        };
+        return new String[] { "moe.takochan.takotech.coremod.transformer.ItemIC2Transformer" };
     }
 
     @Override
@@ -26,8 +24,7 @@ public class FMLPlugin implements IFMLLoadingPlugin {
     }
 
     @Override
-    public void injectData(Map<String, Object> data) {
-    }
+    public void injectData(Map<String, Object> data) {}
 
     @Override
     public String getAccessTransformerClass() {
