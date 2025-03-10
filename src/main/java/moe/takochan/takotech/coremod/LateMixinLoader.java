@@ -38,6 +38,10 @@ public class LateMixinLoader implements ILateMixinLoader {
             mixins.add("gt.MetaGeneratedToolMixin");
         }
 
+        if (map.containsKey("ic2")) {
+            mixins.add("ic2.ItemWrapperMixin");
+        }
+
         return mixins;
     }
 }

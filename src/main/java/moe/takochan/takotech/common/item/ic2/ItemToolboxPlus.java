@@ -3,8 +3,11 @@ package moe.takochan.takotech.common.item.ic2;
 import static moe.takochan.takotech.client.gui.settings.GameSettings.selectTool;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import ic2.core.IHasGui;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.EntityPlayer;
@@ -40,7 +43,7 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
     @Override
     @SideOnly(Side.CLIENT)
     public void addInformation(final ItemStack itemStack, final EntityPlayer player, final List<String> lines,
-        final boolean displayMoreInfo) {
+                               final boolean displayMoreInfo) {
         lines.add(
             I18nUtils.tooltip(
                 NameConstants.ITEM_TOOLBOX_PLUS_DESC,
@@ -65,7 +68,33 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
         return baseIcon;
     }
 
+    /**
+     * 获取可用GT工具
+     *
+     * @param itemStack 当前物品堆
+     * @param player    玩家实体
+     * @return 可用物品清单及插槽下标
+     */
+    public Map<Integer, ItemStack> getGTTools(ItemStack itemStack, EntityPlayer player) {
+        Map<Integer, ItemStack> toolItems = new HashMap<>();
+        final IHasGui toolboxGUI = getInventory(player, itemStack);
+        for (int i = 0; i < toolboxGUI.getSizeInventory(); i++) {
+            ItemStack tool = toolboxGUI.getStackInSlot(i);
+            if (tool != null) {
+                if (tool.stackSize <= 0) {
+                    toolboxGUI.setInventorySlotContents(i, null);
+                }
+                if (tool.getItem() instanceof MetaGeneratedTool) {
+                    toolItems.put(i, tool);
+                }
+            }
+        }
+        return toolItems;
+    }
+
     public static List<ItemStack> getToolItems(ItemStack itemStack) {
+
+
         List<ItemStack> list = new ArrayList<>();
         NBTTagCompound nbt = CommonUtils.openNbtData(itemStack);
         if (nbt.hasKey(NBTConstants.TOOLBOX_ITEMS, Constants.NBT.TAG_LIST)) {
