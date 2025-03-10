@@ -4,7 +4,6 @@ import net.minecraft.client.gui.GuiScreen;
 
 import com.gtnewhorizon.gtnhlib.config.ConfigException;
 import com.gtnewhorizon.gtnhlib.config.SimpleGuiConfig;
-
 import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.config.TakoTechConfig;
 

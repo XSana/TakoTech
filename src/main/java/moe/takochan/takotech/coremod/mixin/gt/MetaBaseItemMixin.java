@@ -1,7 +1,5 @@
 package moe.takochan.takotech.coremod.mixin.gt;
 
-import static moe.takochan.takotech.client.gui.settings.GameSettings.selectTool;
-
 import java.util.List;
 
 import net.minecraft.client.settings.GameSettings;
@@ -9,17 +7,18 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import gregtech.api.items.MetaBaseItem;
 import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import static moe.takochan.takotech.client.gui.settings.GameSettings.selectTool;
 
 @Mixin(MetaBaseItem.class)
 public abstract class MetaBaseItemMixin {

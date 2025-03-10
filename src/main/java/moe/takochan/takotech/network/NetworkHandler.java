@@ -10,7 +10,10 @@ public class NetworkHandler {
     public static final SimpleNetworkWrapper NETWORK = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.MODID);
 
     public static void init() {
-        NETWORK.registerMessage(PacketToolboxSelection.Handler.class, PacketToolboxSelection.class, 1, Side.SERVER);
-        NETWORK.registerMessage(PacketOpenToolboxSelectGUI.Handler.class, PacketOpenToolboxSelectGUI.class, 2, Side.SERVER);
+        NETWORK.registerMessage(
+            PacketOpenToolboxSelectGUI.Handler.class,
+            PacketOpenToolboxSelectGUI.class,
+            1,
+            Side.SERVER);
     }
 }

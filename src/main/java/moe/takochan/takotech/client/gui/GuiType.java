@@ -1,23 +1,17 @@
 package moe.takochan.takotech.client.gui;
 
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Container;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
-import moe.takochan.takotech.utils.CommonUtils;
 
 public enum GuiType implements IGuiHandler {
-
 
     GUI_TOOLBOX_PLUS_SELECT(ContainerToolboxPlusSelect.class, GuiToolboxPlusSelect.class, null);
 
@@ -31,14 +25,12 @@ public enum GuiType implements IGuiHandler {
         this.tileClass = tileClass;
     }
 
-
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
         GuiType guiType = values()[ID];
         try {
             return createContainer(guiType.tileClass, player, world, x, y, z);
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         return null;
     }
 
@@ -48,9 +40,9 @@ public enum GuiType implements IGuiHandler {
         GuiType guiType = values()[ID];
         try {
             Object container = createContainer(guiType.tileClass, player, world, x, y, z);
-            return guiClass.getConstructor(containerClass).newInstance(container);
-        } catch (Exception ignored) {
-        }
+            return guiClass.getConstructor(containerClass)
+                .newInstance(container);
+        } catch (Exception ignored) {}
         return null;
     }
 
