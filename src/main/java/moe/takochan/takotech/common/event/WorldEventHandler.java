@@ -39,10 +39,7 @@ public class WorldEventHandler {
             NBTTagCompound tag = CommonUtils.openNbtData(brokenStack);
             EntityPlayer player = event.entityPlayer;
             if (player != null && tag.hasKey(NBTConstants.TOOLBOX_DATA)) {
-                final NBTTagList toolboxItems = tag.getTagList(
-                    NBTConstants.TOOLBOX_DATA,
-                    Constants.NBT.TAG_COMPOUND
-                );
+                final NBTTagList toolboxItems = tag.getTagList(NBTConstants.TOOLBOX_DATA, Constants.NBT.TAG_COMPOUND);
 
                 // 创建新的工具箱物品
                 final ItemStack toolbox = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);

@@ -7,7 +7,6 @@ import java.util.Set;
 
 import com.gtnewhorizon.gtnhmixins.ILateMixinLoader;
 import com.gtnewhorizon.gtnhmixins.LateMixin;
-
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
@@ -30,6 +29,7 @@ public class LateMixinLoader implements ILateMixinLoader {
         Map<String, ModContainer> map = Loader.instance()
             .getIndexedModList();
 
+        // GT5U
         if (map.containsKey("gregtech")) {
             if (isClient) {
                 mixins.add("gt.MetaGeneratedToolRendererMixin");
@@ -38,7 +38,8 @@ public class LateMixinLoader implements ILateMixinLoader {
             mixins.add("gt.MetaGeneratedToolMixin");
         }
 
-        if (map.containsKey("ic2")) {
+        // IC2
+        if (map.containsKey("IC2")) {
             mixins.add("ic2.ItemWrapperMixin");
         }
 

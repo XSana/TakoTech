@@ -3,16 +3,12 @@ package moe.takochan.takotech.client.gui.settings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
-
-import net.minecraftforge.common.util.ForgeDirection;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.items.MetaGeneratedTool;
-import moe.takochan.takotech.client.gui.GuiType;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.network.NetworkHandler;
@@ -46,15 +42,15 @@ public class KeyHandler {
         return false;
     }
 
-    //    private void openToolboxGUI(EntityPlayer player) {
-    //        World world = Minecraft.getMinecraft().theWorld;
-    //        GuiType.openGuiWithClient(
-    //            GuiType.TOOLBOX_PLUS_SELECT,
-    //            player,
-    //            world,
-    //            ForgeDirection.UNKNOWN,
-    //            (int) player.posX,
-    //            (int) player.posY,
-    //            (int) player.posZ);
-    //    }
+    // private void openToolboxGUI(EntityPlayer player) {
+    // World world = Minecraft.getMinecraft().theWorld;
+    // GuiType.openGuiWithClient(
+    // GuiType.TOOLBOX_PLUS_SELECT,
+    // player,
+    // world,
+    // ForgeDirection.UNKNOWN,
+    // (int) player.posX,
+    // (int) player.posY,
+    // (int) player.posZ);
+    // }
 }

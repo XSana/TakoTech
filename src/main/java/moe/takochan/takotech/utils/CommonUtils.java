@@ -5,9 +5,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
-import net.minecraftforge.common.util.ForgeDirection;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import moe.takochan.takotech.TakoTechMod;
@@ -41,7 +38,6 @@ public class CommonUtils {
     public static String resource(String name) {
         return new ResourceLocation(Reference.MODID, name).toString();
     }
-
 
     public static void openGui(final GuiType type, final EntityPlayer player, final TileEntity tile) {
         if (isClient()) {

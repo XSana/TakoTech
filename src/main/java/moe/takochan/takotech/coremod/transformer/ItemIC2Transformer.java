@@ -1,8 +1,5 @@
 package moe.takochan.takotech.coremod.transformer;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import net.minecraft.launchwrapper.IClassTransformer;
 
 import org.objectweb.asm.ClassReader;

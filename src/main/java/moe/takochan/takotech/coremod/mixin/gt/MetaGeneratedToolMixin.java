@@ -1,13 +1,15 @@
 package moe.takochan.takotech.coremod.mixin.gt;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+
+import net.minecraftforge.common.util.Constants;
+
 import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.utils.CommonUtils;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.Constants;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
@@ -55,10 +57,8 @@ public abstract class MetaGeneratedToolMixin {
             final NBTTagCompound rootTag = CommonUtils.openNbtData(aStack);
 
             if (rootTag.hasKey(NBTConstants.TOOLBOX_DATA)) {
-                final NBTTagList toolboxItems = rootTag.getTagList(
-                    NBTConstants.TOOLBOX_DATA,
-                    Constants.NBT.TAG_COMPOUND
-                );
+                final NBTTagList toolboxItems = rootTag
+                    .getTagList(NBTConstants.TOOLBOX_DATA, Constants.NBT.TAG_COMPOUND);
 
                 // 创建新的工具箱物品
                 final ItemStack toolbox = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
