@@ -3,17 +3,17 @@ package moe.takochan.takotech.coremod.mixin.gt;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-
 import net.minecraftforge.common.util.Constants;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.utils.CommonUtils;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(value = MetaGeneratedTool.class, remap = false)
 public abstract class MetaGeneratedToolMixin {

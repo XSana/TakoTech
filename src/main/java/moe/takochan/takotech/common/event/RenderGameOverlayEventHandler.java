@@ -1,7 +1,6 @@
 package moe.takochan.takotech.common.event;
 
 import net.minecraft.client.Minecraft;
-
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;

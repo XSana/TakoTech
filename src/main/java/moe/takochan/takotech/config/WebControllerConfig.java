@@ -1,6 +1,7 @@
 package moe.takochan.takotech.config;
 
 import com.gtnewhorizon.gtnhlib.config.Config;
+
 import moe.takochan.takotech.common.Reference;
 
 @Config(modid = Reference.MODID, configSubDirectory = "TakoTech", filename = "config", category = "webcontroller")

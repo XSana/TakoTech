@@ -11,9 +11,11 @@ public class NetworkHandler {
 
     public static void init() {
         NETWORK.registerMessage(
-            PacketOpenToolboxSelectGUI.Handler.class,
-            PacketOpenToolboxSelectGUI.class,
+            PacketToolboxOpenSelectGUI.Handler.class,
+            PacketToolboxOpenSelectGUI.class,
             1,
             Side.SERVER);
+
+        NETWORK.registerMessage(PacketToolboxSelected.Handler.class, PacketToolboxSelected.class, 2, Side.SERVER);
     }
 }
