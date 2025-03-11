@@ -1,7 +1,12 @@
 package moe.takochan.takotech.utils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -53,5 +58,26 @@ public class CommonUtils {
         } else if (tile != null && type.tileClass != null) {
             player.openGui(TakoTechMod.instance, type.ordinal(), tile.getWorldObj(), x, y, z);
         }
+    }
+
+    public static byte[] nbtToBytes(NBTTagCompound tag) {
+        try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            CompressedStreamTools.writeCompressed(tag, outputStream);
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            TakoTechMod.LOG.error("Failed to convert NBTTagCompound to byte array!", e);
+        }
+        return new byte[0];
+    }
+
+    public static NBTTagCompound bytesToNbt(byte[] bytes) {
+        try {
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+            return CompressedStreamTools.readCompressed(inputStream);
+        } catch (IOException e) {
+            TakoTechMod.LOG.error("Failed to convert byte array to NBTTagCompound!", e);
+        }
+        return new NBTTagCompound();
     }
 }

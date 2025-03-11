@@ -5,10 +5,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import org.spongepowered.asm.lib.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
+
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 
 public class MixinPlugin implements IMixinConfigPlugin {
 

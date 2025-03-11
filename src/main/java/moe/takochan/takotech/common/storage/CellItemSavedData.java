@@ -10,7 +10,6 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldSavedData;
 import net.minecraft.world.storage.MapStorage;
-
 import net.minecraftforge.common.util.Constants;
 
 import moe.takochan.takotech.common.Reference;

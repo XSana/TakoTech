@@ -2,7 +2,6 @@ package moe.takochan.takotech.common.loader;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 import appeng.api.AEApi;

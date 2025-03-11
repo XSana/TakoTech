@@ -2,11 +2,12 @@ package moe.takochan.takotech.client.gui.settings;
 
 import net.minecraft.client.settings.KeyBinding;
 
+import org.lwjgl.input.Keyboard;
+
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.I18nUtils;
-import org.lwjgl.input.Keyboard;
 
 public class GameSettings {
 

@@ -1,13 +1,20 @@
 package moe.takochan.takotech.client.gui;
 
-import java.util.ArrayList;
+import static moe.takochan.takotech.utils.SectorVertexUtils.DEFAULT_SECTOR_VERTEX_DATA;
+import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_IN;
+import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_OUT;
+
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.GL11;
 
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
@@ -18,12 +25,6 @@ import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
 import moe.takochan.takotech.client.gui.settings.GameSettings;
 import moe.takochan.takotech.common.data.ToolData;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
-
-import static moe.takochan.takotech.utils.SectorVertexUtils.DEFAULT_SECTOR_VERTEX_DATA;
-import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_IN;
-import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_OUT;
 
 @SideOnly(Side.CLIENT)
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
@@ -33,9 +34,6 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     private final static Minecraft mc = Minecraft.getMinecraft();
 
     private List<ToolData> items; // 存储的可选物品列表
-
-    // 用于工具提示的临时存储
-    //    private ItemStack selectedItemStack = null; // 当前鼠标悬停的物品
 
     private int selectIndex = -1;
 
@@ -54,7 +52,8 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     @Override
     public void initGui() {
         super.initGui();
-        items = container.getItems();
+        EntityPlayer player = container.getPlayer();
+        loadItems(player.inventory.getCurrentItem());
     }
 
     /**
@@ -138,7 +137,8 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             float posX = xCenter - 8 + ITEM_RADIUS * (float) Math.cos(angleRad);
             float posY = yCenter - 8 + ITEM_RADIUS * (float) Math.sin(angleRad);
 
-            ItemStack toolItemStack = items.get(i).getItemStack();
+            ItemStack toolItemStack = items.get(i)
+                .getItemStack();
 
             if (toolItemStack != null) {
                 // 渲染物品图标和效果
@@ -175,7 +175,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             // 当选择按键松开时执行选择操作
             if (!Keyboard.isKeyDown(GameSettings.selectTool.getKeyCode())) {
                 if (selectIndex != -1) {
-                    container.selectTool(items.get(selectIndex).getSlot());
+                    // items.get(selectIndex).getSlot();
                 }
                 mc.thePlayer.closeScreen();
             }
@@ -210,4 +210,24 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         return true;
     }
     // endregion
+
+    private void loadItems(ItemStack stack) {
+        final List<ToolData> list = getGTTools(stack);
+        if (list == null || list.isEmpty()) return;
+        if (ItemToolboxPlus.isMetaGeneratedTool(stack)) {
+            this.items.add(new ToolData(-1, ItemToolboxPlus.DEFAULT_ITEM));
+        }
+        this.items.addAll(list);
+    }
+
+    public List<ToolData> getGTTools(ItemStack stack) {
+        return ItemToolboxPlus.getToolbox(stack)
+            .map(toolbox -> {
+                if (toolbox.getItem() instanceof ItemToolboxPlus) {
+                    return ItemToolboxPlus.getToolItems(toolbox);
+                }
+                return null;
+            })
+            .orElse(null);
+    }
 }
