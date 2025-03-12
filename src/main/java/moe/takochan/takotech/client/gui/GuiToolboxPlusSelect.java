@@ -4,6 +4,7 @@ import static moe.takochan.takotech.utils.SectorVertexUtils.DEFAULT_SECTOR_VERTE
 import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_IN;
 import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_OUT;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
@@ -25,6 +26,9 @@ import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
 import moe.takochan.takotech.client.gui.settings.GameSettings;
 import moe.takochan.takotech.common.data.ToolData;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
+import moe.takochan.takotech.common.loader.ItemLoader;
+import moe.takochan.takotech.network.NetworkHandler;
+import moe.takochan.takotech.network.PacketToolboxSelected;
 
 @SideOnly(Side.CLIENT)
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
@@ -33,7 +37,9 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     // 获取当前游戏
     private final static Minecraft mc = Minecraft.getMinecraft();
 
-    private List<ToolData> items; // 存储的可选物品列表
+    private final static ItemStack DEFAULT_ITEM = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
+
+    private final List<ToolData> items = new ArrayList<>(); // 存储的可选物品列表
 
     private int selectIndex = -1;
 
@@ -175,7 +181,9 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             // 当选择按键松开时执行选择操作
             if (!Keyboard.isKeyDown(GameSettings.selectTool.getKeyCode())) {
                 if (selectIndex != -1) {
-                    // items.get(selectIndex).getSlot();
+                    int slot = items.get(selectIndex)
+                        .getSlot();
+                    NetworkHandler.NETWORK.sendToServer(new PacketToolboxSelected(slot));
                 }
                 mc.thePlayer.closeScreen();
             }
@@ -212,11 +220,12 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     // endregion
 
     private void loadItems(ItemStack stack) {
+        items.clear();
+        if (ItemToolboxPlus.isMetaGeneratedTool(stack)) {
+            this.items.add(new ToolData(-1, DEFAULT_ITEM));
+        }
         final List<ToolData> list = getGTTools(stack);
         if (list == null || list.isEmpty()) return;
-        if (ItemToolboxPlus.isMetaGeneratedTool(stack)) {
-            this.items.add(new ToolData(-1, ItemToolboxPlus.DEFAULT_ITEM));
-        }
         this.items.addAll(list);
     }
 

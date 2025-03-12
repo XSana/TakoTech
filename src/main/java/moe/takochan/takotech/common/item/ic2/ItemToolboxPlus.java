@@ -22,15 +22,12 @@ import gregtech.api.items.MetaGeneratedTool;
 import ic2.core.item.IHandHeldInventory;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.common.data.ToolData;
-import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
 
 public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInventory {
-
-    public final static ItemStack DEFAULT_ITEM = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
 
     @SideOnly(Side.CLIENT)
     private IIcon baseIcon;
@@ -72,10 +69,12 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
     public static List<ToolData> getToolItems(ItemStack itemStack) {
         // 可用工具列表
         List<ToolData> list = new ArrayList<>();
+        if (!isItemToolbox(itemStack)) return list;
+
         // 获取NBT
         NBTTagCompound nbt = CommonUtils.openNbtData(itemStack);
         // 获取物品列表
-        if (nbt.hasKey(NBTConstants.TOOLBOX_ITEMS, Constants.NBT.TAG_COMPOUND)) {
+        if (nbt.hasKey(NBTConstants.TOOLBOX_ITEMS, Constants.NBT.TAG_LIST)) {
             NBTTagList contentList = nbt.getTagList(NBTConstants.TOOLBOX_ITEMS, Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < contentList.tagCount(); i++) {
                 NBTTagCompound slotNbt = contentList.getCompoundTagAt(i);
@@ -87,6 +86,51 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
             }
         }
         return list;
+    }
+
+    public static void setItemToSlot(ItemStack itemStack, int slot, ItemStack toolStack) {
+        if (!isItemToolbox(itemStack)) return;
+
+        NBTTagCompound nbt = CommonUtils.openNbtData(itemStack);
+        NBTTagList contentList = nbt.getTagList(NBTConstants.TOOLBOX_ITEMS, Constants.NBT.TAG_COMPOUND);
+        ItemStack[] toolStackList = new ItemStack[9];
+        for (int i = 0; i < contentList.tagCount(); i++) {
+            NBTTagCompound slotNbt = contentList.getCompoundTagAt(i);
+            int slotNum = slotNbt.getByte(NBTConstants.TOOLBOX_TOOLS_SLOT);
+            toolStackList[slotNum] = ItemStack.loadItemStackFromNBT(slotNbt);
+        }
+
+        toolStackList[slot] = toolStack;
+
+        NBTTagList newContentList = new NBTTagList();
+
+        for (int i = 0; i < toolStackList.length; i++) {
+            if (toolStackList[i] != null) {
+                NBTTagCompound slotNbt = new NBTTagCompound();
+                slotNbt.setByte(NBTConstants.TOOLBOX_TOOLS_SLOT, (byte) i);
+                toolStackList[i].writeToNBT(slotNbt);
+                newContentList.appendTag(slotNbt);
+            }
+        }
+        nbt.setTag(NBTConstants.TOOLBOX_ITEMS, newContentList);
+    }
+
+    public static ItemStack getStackInSlot(ItemStack itemStack, int slot) {
+        if (!isItemToolbox(itemStack)) return null;
+
+        NBTTagCompound nbt = CommonUtils.openNbtData(itemStack);
+        if (nbt.hasKey(NBTConstants.TOOLBOX_ITEMS, Constants.NBT.TAG_LIST)) {
+            NBTTagList contentList = nbt.getTagList(NBTConstants.TOOLBOX_ITEMS, Constants.NBT.TAG_COMPOUND);
+            for (int i = 0; i < contentList.tagCount(); i++) {
+                NBTTagCompound slotNbt = contentList.getCompoundTagAt(i);
+                int slotNum = slotNbt.getByte(NBTConstants.TOOLBOX_TOOLS_SLOT);
+                if (slotNum == slot) {
+                    return ItemStack.loadItemStackFromNBT(slotNbt);
+                }
+            }
+        }
+
+        return null;
     }
 
     public static Optional<ItemStack> getToolbox(ItemStack itemStack) {

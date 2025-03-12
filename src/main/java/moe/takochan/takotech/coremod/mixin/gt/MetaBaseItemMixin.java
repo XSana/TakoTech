@@ -29,7 +29,7 @@ public abstract class MetaBaseItemMixin {
         CallbackInfo ci) {
         if (aStack.getItem() instanceof MetaGeneratedTool) {
             NBTTagCompound nbt = CommonUtils.openNbtData(aStack);
-            if (!nbt.hasKey(NBTConstants.TOOLBOX_DATA) || !nbt.hasKey(NBTConstants.TOOLBOX_SELECTED_INDEX)) return;
+            if (!nbt.hasKey(NBTConstants.TOOLBOX_DATA) || !nbt.hasKey(NBTConstants.TOOLBOX_SLOT)) return;
             aList.add("");
             aList.add(
                 I18nUtils.tooltip(

@@ -11,7 +11,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import ic2.core.IHasGui;
 import io.netty.buffer.ByteBuf;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.constants.NBTConstants;
@@ -47,43 +46,45 @@ public class PacketToolboxSelected implements IMessage {
             // ToolData.setSelectedSlot(message.slot);
             player = ctx.getServerHandler().playerEntity;
             currentItem = player.inventory.getCurrentItem();
+            selectTool(message.slot);
             return null;
         }
 
-        public void selectTool(int slot, EntityPlayer player) {
-            getToolbox(currentItem).ifPresent(toolbox -> {
-                if (toolbox.getItem() instanceof ItemToolboxPlus toolboxPlus) {
-                    final IHasGui toolboxGUI = toolboxPlus.getInventory(player, toolbox);
+        public void selectTool(int slot) {
+            getToolbox(currentItem).ifPresent(t -> {
+                ItemStack toolbox = t.copy();
+                if (toolbox.getItem() instanceof ItemToolboxPlus) {
                     if (isToolboxPlus(currentItem)) {
-                        handleToolSelection(toolboxGUI, slot, toolbox);
+                        handleToolSelection(slot, toolbox);
                     } else if (isMetaGeneratedTool(currentItem)) {
-                        handleMetaToolSelection(toolboxGUI, slot, toolbox);
+                        handleMetaToolSelection(slot, toolbox);
                     }
                 }
             });
         }
 
-        private void handleToolSelection(IHasGui toolboxGUI, int slot, ItemStack toolbox) {
-            ItemStack tool = toolboxGUI.getStackInSlot(slot)
-                .copy();
-            toolboxGUI.setInventorySlotContents(slot, null);
+        private void handleToolSelection(int slot, ItemStack toolbox) {
+            ItemStack tool = ItemToolboxPlus.getStackInSlot(toolbox, slot);
+            if (tool == null) return;
+            ItemToolboxPlus.setItemToSlot(toolbox, slot, null);
             NBTTagCompound toolNbt = new NBTTagCompound();
             toolbox.writeToNBT(toolNbt);
-            CommonUtils.openNbtData(tool)
-                .setTag(NBTConstants.TOOLBOX_DATA, toolNbt);
+            NBTTagCompound nbt = CommonUtils.openNbtData(tool);
+            nbt.setTag(NBTConstants.TOOLBOX_DATA, toolNbt);
+            nbt.setInteger(NBTConstants.TOOLBOX_SLOT, slot);
             player.inventory.setInventorySlotContents(player.inventory.currentItem, tool);
         }
 
-        private void handleMetaToolSelection(IHasGui toolboxGUI, int slot, ItemStack toolbox) {
+        private void handleMetaToolSelection(int slot, ItemStack toolbox) {
             NBTTagCompound nbt = CommonUtils.openNbtData(currentItem);
-            int currentSlot = nbt.getInteger(NBTConstants.TOOLBOX_TOOLS_SLOT);
+            int currentSlot = nbt.getInteger(NBTConstants.TOOLBOX_SLOT);
             nbt.removeTag(NBTConstants.TOOLBOX_DATA);
-            nbt.removeTag(NBTConstants.TOOLBOX_TOOLS_SLOT);
-            toolboxGUI.setInventorySlotContents(currentSlot, currentItem);
+            nbt.removeTag(NBTConstants.TOOLBOX_SLOT);
+            ItemToolboxPlus.setItemToSlot(toolbox, currentSlot, currentItem);
             if (slot == -1) {
                 player.inventory.setInventorySlotContents(player.inventory.currentItem, toolbox);
             } else {
-                handleToolSelection(toolboxGUI, slot, toolbox);
+                handleToolSelection(slot, toolbox);
             }
         }
     }

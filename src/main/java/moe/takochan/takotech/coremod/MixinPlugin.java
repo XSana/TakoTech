@@ -71,6 +71,8 @@ public class MixinPlugin implements IMixinConfigPlugin {
             mixins.add("InputFixMixin");
         }
 
+        mixins.add("NetHandlerPlayServerMixin");
+
         // 返回要应用的 Mixin 类名
         return mixins;
     }
