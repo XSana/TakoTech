@@ -26,7 +26,7 @@ public abstract class MetaGeneratedToolRendererMixin {
     private void afterRenderItem(IItemRenderer.ItemRenderType type, ItemStack stack, Object[] data, CallbackInfo ci) {
         if (type == IItemRenderer.ItemRenderType.INVENTORY) {
             NBTTagCompound nbt = CommonUtils.openNbtData(stack);
-            if (!nbt.hasKey(NBTConstants.TOOLBOX_DATA) || !nbt.hasKey(NBTConstants.TOOLBOX_SELECTED_INDEX)) return;
+            if (!nbt.hasKey(NBTConstants.TOOLBOX_DATA) || !nbt.hasKey(NBTConstants.TOOLBOX_SLOT)) return;
             IIcon baseIcon = ItemLoader.ITEM_TOOLBOX_PLUS.getBaseIcon();
             if (baseIcon != null) {
                 // 保存当前渲染状态

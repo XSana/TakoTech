@@ -9,7 +9,7 @@ import moe.takochan.takotech.client.gui.GuiToolboxPlusSelect;
 public class RenderGameOverlayEventHandler {
 
     /**
-     * 取消渲染 HUD 时的准星（仅当当前 GUI 为径向菜单时）。
+     * 取消渲染 HUD 时的准星
      */
     @SubscribeEvent
     public void onRenderGameOverlay(RenderGameOverlayEvent.Pre event) {
