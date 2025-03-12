@@ -16,7 +16,7 @@ import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 
-@Mixin(NetHandlerPlayServer.class)
+@Mixin(value = NetHandlerPlayServer.class, remap = false)
 public abstract class NetHandlerPlayServerMixin {
 
     @Shadow
@@ -27,16 +27,24 @@ public abstract class NetHandlerPlayServerMixin {
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/entity/player/InventoryPlayer;getCurrentItem()Lnet/minecraft/item/ItemStack;",
-            shift = At.Shift.BEFORE))
-    private void onInventorySetNull(C08PacketPlayerBlockPlacement packet, CallbackInfo ci) {
-        ItemStack currentItem = this.playerEntity.inventory.getCurrentItem();
-        if (currentItem != null && currentItem.stackSize == 0) {
-            if (ItemToolboxPlus.isMetaGeneratedTool(currentItem) && ItemToolboxPlus.isItemToolbox(currentItem)) {
-                NBTTagCompound tag = CommonUtils.openNbtData(currentItem);
-                final NBTTagCompound toolboxItems = tag.getCompoundTag(NBTConstants.TOOLBOX_DATA);
-                final ItemStack toolbox = ItemStack.loadItemStackFromNBT(toolboxItems);
-                playerEntity.inventory.setInventorySlotContents(playerEntity.inventory.currentItem, toolbox);
+            ordinal = 1,
+            shift = At.Shift.BEFORE),
+        remap = true,
+        require = 1)
+    private void onHandleItemStackZero(C08PacketPlayerBlockPlacement packetIn, CallbackInfo ci) {
+        ItemStack itemstack = this.playerEntity.inventory.getCurrentItem();
+        if (itemstack != null && itemstack.stackSize == 0) {
+            if (ItemToolboxPlus.isMetaGeneratedTool(itemstack) && ItemToolboxPlus.isItemToolbox(itemstack)) {
+                // 从 NBT 中恢复工具箱数据
+                NBTTagCompound tag = CommonUtils.openNbtData(itemstack);
+                NBTTagCompound toolboxItems = tag.getCompoundTag(NBTConstants.TOOLBOX_DATA);
+                ItemStack toolbox = ItemStack.loadItemStackFromNBT(toolboxItems);
+
+                // 更新玩家物品栏
+                this.playerEntity.inventory.setInventorySlotContents(this.playerEntity.inventory.currentItem, toolbox);
             }
         }
+
     }
+
 }
