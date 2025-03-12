@@ -39,6 +39,8 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
     private final static ItemStack DEFAULT_ITEM = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
 
+    private final List<ItemStack> toolboxList = new ArrayList<>();
+
     private final List<ToolData> items = new ArrayList<>(); // 存储的可选物品列表
 
     private int selectIndex = -1;

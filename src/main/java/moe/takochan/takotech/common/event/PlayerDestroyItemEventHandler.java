@@ -1,6 +1,7 @@
 package moe.takochan.takotech.common.event;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
@@ -22,7 +23,11 @@ public class PlayerDestroyItemEventHandler {
                 final NBTTagCompound toolboxItems = tag.getCompoundTag(NBTConstants.TOOLBOX_DATA);
                 final ItemStack toolbox = ItemStack.loadItemStackFromNBT(toolboxItems);
                 player.inventory.setInventorySlotContents(player.inventory.currentItem, toolbox);
+                if (player instanceof EntityPlayerMP playerMP) {
+                    playerMP.sendContainerToPlayer(player.inventoryContainer);
+                }
             }
         }
     }
+
 }
