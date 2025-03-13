@@ -33,14 +33,18 @@ import moe.takochan.takotech.network.PacketToolboxSelected;
 @SideOnly(Side.CLIENT)
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
 
-    public final static float ITEM_RADIUS = (RADIUS_IN + RADIUS_OUT) * 0.5F; // 物品显示位置半径
-    // 获取当前游戏
+    // 物品显示位置半径
+    public final static float ITEM_RADIUS = (RADIUS_IN + RADIUS_OUT) * 0.5F;
+    // 获取当前游戏实例
     private final static Minecraft mc = Minecraft.getMinecraft();
-
+    // 默认物品实例
     private final static ItemStack DEFAULT_ITEM = new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS);
 
-    private final List<ToolData> items = new ArrayList<>(); // 存储的可选物品列表
+    // 存储的可选物品列表
+    private final List<ToolData> items = new ArrayList<>();
+    // 关联的容器实例
     private final ContainerToolboxPlusSelect container;
+    // 当前选中的物品索引
     private int selectIndex = -1;
 
     public GuiToolboxPlusSelect(ContainerToolboxPlusSelect container) {
@@ -53,6 +57,9 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
     }
 
+    /**
+     * 初始化 GUI
+     */
     @Override
     public void initGui() {
         super.initGui();
@@ -62,6 +69,10 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
     /**
      * 绘制背景层（主要绘制逻辑）
+     *
+     * @param partialTicks 部分刻（用于动画效果）
+     * @param mouseX       鼠标 X 坐标
+     * @param mouseY       鼠标 Y 坐标
      */
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
@@ -160,6 +171,9 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
     /**
      * 绘制前景层
+     *
+     * @param mouseX 鼠标 X 坐标
+     * @param mouseY 鼠标 Y 坐标
      */
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
@@ -217,6 +231,11 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     }
     // endregion
 
+    /**
+     * 加载物品到 GUI 中
+     * 
+     * @param stack 玩家当前手持的物品
+     */
     private void loadItems(ItemStack stack) {
         items.clear();
         if (ItemToolboxPlus.isMetaGeneratedTool(stack)) {
@@ -227,6 +246,12 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         this.items.addAll(list);
     }
 
+    /**
+     * 获取 GT 工具箱中的工具
+     * 
+     * @param stack 玩家当前手持的物品
+     * @return 工具列表，如果不存在则返回 null
+     */
     public List<ToolData> getGTTools(ItemStack stack) {
         return ItemToolboxPlus.getToolbox(stack)
             .map(toolbox -> {

@@ -4,14 +4,10 @@ import net.minecraft.nbt.NBTTagCompound;
 
 public class WebControllerData {
 
-    /**
-     * 控制器唯一标识符
-     */
+    // 控制器唯一标识符
     public static final String CONTROLLER_ID = "controller_id";
 
-    /**
-     * 当前控制器的唯一标识字符串
-     */
+    // 当前控制器的唯一标识字符串
     private String controllerId;
 
     /**
