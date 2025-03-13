@@ -23,7 +23,7 @@ import codechicken.nei.api.TaggedInventoryArea;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
-import moe.takochan.takotech.client.gui.settings.GameSettings;
+import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.data.ToolData;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.common.loader.ItemLoader;
@@ -181,6 +181,9 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         // if (tooltipItem != null) renderToolTip(tooltipItem, mouseX, mouseY);
     }
 
+    @Override
+    public void drawDefaultBackground() {}
+
     /**
      * 处理输入事件
      */
@@ -233,7 +236,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
     /**
      * 加载物品到 GUI 中
-     * 
+     *
      * @param stack 玩家当前手持的物品
      */
     private void loadItems(ItemStack stack) {
@@ -248,7 +251,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
     /**
      * 获取 GT 工具箱中的工具
-     * 
+     *
      * @param stack 玩家当前手持的物品
      * @return 工具列表，如果不存在则返回 null
      */

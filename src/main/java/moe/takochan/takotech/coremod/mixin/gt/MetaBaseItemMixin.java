@@ -1,6 +1,6 @@
 package moe.takochan.takotech.coremod.mixin.gt;
 
-import static moe.takochan.takotech.client.gui.settings.GameSettings.selectTool;
+import static moe.takochan.takotech.client.settings.GameSettings.selectTool;
 
 import java.util.List;
 

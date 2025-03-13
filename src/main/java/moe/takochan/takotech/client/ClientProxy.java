@@ -1,7 +1,7 @@
 package moe.takochan.takotech.client;
 
 import cpw.mods.fml.common.event.FMLInitializationEvent;
-import moe.takochan.takotech.client.gui.settings.GameSettings;
+import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.CommonProxy;
 
 public class ClientProxy extends CommonProxy {
