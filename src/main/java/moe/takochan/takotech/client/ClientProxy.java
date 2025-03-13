@@ -12,6 +12,8 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+
+        // 创建游戏设置实例并注册按键绑定
         GameSettings gameSettings = new GameSettings();
         gameSettings.register();
     }

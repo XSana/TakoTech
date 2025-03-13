@@ -9,8 +9,14 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.I18nUtils;
 
+/**
+ * 游戏设置类
+ * <p>
+ * 用于管理游戏中的按键绑定和设置相关逻辑
+ */
 public class GameSettings {
 
+    // 工具箱选择工具的按键绑定实例
     public static KeyBinding selectTool;
 
     public GameSettings() {
@@ -21,7 +27,9 @@ public class GameSettings {
     }
 
     public void register() {
+        // 注册按键绑定
         ClientRegistry.registerKeyBinding(selectTool);
+        // 注册按键处理器
         FMLCommonHandler.instance()
             .bus()
             .register(new KeyHandler());
