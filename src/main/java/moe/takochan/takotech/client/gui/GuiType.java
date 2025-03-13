@@ -6,10 +6,12 @@ import net.minecraft.world.World;
 
 import cpw.mods.fml.common.network.IGuiHandler;
 import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
+import moe.takochan.takotech.utils.CommonUtils;
 
 /**
  * GUI 类型枚举类
@@ -19,26 +21,25 @@ import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
 public enum GuiType implements IGuiHandler {
 
     // 高级工具箱选择界面的 GUI 类型
-    GUI_TOOLBOX_PLUS_SELECT(ContainerToolboxPlusSelect.class, GuiToolboxPlusSelect.class, null);
+    GUI_TOOLBOX_PLUS_SELECT(ContainerToolboxPlusSelect.class, null);
 
     // 关联的 TileEntity 类
     public final Class<?> tileClass;
     // 关联的 TileEntity 类
     private final Class<?> containerClass;
     // 关联的 GUI 类
-    private final Class<?> guiClass;
+    private Class<?> guiClass;
 
     /**
      * 构造函数
      *
      * @param containerClass 关联的容器类
-     * @param guiClass       关联的 GUI 类
      * @param tileClass      关联的 TileEntity 类
      */
-    GuiType(final Class<?> containerClass, final Class<?> guiClass, final Class<?> tileClass) {
+    GuiType(final Class<?> containerClass, final Class<?> tileClass) {
         this.containerClass = containerClass;
-        this.guiClass = guiClass;
         this.tileClass = tileClass;
+        this.loadGuiClass();
     }
 
     /**
@@ -66,7 +67,8 @@ public enum GuiType implements IGuiHandler {
         GuiType guiType = values()[ID];
         try {
             return createContainer(guiType.tileClass, player, world, x, y, z);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return null;
     }
 
@@ -89,7 +91,8 @@ public enum GuiType implements IGuiHandler {
             Object container = createContainer(guiType.tileClass, player, world, x, y, z);
             return guiClass.getConstructor(containerClass)
                 .newInstance(container);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return null;
     }
 
@@ -118,6 +121,17 @@ public enum GuiType implements IGuiHandler {
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to create container for " + this.name(), e);
+        }
+    }
+
+    private void loadGuiClass() {
+        if (CommonUtils.isClient()) {
+            String start = this.containerClass.getName();
+            String guiClassName = start.replaceFirst("container.", "")
+                .replace(".Container", ".Gui");
+            this.guiClass = ReflectionHelper.getClass(
+                this.getClass()
+                    .getClassLoader(), guiClassName);
         }
     }
 }
