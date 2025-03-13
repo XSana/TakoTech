@@ -67,8 +67,7 @@ public enum GuiType implements IGuiHandler {
         GuiType guiType = values()[ID];
         try {
             return createContainer(guiType.tileClass, player, world, x, y, z);
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         return null;
     }
 
@@ -91,8 +90,7 @@ public enum GuiType implements IGuiHandler {
             Object container = createContainer(guiType.tileClass, player, world, x, y, z);
             return guiClass.getConstructor(containerClass)
                 .newInstance(container);
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         return null;
     }
 
@@ -131,7 +129,8 @@ public enum GuiType implements IGuiHandler {
                 .replace(".Container", ".Gui");
             this.guiClass = ReflectionHelper.getClass(
                 this.getClass()
-                    .getClassLoader(), guiClassName);
+                    .getClassLoader(),
+                guiClassName);
         }
     }
 }
