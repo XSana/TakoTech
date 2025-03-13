@@ -13,9 +13,7 @@ import moe.takochan.takotech.crossmod.waila.BaseWailaDataProvider;
 import moe.takochan.takotech.utils.I18nUtils;
 
 /**
- * WEB控制器专用WAILA数据提供者
- * 在WAILA提示中显示控制器的信息
- * 继承自基础提供者实现核心数据展示逻辑
+ * WEB控制器专用WAILA数据提供者 在WAILA提示中显示控制器的信息 继承自基础提供者实现核心数据展示逻辑
  */
 public class WebControllerWailaDataProvider extends BaseWailaDataProvider {
 

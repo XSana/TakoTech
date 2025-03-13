@@ -38,34 +38,6 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
         this.setTextureName(CommonUtils.resource(NameConstants.ITEM_TOOLBOX_PLUS));
     }
 
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void addInformation(final ItemStack itemStack, final EntityPlayer player, final List<String> lines,
-        final boolean displayMoreInfo) {
-        lines.add(
-            I18nUtils.tooltip(
-                NameConstants.ITEM_TOOLBOX_PLUS_DESC,
-                GameSettings.getKeyDisplayString(selectTool.getKeyCode())));
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void registerIcons(IIconRegister register) {
-        super.registerIcons(register);
-        this.baseIcon = register.registerIcon(this.getIconString());
-    }
-
-    @Override
-    public void register() {
-        GameRegistry.registerItem(this, NameConstants.ITEM_TOOLBOX_PLUS);
-        setCreativeTab(TakoTechTabs.getInstance());
-    }
-
-    @SideOnly(Side.CLIENT)
-    public IIcon getBaseIcon() {
-        return baseIcon;
-    }
-
     public static List<ToolData> getToolItems(ItemStack itemStack) {
         // 可用工具列表
         List<ToolData> list = new ArrayList<>();
@@ -158,6 +130,34 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
 
     public static boolean isMetaGeneratedTool(ItemStack itemStack) {
         return itemStack.getItem() instanceof MetaGeneratedTool;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(final ItemStack itemStack, final EntityPlayer player, final List<String> lines,
+        final boolean displayMoreInfo) {
+        lines.add(
+            I18nUtils.tooltip(
+                NameConstants.ITEM_TOOLBOX_PLUS_DESC,
+                GameSettings.getKeyDisplayString(selectTool.getKeyCode())));
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void registerIcons(IIconRegister register) {
+        super.registerIcons(register);
+        this.baseIcon = register.registerIcon(this.getIconString());
+    }
+
+    @Override
+    public void register() {
+        GameRegistry.registerItem(this, NameConstants.ITEM_TOOLBOX_PLUS);
+        setCreativeTab(TakoTechTabs.getInstance());
+    }
+
+    @SideOnly(Side.CLIENT)
+    public IIcon getBaseIcon() {
+        return baseIcon;
     }
 
 }

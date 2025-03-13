@@ -20,8 +20,7 @@ public abstract class BaseAECellItem extends AEBaseItem implements IBaseAECellIt
     }
 
     /**
-     * 客户端显示物品的额外信息（如提示）。
-     * 这个方法仅在客户端侧调用。
+     * 客户端显示物品的额外信息（如提示）。 这个方法仅在客户端侧调用。
      *
      * @param itemStack       当前物品的堆叠
      * @param player          当前玩家实例

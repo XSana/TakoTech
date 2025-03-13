@@ -13,8 +13,7 @@ import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
 
 /**
- * WEB控制器方块的物品形式
- * 处理物品形式的NBT数据交互和工具提示显示
+ * WEB控制器方块的物品形式 处理物品形式的NBT数据交互和工具提示显示
  */
 public class ItemBlockWebController extends BaseAEItemBlock {
 
@@ -23,8 +22,7 @@ public class ItemBlockWebController extends BaseAEItemBlock {
     }
 
     /**
-     * 添加物品详细信息（工具提示）
-     * 当玩家悬停查看物品时显示控制器ID信息
+     * 添加物品详细信息（工具提示） 当玩家悬停查看物品时显示控制器ID信息
      *
      * @param itemStack        当前物品堆栈
      * @param player           当前玩家对象
@@ -34,6 +32,7 @@ public class ItemBlockWebController extends BaseAEItemBlock {
     @Override
     public void addCheckedInformation(ItemStack itemStack, EntityPlayer player, List<String> toolTip,
         boolean advancedToolTips) {
+        toolTip.add(I18nUtils.tooltip(NameConstants.BLOCK_WEB_CONTROLLER_DESC));
         if (itemStack.hasTagCompound()) {
             WebControllerData data = new WebControllerData();
             data.readFormNBT(CommonUtils.openNbtData(itemStack));

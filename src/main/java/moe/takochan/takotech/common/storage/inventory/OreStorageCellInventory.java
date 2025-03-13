@@ -35,11 +35,10 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     // NBT标签名称，用于存储物品类型和数量的标签
     private static final String ITEM_TYPE_TAG = "it";
     private static final String ITEM_COUNT_TAG = "ic";
-
+    // 元件的数据存储实例
+    protected final CellItemStorageData storageData;
     // 存储的物品数量和物品类型数量
     private final long storedItemCount;
-    private int storedItemTypes;
-
     // 元件的物品堆栈、保存提供器和NBT数据
     private final ItemStack cellItem;
     private final ISaveProvider container;
@@ -47,11 +46,9 @@ public class OreStorageCellInventory implements ITakoCellInventory {
 
     // 原件类型实例
     private final ItemOreStorageCell cellType;
+    private int storedItemTypes;
     // 元件中的物品列表
     private IItemList<IAEItemStack> cellItems;
-
-    // 元件的数据存储实例
-    protected final CellItemStorageData storageData;
 
     /**
      * 初始化元件的物品堆栈和保存提供器。
@@ -82,6 +79,29 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         // 获取元件的数据存储实例
         this.storageData = CommonUtils.isServer() ? CellItemSavedData.getInstance()
             .getDataStorage(this.getItemStack()) : null;
+    }
+
+    /**
+     * 判断物品是否为有效的元件。
+     *
+     * @param itemStack 要检查的物品堆栈
+     * @return 如果物品堆栈是有效的元件，返回 true；否则返回 false
+     */
+    private static boolean isStorageCell(final IAEItemStack itemStack) {
+        if (itemStack == null) {
+            return false;
+        }
+
+        try {
+            // 检查物品是否为 IStorageCell 类型，并且是否可以存储其他物品
+            if (itemStack.getItem() instanceof IStorageCell type) {
+                return !type.storableInStorageCell();
+            }
+        } catch (final Throwable err) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -439,8 +459,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     /**
      * 获取当前元件中的物品列表。
      * <p>
-     * 该方法首先检查当前元件是否已经加载了物品列表。如果物品列表尚未加载（即 `cellItems` 为 `null`），
-     * 则会调用 `loadCellItems()` 方法来加载物品列表。最后返回元件中的物品列表。
+     * 该方法首先检查当前元件是否已经加载了物品列表。如果物品列表尚未加载（即 `cellItems` 为 `null`）， 则会调用 `loadCellItems()` 方法来加载物品列表。最后返回元件中的物品列表。
      *
      * @return 返回一个物品列表，包含当前元件中所有物品的堆栈信息。
      */
@@ -450,29 +469,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         }
 
         return this.cellItems;
-    }
-
-    /**
-     * 判断物品是否为有效的元件。
-     *
-     * @param itemStack 要检查的物品堆栈
-     * @return 如果物品堆栈是有效的元件，返回 true；否则返回 false
-     */
-    private static boolean isStorageCell(final IAEItemStack itemStack) {
-        if (itemStack == null) {
-            return false;
-        }
-
-        try {
-            // 检查物品是否为 IStorageCell 类型，并且是否可以存储其他物品
-            if (itemStack.getItem() instanceof IStorageCell type) {
-                return !type.storableInStorageCell();
-            }
-        } catch (final Throwable err) {
-            return true;
-        }
-
-        return false;
     }
 
     /**

@@ -9,17 +9,14 @@ import moe.takochan.takotech.crossmod.waila.TileWailaDataProvider;
 public class Waila {
 
     /**
-     * 初始化WAILA集成
-     * 通过FML的跨模组通信系统发送注册请求
-     * 应在模组初始化阶段调用
+     * 初始化WAILA集成 通过FML的跨模组通信系统发送注册请求 应在模组初始化阶段调用
      */
     public static void run() {
         FMLInterModComms.sendMessage("Waila", "register", Waila.class.getName() + ".register");
     }
 
     /**
-     * WAILA回调注册方法
-     * 由WAILA模组在加载时主动调用
+     * WAILA回调注册方法 由WAILA模组在加载时主动调用
      *
      * @param registrar WAILA注册接口，用于添加数据提供者
      */

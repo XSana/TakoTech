@@ -18,8 +18,7 @@ public abstract class MetaGeneratedToolMixin {
     public abstract ItemStack invokerGetContainerItem(ItemStack aStack, boolean playSound);
 
     /**
-     * 覆写容器物品存在判断逻辑
-     * 当工具耐久耗尽且包含工具箱数据时返回true
+     * 覆写容器物品存在判断逻辑 当工具耐久耗尽且包含工具箱数据时返回true
      *
      * @author XSana
      * @reason 支持工具箱系统特殊逻辑
@@ -37,8 +36,7 @@ public abstract class MetaGeneratedToolMixin {
     }
 
     /**
-     * 覆写获取容器物品逻辑
-     * 当耐久耗尽时返回配置的工具箱物品
+     * 覆写获取容器物品逻辑 当耐久耗尽时返回配置的工具箱物品
      *
      * @author XSana
      * @reason 实现工具箱物品自动回收功能

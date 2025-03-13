@@ -25,8 +25,7 @@ public class TileWebController extends BaseAETile {
     }
 
     /**
-     * 从NBT加载数据（世界加载时调用）
-     * 通过AE2的TileEvent机制触发数据恢复
+     * 从NBT加载数据（世界加载时调用） 通过AE2的TileEvent机制触发数据恢复
      *
      * @param data 包含持久化数据的NBT标签
      */
@@ -42,8 +41,7 @@ public class TileWebController extends BaseAETile {
     }
 
     /**
-     * 写入数据到NBT（世界保存时调用）
-     * 通过AE2的TileEvent机制触发数据保存
+     * 写入数据到NBT（世界保存时调用） 通过AE2的TileEvent机制触发数据保存
      *
      * @param data 用于存储数据的NBT标签
      */
@@ -59,8 +57,7 @@ public class TileWebController extends BaseAETile {
     }
 
     /**
-     * TileEntity就绪时回调
-     * 确保控制器拥有唯一标识符，自动生成UUID（若缺失）
+     * TileEntity就绪时回调 确保控制器拥有唯一标识符，自动生成UUID（若缺失）
      */
     @Override
     public void onReady() {
@@ -77,8 +74,7 @@ public class TileWebController extends BaseAETile {
     }
 
     /**
-     * 获取数据访问接口
-     * 注意：对返回对象的修改会自动同步到NBT
+     * 获取数据访问接口 注意：对返回对象的修改会自动同步到NBT
      *
      * @return 包含控制器配置数据的对象
      */
