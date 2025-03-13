@@ -28,8 +28,7 @@ public class Reference {
     public static final String GROUPNAME = "moe.takochan.takotech";
 
     /**
-     * GUI 工厂类的全限定名。
-     * 用于初始化模组的图形用户界面配置。
+     * GUI 工厂类的全限定名。 用于初始化模组的图形用户界面配置。
      */
     public static final String GUI_FACTORY = "moe.takochan.takotech.client.gui.config.TakoTechGuiConfigFactory";
 

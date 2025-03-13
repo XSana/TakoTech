@@ -16,9 +16,7 @@ import mcp.mobius.waila.api.IWailaDataProvider;
 import moe.takochan.takotech.crossmod.waila.tile.WebControllerWailaDataProvider;
 
 /**
- * WAILA数据提供者组合器
- * 负责聚合多个TileEntity数据提供者，实现模块化WAILA支持
- * 采用组合模式统一管理不同方块类型的提示信息
+ * WAILA数据提供者组合器 负责聚合多个TileEntity数据提供者，实现模块化WAILA支持 采用组合模式统一管理不同方块类型的提示信息
  */
 public class TileWailaDataProvider implements IWailaDataProvider {
 

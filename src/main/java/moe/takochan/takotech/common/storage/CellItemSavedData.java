@@ -19,9 +19,7 @@ import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 
 /**
- * `StorageComponentSavedData` 类负责管理存储元件数据。
- * 它继承自 `WorldSavedData`，用于保存特定于世界的存储元件数据。
- * 这些数据是持久化的，可以跨世界加载和保存。
+ * `StorageComponentSavedData` 类负责管理存储元件数据。 它继承自 `WorldSavedData`，用于保存特定于世界的存储元件数据。 这些数据是持久化的，可以跨世界加载和保存。
  */
 public class CellItemSavedData extends WorldSavedData {
 
@@ -39,9 +37,7 @@ public class CellItemSavedData extends WorldSavedData {
     }
 
     /**
-     * 初始化 `StorageComponentSavedData`，将其加载到指定世界的地图存储中。
-     * 如果没有现有的数据，则创建新的实例并存储。
-     * 这个方法是同步的，确保在一个世界加载时只会初始化一次。
+     * 初始化 `StorageComponentSavedData`，将其加载到指定世界的地图存储中。 如果没有现有的数据，则创建新的实例并存储。 这个方法是同步的，确保在一个世界加载时只会初始化一次。
      *
      * @param world 当前加载的世界
      */

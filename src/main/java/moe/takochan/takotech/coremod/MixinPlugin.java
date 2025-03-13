@@ -22,8 +22,7 @@ public class MixinPlugin implements IMixinConfigPlugin {
     public void onLoad(String mixinPackage) {}
 
     /**
-     * 返回映射器配置的路径。该方法用于指定反向映射配置文件（如果有）。
-     * 如果不需要映射器配置，可以返回空字符串。
+     * 返回映射器配置的路径。该方法用于指定反向映射配置文件（如果有）。 如果不需要映射器配置，可以返回空字符串。
      *
      * @return 映射器配置的路径，空字符串表示不需要配置
      */

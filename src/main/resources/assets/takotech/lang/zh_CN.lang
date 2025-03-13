@@ -8,7 +8,7 @@ tile.takotech.web_controller.name=Web控制器
 tooltip.takotech.ore_storage_cell.desc=一个近乎无限容量的存储元件，只能用于矿物存储
 tooltip.takotech.ore_storage_cell.desc.1=可存入矿典前缀
 
-tooltip.takotech.web_controller.desc=
+tooltip.takotech.web_controller.desc=未完成，请勿使用，可能会导致存档损坏
 tooltip.takotech.web_controller.desc.1=控制器Id
 
 tooltip.takotech.toolbox_plus.desc=§r按 §6[%s] §r键切换工具

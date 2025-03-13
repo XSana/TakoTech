@@ -26,17 +26,17 @@ public class TakoTechTabs extends CreativeTabs {
     }
 
     /**
+     * 获取单例实例
+     */
+    public static TakoTechTabs getInstance() {
+        return INSTANCE;
+    }
+
+    /**
      * 设置标签页图标为指定的方块物品
      */
     @Override
     public Item getTabIconItem() {
         return Item.getItemFromBlock(BlockLoader.BLOCK_WEB_CONTROLLER);
-    }
-
-    /**
-     * 获取单例实例
-     */
-    public static TakoTechTabs getInstance() {
-        return INSTANCE;
     }
 }

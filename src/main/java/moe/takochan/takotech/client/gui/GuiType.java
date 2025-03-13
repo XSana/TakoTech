@@ -15,14 +15,20 @@ public enum GuiType implements IGuiHandler {
 
     GUI_TOOLBOX_PLUS_SELECT(ContainerToolboxPlusSelect.class, GuiToolboxPlusSelect.class, null);
 
+    public final Class<?> tileClass;
     private final Class<?> containerClass;
     private final Class<?> guiClass;
-    public final Class<?> tileClass;
 
     GuiType(final Class<?> containerClass, final Class<?> guiClass, final Class<?> tileClass) {
         this.containerClass = containerClass;
         this.guiClass = guiClass;
         this.tileClass = tileClass;
+    }
+
+    public static void register() {
+        for (GuiType type : values()) {
+            NetworkRegistry.INSTANCE.registerGuiHandler(TakoTechMod.instance, type);
+        }
     }
 
     @Override
@@ -58,12 +64,6 @@ public enum GuiType implements IGuiHandler {
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to create container for " + this.name(), e);
-        }
-    }
-
-    public static void register() {
-        for (GuiType type : values()) {
-            NetworkRegistry.INSTANCE.registerGuiHandler(TakoTechMod.instance, type);
         }
     }
 }

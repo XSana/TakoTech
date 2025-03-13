@@ -48,8 +48,7 @@ public abstract class BaseAETileBlock extends AEBaseTileBlock implements IBaseAE
     }
 
     /**
-     * 注册方块的所有图标（重写AE原有贴图获取逻辑）。
-     * 此方法仅在客户端环境中调用，用于渲染方块。
+     * 注册方块的所有图标（重写AE原有贴图获取逻辑）。 此方法仅在客户端环境中调用，用于渲染方块。
      *
      * @param register IIconRegister 用于注册方块的图标
      */
@@ -87,8 +86,7 @@ public abstract class BaseAETileBlock extends AEBaseTileBlock implements IBaseAE
     }
 
     /**
-     * 注册当前方块及其关联的 TileEntity。
-     * 使用 GameRegistry 进行注册以便在游戏中使用。
+     * 注册当前方块及其关联的 TileEntity。 使用 GameRegistry 进行注册以便在游戏中使用。
      */
     public void register() {
         GameRegistry.registerBlock(this, this.getItemBlockClass(), this.getName());

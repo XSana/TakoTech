@@ -14,9 +14,8 @@ import moe.takochan.takotech.common.item.IBaseItem;
 
 public abstract class BaseItemToolbox extends ItemToolbox implements IBaseItem {
 
-    private String unlocalizedName;
-
     protected String name;
+    private String unlocalizedName;
 
     public BaseItemToolbox(String name) {
         super(null);
