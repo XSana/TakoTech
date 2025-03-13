@@ -1,7 +1,17 @@
 itemGroup.TakoTech=塔可科技
 
 item.takotech.ore_storage_cell.name=ME矿物存储原件
+item.takotech.toolbox_plus.name=高级工具箱
+
+tile.takotech.web_controller.name=Web控制器
 
 tooltip.takotech.ore_storage_cell.desc=一个近乎无限容量的存储元件，只能用于矿物存储
-
 tooltip.takotech.ore_storage_cell.desc.1=可存入矿典前缀
+
+tooltip.takotech.web_controller.desc=未完成，请勿使用，可能会导致存档损坏
+tooltip.takotech.web_controller.desc.1=控制器Id
+
+tooltip.takotech.toolbox_plus.desc=§r按 §6[%s] §r键切换工具
+
+key.takotech.category=塔可科技
+key.takotech.toolbox_plus.desc=切换工具（高级工具箱）

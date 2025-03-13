@@ -1,7 +1,17 @@
 itemGroup.TakoTech=TakoTech
 
 item.takotech.ore_storage_cell.name=ME Ore Storage Cell
+item.takotech.toolbox_plus.name=Tool Box Plus
+
+tile.takotech.web_controller.name=Web Controller
 
 tooltip.takotech.ore_storage_cell.desc=An almost infinite capacity storage component, only usable for mineral storage.
-
 tooltip.takotech.ore_storage_cell.desc.1=Can store ore dictionary prefixes.
+
+tooltip.takotech.web_controller.desc=Unfinished, do not use. It may cause archive corruption.
+tooltip.takotech.web_controller.desc.1=Controller Id
+
+tooltip.takotech.toolbox_plus.desc=§rPress §6%s §rto switch tools
+
+key.takotech.category=Tako Tech
+key.takotech.toolbox_plus.desc=Selector Tool (Toolbox Plus)

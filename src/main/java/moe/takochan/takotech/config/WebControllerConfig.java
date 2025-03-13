@@ -24,4 +24,8 @@ public class WebControllerConfig {
     @Config.DefaultInt(11451)
     @Config.RangeInt(min = 0, max = 65535)
     public static int defaultPort;
+
+    @Config.Comment("是否使用 (SSL/TLS) 加密连接。如果服务端启用了https则启用。")
+    @Config.DefaultBoolean(false)
+    public static boolean useSSL;
 }

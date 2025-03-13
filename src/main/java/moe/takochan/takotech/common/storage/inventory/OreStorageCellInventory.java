@@ -20,12 +20,12 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
-import appeng.util.Platform;
+import moe.takochan.takotech.common.data.CellItemStorageData;
 import moe.takochan.takotech.common.item.ae.ItemOreStorageCell;
 import moe.takochan.takotech.common.storage.CellItemSavedData;
-import moe.takochan.takotech.common.storage.CellItemStorage;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
 import moe.takochan.takotech.constants.NBTConstants;
+import moe.takochan.takotech.utils.CommonUtils;
 
 /**
  * 矿物存储元件库存管理。
@@ -35,11 +35,10 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     // NBT标签名称，用于存储物品类型和数量的标签
     private static final String ITEM_TYPE_TAG = "it";
     private static final String ITEM_COUNT_TAG = "ic";
-
+    // 元件的数据存储实例
+    protected final CellItemStorageData storageData;
     // 存储的物品数量和物品类型数量
     private final long storedItemCount;
-    private int storedItemTypes;
-
     // 元件的物品堆栈、保存提供器和NBT数据
     private final ItemStack cellItem;
     private final ISaveProvider container;
@@ -47,11 +46,9 @@ public class OreStorageCellInventory implements ITakoCellInventory {
 
     // 原件类型实例
     private final ItemOreStorageCell cellType;
+    private int storedItemTypes;
     // 元件中的物品列表
     private IItemList<IAEItemStack> cellItems;
-
-    // 元件的数据存储实例
-    protected final CellItemStorage storage;
 
     /**
      * 初始化元件的物品堆栈和保存提供器。
@@ -70,7 +67,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         this.container = container;
 
         // 读取NBT数据
-        this.tagCompound = Platform.openNbtData(cellItem);
+        this.tagCompound = CommonUtils.openNbtData(cellItem);
 
         // 从NBT数据中读取存储的物品数量和类型
         this.storedItemTypes = tagCompound.getInteger(ITEM_TYPE_TAG);
@@ -80,8 +77,31 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         this.cellType = (ItemOreStorageCell) this.cellItem.getItem();
 
         // 获取元件的数据存储实例
-        this.storage = Platform.isServer() ? CellItemSavedData.getInstance()
+        this.storageData = CommonUtils.isServer() ? CellItemSavedData.getInstance()
             .getDataStorage(this.getItemStack()) : null;
+    }
+
+    /**
+     * 判断物品是否为有效的元件。
+     *
+     * @param itemStack 要检查的物品堆栈
+     * @return 如果物品堆栈是有效的元件，返回 true；否则返回 false
+     */
+    private static boolean isStorageCell(final IAEItemStack itemStack) {
+        if (itemStack == null) {
+            return false;
+        }
+
+        try {
+            // 检查物品是否为 IStorageCell 类型，并且是否可以存储其他物品
+            if (itemStack.getItem() instanceof IStorageCell type) {
+                return !type.storableInStorageCell();
+            }
+        } catch (final Throwable err) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -439,8 +459,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     /**
      * 获取当前元件中的物品列表。
      * <p>
-     * 该方法首先检查当前元件是否已经加载了物品列表。如果物品列表尚未加载（即 `cellItems` 为 `null`），
-     * 则会调用 `loadCellItems()` 方法来加载物品列表。最后返回元件中的物品列表。
+     * 该方法首先检查当前元件是否已经加载了物品列表。如果物品列表尚未加载（即 `cellItems` 为 `null`）， 则会调用 `loadCellItems()` 方法来加载物品列表。最后返回元件中的物品列表。
      *
      * @return 返回一个物品列表，包含当前元件中所有物品的堆栈信息。
      */
@@ -450,29 +469,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         }
 
         return this.cellItems;
-    }
-
-    /**
-     * 判断物品是否为有效的元件。
-     *
-     * @param itemStack 要检查的物品堆栈
-     * @return 如果物品堆栈是有效的元件，返回 true；否则返回 false
-     */
-    private static boolean isStorageCell(final IAEItemStack itemStack) {
-        if (itemStack == null) {
-            return false;
-        }
-
-        try {
-            // 检查物品是否为 IStorageCell 类型，并且是否可以存储其他物品
-            if (itemStack.getItem() instanceof IStorageCell type) {
-                return !type.storableInStorageCell();
-            }
-        } catch (final Throwable err) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -500,7 +496,7 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     private void loadCellItems() {
         // 如果物品列表为空，则创建一个新列表
         if (this.cellItems == null) {
-            this.cellItems = this.storage.getItems();
+            this.cellItems = this.storageData.getItems();
             for (IAEItemStack ais : this.cellItems) {
                 if (ais != null && ais.getStackSize() <= 0) {
                     ais.reset();
@@ -512,8 +508,8 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         this.updateItemTypes();
 
         if (!this.getDiskID()
-            .equals(this.storage.getDiskID())) {
-            tagCompound.setString(NBTConstants.DISK_ID, this.storage.getDiskID());
+            .equals(this.storageData.getDiskID())) {
+            tagCompound.setString(NBTConstants.DISK_ID, this.storageData.getDiskID());
         }
     }
 

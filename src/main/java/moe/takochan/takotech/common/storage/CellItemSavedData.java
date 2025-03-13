@@ -12,22 +12,21 @@ import net.minecraft.world.WorldSavedData;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraftforge.common.util.Constants;
 
-import appeng.util.Platform;
 import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.item.ae.BaseAECellItem;
+import moe.takochan.takotech.common.data.CellItemStorageData;
+import moe.takochan.takotech.common.item.BaseAECellItem;
 import moe.takochan.takotech.constants.NBTConstants;
+import moe.takochan.takotech.utils.CommonUtils;
 
 /**
- * `StorageComponentSavedData` 类负责管理存储元件数据。
- * 它继承自 `WorldSavedData`，用于保存特定于世界的存储元件数据。
- * 这些数据是持久化的，可以跨世界加载和保存。
+ * `StorageComponentSavedData` 类负责管理存储元件数据。 它继承自 `WorldSavedData`，用于保存特定于世界的存储元件数据。 这些数据是持久化的，可以跨世界加载和保存。
  */
 public class CellItemSavedData extends WorldSavedData {
 
     private final static String DATA_NAME = Reference.MODID + "_Cell";
 
     private static CellItemSavedData INSTANCE;
-    private final Map<String, CellItemStorage> disks = new HashMap<>();
+    private final Map<String, CellItemStorageData> disks = new HashMap<>();
 
     public CellItemSavedData() {
         this(DATA_NAME);
@@ -38,9 +37,7 @@ public class CellItemSavedData extends WorldSavedData {
     }
 
     /**
-     * 初始化 `StorageComponentSavedData`，将其加载到指定世界的地图存储中。
-     * 如果没有现有的数据，则创建新的实例并存储。
-     * 这个方法是同步的，确保在一个世界加载时只会初始化一次。
+     * 初始化 `StorageComponentSavedData`，将其加载到指定世界的地图存储中。 如果没有现有的数据，则创建新的实例并存储。 这个方法是同步的，确保在一个世界加载时只会初始化一次。
      *
      * @param world 当前加载的世界
      */
@@ -70,13 +67,13 @@ public class CellItemSavedData extends WorldSavedData {
 
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
-        Map<String, CellItemStorage> n = new HashMap<>();
+        Map<String, CellItemStorageData> n = new HashMap<>();
         NBTTagList list = nbt.getTagList(NBTConstants.DISK_LIST, Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < list.tagCount(); i++) {
             NBTTagCompound tag = list.getCompoundTagAt(i);
             String diskID = tag.getString(NBTConstants.DISK_ID);
             NBTTagList items = tag.getTagList(NBTConstants.DISK_ITEMS, Constants.NBT.TAG_COMPOUND);
-            CellItemStorage storage = CellItemStorage.readFromNBT(diskID, items);
+            CellItemStorageData storage = CellItemStorageData.readFromNBT(diskID, items);
             n.put(diskID, storage);
         }
         disks.clear();
@@ -86,7 +83,7 @@ public class CellItemSavedData extends WorldSavedData {
     @Override
     public void writeToNBT(NBTTagCompound nbt) {
         NBTTagList list = new NBTTagList();
-        for (Map.Entry<String, CellItemStorage> entry : disks.entrySet()) {
+        for (Map.Entry<String, CellItemStorageData> entry : disks.entrySet()) {
             if (entry.getValue() == null || entry.getValue()
                 .isEmpty()) {
                 continue;
@@ -109,15 +106,15 @@ public class CellItemSavedData extends WorldSavedData {
      * @param itemStack 物品堆栈
      * @return 与存储元件项堆栈关联的 `CellItemStorage` 数据
      */
-    public CellItemStorage getDataStorage(ItemStack itemStack) {
+    public CellItemStorageData getDataStorage(ItemStack itemStack) {
         if (itemStack.getItem() instanceof BaseAECellItem) {
-            NBTTagCompound tag = Platform.openNbtData(itemStack);
+            NBTTagCompound tag = CommonUtils.openNbtData(itemStack);
             String diskId = tag.getString(NBTConstants.DISK_ID);
             if (diskId == null || diskId.isEmpty()) {
                 diskId = UUID.randomUUID()
                     .toString();
             }
-            return disks.computeIfAbsent(diskId, CellItemStorage::new);
+            return disks.computeIfAbsent(diskId, CellItemStorageData::new);
         }
         return null;
     }
