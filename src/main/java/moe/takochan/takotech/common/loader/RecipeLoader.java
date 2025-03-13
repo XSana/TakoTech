@@ -8,8 +8,13 @@ import appeng.api.AEApi;
 import appeng.core.ApiDefinitions;
 import appeng.core.api.definitions.ApiMaterials;
 import cpw.mods.fml.common.registry.GameRegistry;
+import ic2.core.Ic2Items;
+import moe.takochan.takotech.common.recipe.ToolboxPlusRecipe;
 
-public class RecipeLoader {
+/**
+ * 配方注册
+ */
+public class RecipeLoader implements Runnable {
 
     private static ItemStack BLOCK_COBBLESTONE;
 
@@ -17,8 +22,9 @@ public class RecipeLoader {
 
     private static ItemStack ITEM_AE2_CELL_64_PART;
 
-    public static void init() {
+    private static ItemStack ITEM_IC2_TOOLBOX;
 
+    public RecipeLoader() {
         ApiDefinitions aeDef = (ApiDefinitions) AEApi.instance()
             .definitions();
         ApiMaterials aeMaterials = aeDef.materials();
@@ -27,15 +33,22 @@ public class RecipeLoader {
 
         ITEM_AE2_EMPTY_STORAGE_CELL = aeMaterials.emptyStorageCell()
             .maybeStack(1)
-            .get();
+            .orNull();
 
         ITEM_AE2_CELL_64_PART = aeMaterials.cell64kPart()
             .maybeStack(1)
-            .get();
+            .orNull();
+
+        ITEM_IC2_TOOLBOX = Ic2Items.toolbox;
     }
 
-    public static void registryRecipe() {
+    @Override
+    public void run() {
+        registryRecipe();
+    }
 
+    private void registryRecipe() {
+        // 矿物存储元件
         GameRegistry.addRecipe(
             new ShapedOreRecipe(
                 new ItemStack(ItemLoader.ITEM_ORE_STORAGE_CELL, 1),
@@ -48,5 +61,8 @@ public class RecipeLoader {
                 BLOCK_COBBLESTONE,
                 'E',
                 ITEM_AE2_CELL_64_PART));
+
+        GameRegistry.addRecipe(new ToolboxPlusRecipe(new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS, 1), ITEM_IC2_TOOLBOX));
     }
+
 }
