@@ -1,6 +1,7 @@
 package moe.takochan.takotech.coremod.mixin.gt;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -45,9 +46,15 @@ public abstract class MetaGeneratedToolRendererMixin {
             IIcon baseIcon = ItemLoader.ITEM_TOOLBOX_PLUS.getBaseIcon();
             if (baseIcon != null) {
                 // 保存当前渲染状态
-                GL11.glPushMatrix();
-                // 设置混合函数
+                boolean wasBlendEnabled = GL11.glGetBoolean(GL11.GL_BLEND);
+                boolean wasDepthTestEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+                int blendSrc = GL11.glGetInteger(GL11.GL_BLEND_SRC);
+                int blendDst = GL11.glGetInteger(GL11.GL_BLEND_DST);
+
+                // 设置新状态
+                GL11.glEnable(GL11.GL_BLEND);
                 GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                GL11.glDisable(GL11.GL_DEPTH_TEST);
 
                 // 绑定物品纹理
                 Minecraft.getMinecraft().renderEngine.bindTexture(TextureMap.locationItemsTexture);
@@ -61,8 +68,17 @@ public abstract class MetaGeneratedToolRendererMixin {
                 // 渲染工具箱的图标
                 GTRenderUtil.renderItem(IItemRenderer.ItemRenderType.INVENTORY, baseIcon);
 
-                // 恢复渲染状态
-                GL11.glPopMatrix();
+                // 恢复原始状态
+                GL11.glLoadIdentity();
+                if (wasBlendEnabled) GL11.glEnable(GL11.GL_BLEND);
+                else GL11.glDisable(GL11.GL_BLEND);
+                GL11.glBlendFunc(blendSrc, blendDst);
+                if (wasDepthTestEnabled) GL11.glEnable(GL11.GL_DEPTH_TEST);
+                else GL11.glDisable(GL11.GL_DEPTH_TEST);
+
+                RenderHelper.disableStandardItemLighting();
+                GL11.glDisable(GL11.GL_LIGHTING);
+                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
             }
         }
