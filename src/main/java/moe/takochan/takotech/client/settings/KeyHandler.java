@@ -1,4 +1,4 @@
-package moe.takochan.takotech.client.gui.settings;
+package moe.takochan.takotech.client.settings;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;

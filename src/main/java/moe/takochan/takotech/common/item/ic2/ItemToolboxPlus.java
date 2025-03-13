@@ -1,6 +1,6 @@
 package moe.takochan.takotech.common.item.ic2;
 
-import static moe.takochan.takotech.client.gui.settings.GameSettings.selectTool;
+import static moe.takochan.takotech.client.settings.GameSettings.selectTool;
 
 import java.util.ArrayList;
 import java.util.List;
