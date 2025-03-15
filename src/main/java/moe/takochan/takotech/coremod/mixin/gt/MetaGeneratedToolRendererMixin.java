@@ -1,7 +1,6 @@
 package moe.takochan.takotech.coremod.mixin.gt;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -75,10 +74,6 @@ public abstract class MetaGeneratedToolRendererMixin {
                 GL11.glBlendFunc(blendSrc, blendDst);
                 if (wasDepthTestEnabled) GL11.glEnable(GL11.GL_DEPTH_TEST);
                 else GL11.glDisable(GL11.GL_DEPTH_TEST);
-
-                RenderHelper.disableStandardItemLighting();
-                GL11.glDisable(GL11.GL_LIGHTING);
-                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
             }
         }

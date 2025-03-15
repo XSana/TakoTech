@@ -16,7 +16,7 @@ import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 
-@Mixin(value = NetHandlerPlayServer.class, remap = false)
+@Mixin(value = NetHandlerPlayServer.class)
 public abstract class NetHandlerPlayServerMixin {
 
     @Shadow
@@ -37,7 +37,7 @@ public abstract class NetHandlerPlayServerMixin {
             target = "Lnet/minecraft/entity/player/InventoryPlayer;getCurrentItem()Lnet/minecraft/item/ItemStack;",
             ordinal = 1,
             shift = At.Shift.BEFORE),
-        remap = true,
+        cancellable = true,
         require = 1)
     private void onHandleItemStackZero(C08PacketPlayerBlockPlacement packetIn, CallbackInfo ci) {
         // 获取玩家当前手持的物品堆栈
@@ -52,6 +52,7 @@ public abstract class NetHandlerPlayServerMixin {
 
                 // 更新玩家物品栏，将工具箱放回当前槽位
                 this.playerEntity.inventory.setInventorySlotContents(this.playerEntity.inventory.currentItem, toolbox);
+                ci.cancel();
             }
         }
 
