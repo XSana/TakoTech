@@ -31,7 +31,14 @@ public class KeyHandler {
      */
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
-    public void onKeyPress(InputEvent.KeyInputEvent event) {
+    public void onKeyPress(InputEvent event) {
+        if (event instanceof InputEvent.KeyInputEvent || event instanceof InputEvent.MouseInputEvent) {
+            checkToolboxOpenRequest();
+        }
+    }
+
+    private void checkToolboxOpenRequest() {
+        // 如果按键被按下，执行逻辑
         if (GameSettings.selectTool.isPressed()) {
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
             ItemStack heldItem = player.inventory.getCurrentItem();
