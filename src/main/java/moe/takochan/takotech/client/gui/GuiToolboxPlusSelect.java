@@ -15,6 +15,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import codechicken.nei.VisiblityData;
@@ -193,8 +194,25 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             while (Keyboard.next()) {
                 this.handleKeyboardInput();
             }
-            // 当选择按键松开时执行选择操作
-            if (!Keyboard.isKeyDown(GameSettings.selectTool.getKeyCode())) {
+            // 获取 KeyBinding 的键码
+            int keyCode = GameSettings.selectTool.getKeyCode();
+
+            // 判断是否是鼠标按键
+            boolean isMouseButton = keyCode < 0;
+
+            // 检测按键是否松开
+            boolean isKeyReleased;
+            if (isMouseButton) {
+                // 鼠标按键检测（需要转换键码）
+                int mouseButton = keyCode + 100;
+                isKeyReleased = !Mouse.isButtonDown(mouseButton);
+            } else {
+                // 键盘按键检测
+                isKeyReleased = !Keyboard.isKeyDown(keyCode);
+            }
+
+            // 当选择按键松开时执行操作
+            if (isKeyReleased) {
                 if (selectIndex != -1) {
                     int slot = items.get(selectIndex)
                         .getSlot();
