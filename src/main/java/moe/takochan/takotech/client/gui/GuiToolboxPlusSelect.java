@@ -28,6 +28,7 @@ import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.data.ToolData;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.common.loader.ItemLoader;
+import moe.takochan.takotech.config.ToolboxConfig;
 import moe.takochan.takotech.network.NetworkHandler;
 import moe.takochan.takotech.network.PacketToolboxSelected;
 
@@ -179,7 +180,17 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
         // 若存在工具提示物品则绘制其提示文本
-        // if (tooltipItem != null) renderToolTip(tooltipItem, mouseX, mouseY);
+        if (ToolboxConfig.renderToolTip && selectIndex > -1) {
+            ToolData toolData = items.get(selectIndex);
+            if (toolData.getSlot() == -1) return;
+
+            // 将鼠标坐标转换为 GUI 坐标系
+            int guiMouseX = mouseX - guiLeft;
+            int guiMouseY = mouseY - guiTop;
+
+            ItemStack tooltipItem = toolData.getItemStack();
+            renderToolTip(tooltipItem, guiMouseX, guiMouseY);
+        }
     }
 
     @Override
@@ -190,37 +201,35 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      */
     @Override
     public void handleInput() {
-        if (Keyboard.isCreated()) {
-            while (Keyboard.next()) {
-                this.handleKeyboardInput();
-            }
-            // 获取 KeyBinding 的键码
-            int keyCode = GameSettings.selectTool.getKeyCode();
+        super.handleInput();
 
-            // 判断是否是鼠标按键
-            boolean isMouseButton = keyCode < 0;
+        // 获取 KeyBinding 的键码
+        int keyCode = GameSettings.selectTool.getKeyCode();
 
-            // 检测按键是否松开
-            boolean isKeyReleased;
-            if (isMouseButton) {
-                // 鼠标按键检测（需要转换键码）
-                int mouseButton = keyCode + 100;
-                isKeyReleased = !Mouse.isButtonDown(mouseButton);
-            } else {
-                // 键盘按键检测
-                isKeyReleased = !Keyboard.isKeyDown(keyCode);
-            }
+        // 判断是否是鼠标按键
+        boolean isMouseButton = keyCode < 0;
 
-            // 当选择按键松开时执行操作
-            if (isKeyReleased) {
-                if (selectIndex != -1) {
-                    int slot = items.get(selectIndex)
-                        .getSlot();
-                    NetworkHandler.NETWORK.sendToServer(new PacketToolboxSelected(slot));
-                }
-                mc.thePlayer.closeScreen();
-            }
+        // 检测按键是否松开
+        boolean isKeyReleased;
+        if (isMouseButton) {
+            // 鼠标按键检测（需要转换键码）
+            int mouseButton = keyCode + 100;
+            isKeyReleased = !Mouse.isButtonDown(mouseButton);
+        } else {
+            // 键盘按键检测
+            isKeyReleased = !Keyboard.isKeyDown(keyCode);
         }
+
+        // 当选择按键松开时执行操作
+        if (isKeyReleased) {
+            if (selectIndex != -1) {
+                int slot = items.get(selectIndex)
+                    .getSlot();
+                NetworkHandler.NETWORK.sendToServer(new PacketToolboxSelected(slot));
+            }
+            mc.thePlayer.closeScreen();
+        }
+
     }
 
     // region NEI
