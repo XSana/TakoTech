@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
+import appeng.api.config.Upgrades;
 import appeng.api.exceptions.AppEngException;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageCell;
@@ -283,7 +284,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public boolean isEditable(ItemStack is) {
-        return false;
+        return true;
     }
 
     /**
@@ -294,7 +295,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public IInventory getUpgradesInventory(ItemStack is) {
-        return new CellUpgrades(is, 0);
+        return new CellUpgrades(is, 2);
     }
 
     /**
@@ -339,8 +340,8 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public String getOreFilter(ItemStack is) {
-        // 不支持元件工作台默认返回空
-        return "";
+        return CommonUtils.openNbtData(is)
+            .getString("OreFilter");
     }
 
     /**
@@ -351,7 +352,8 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public void setOreFilter(ItemStack is, String filter) {
-        // 不支持元件工作台不做处理
+        CommonUtils.openNbtData(is)
+            .setString("OreFilter", filter);
     }
 
     /**
@@ -374,6 +376,12 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     public void register() {
         GameRegistry.registerItem(this, NameConstants.ITEM_ORE_STORAGE_CELL);
         setCreativeTab(TakoTechTabs.getInstance());
+
+        ItemStack itemStack = new ItemStack(this);
+        // 反向卡
+        Upgrades.INVERTER.registerItem(itemStack, 1);
+        // 矿典卡
+        Upgrades.ORE_FILTER.registerItem(itemStack, 1);
     }
 
     private String getOreDefs() {
