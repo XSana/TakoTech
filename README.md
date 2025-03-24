@@ -10,10 +10,9 @@ TakoTech(塔可科技)，主要用于改善在与我的小伙伴游玩[GTNH](htt
 
 ### 目标
 
-- [X] 中文输入修正 ([InputFix](https://github.com/zlainsama/InputFix))
+- [X] 中文输入修正 (会自动判是否安装了[InputFix](https://github.com/zlainsama/InputFix)，如果有则使用InputFix Mod)
 - [X] 矿物存储元件（qz-miner太强了！存储部分代码来源于[AE2Things](https://github.com/asdflj/AE2Things)）
-- [X] 高级工具箱（可以切换工具箱内的物品到手中，需要设置按键）
-- [X] 完善合成表
+- [X] 高级工具箱（原版工具箱相同增加可以切换工具箱内的物品到手中，需要设置按键）
 - [ ] AE网页下单
 - [ ] 加入吉祥物
 

@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
@@ -32,6 +33,7 @@ import appeng.util.item.OreReference;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import moe.takochan.takotech.client.gui.GuiType;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.common.item.BaseAECellItem;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
@@ -75,6 +77,14 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     @Override
     public String getUnlocalizedGroupName(Set<ItemStack> otherItems, ItemStack is) {
         return GuiText.StorageCells.getUnlocalized();
+    }
+
+    @Override
+    public ItemStack onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer player) {
+        if (CommonUtils.isServer()) {
+            CommonUtils.openGui(GuiType.GUI_ORE_STORAGE_CELL, player, null);
+        }
+        return super.onItemRightClick(itemStackIn, worldIn, player);
     }
 
     /**
