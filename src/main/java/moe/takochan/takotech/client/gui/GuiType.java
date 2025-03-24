@@ -10,6 +10,7 @@ import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.TakoTechMod;
+import moe.takochan.takotech.client.gui.container.ContainerOreStorageCell;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
 import moe.takochan.takotech.utils.CommonUtils;
 
@@ -21,7 +22,10 @@ import moe.takochan.takotech.utils.CommonUtils;
 public enum GuiType implements IGuiHandler {
 
     // 高级工具箱选择界面的 GUI 类型
-    GUI_TOOLBOX_PLUS_SELECT(ContainerToolboxPlusSelect.class, null);
+    GUI_TOOLBOX_PLUS_SELECT(ContainerToolboxPlusSelect.class, null),
+
+    // 矿物存储元件矿词开关界面
+    GUI_ORE_STORAGE_CELL(ContainerOreStorageCell.class, null);
 
     // 关联的 TileEntity 类
     public final Class<?> tileClass;
