@@ -13,15 +13,15 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
 
     private final static Minecraft mc = Minecraft.getMinecraft();
 
-    private final ResourceLocation GUI_TEXTURE = new ResourceLocation(
-        Reference.RESOURCE_ROOT_ID,
+    private final ResourceLocation GUI_TEXTURE = new ResourceLocation(Reference.RESOURCE_ROOT_ID,
         "textures/guis/base_gui.png");
 
     private final T container;
 
     private final String title;
-    private final int windowWidth; // 窗口宽度
-    private final int windowHeight; // 窗口高度
+    private final int windowWidth;
+    private final int windowHeight;
+    private int titleBarWidth;
 
     public BaseTakoGui(T container, String title, int windowWidth, int windowHeight) {
         super(container);
@@ -29,6 +29,7 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         this.title = title;
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
+        titleBarWidth = 0;
     }
 
     public T getContainer() {
@@ -65,10 +66,10 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         drawTitleBar(guiLeft, guiTop, windowWidth);
 
         // 绘制主体
-        drawBody(guiLeft, guiTop + 16, windowWidth, windowHeight - 3);
+        drawBody(guiLeft, guiTop + 16, windowWidth, windowHeight);
 
         // 绘制底部
-        //        drawBottom(guiLeft, guiTop + windowHeight - 16, windowWidth, 16);
+        drawBottom(guiLeft, guiTop + windowHeight - 3, windowWidth);
     }
 
     private void drawTitleBar(int x, int y, int width) {
@@ -81,7 +82,7 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         int middleWidth = Math.max(titleWidth + padding, 4);
 
         // 计算基础部分总宽度
-        int totalBase = leftWidth + middleWidth + rightBaseWidth;
+        titleBarWidth = leftWidth + middleWidth + rightBaseWidth;
 
         // 绘制左侧 (1-3像素)
         drawTexturedModalRect(x, y, 0, 0, 3, 16);
@@ -93,72 +94,57 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         drawTexturedModalRect(x + 3 + middleWidth, y, 4, 0, 16, 16);
 
         // 计算延伸区域剩余空间
-        int remaining = width - totalBase - 2; // 总宽-基础部分-2px边距
+        int remaining = width - titleBarWidth - 2; // 总宽-基础部分-2px边距
         if (remaining > 0) {
             // 右侧延伸部分 (16,0开始的1像素宽纹理)
-            drawModalRectWithCustomSizedTexture(
-                x + totalBase, y, 20, 0, // 新纹理坐标
+            drawModalRectWithCustomSizedTexture(x + titleBarWidth, y, 20, 0, // 新纹理坐标
                 remaining, 16, 1, 16  // 1像素宽纹理横向拉伸
             );
         }
 
         // 标题文字居中绘制
         int textX = x + 4 + (middleWidth - titleWidth) / 2;
-        int textY = y + 6; // 垂直居中
-        fontRendererObj.drawString(title, textX, textY, 0x404040);
+        int textY = y + 5; // 垂直居中
+        //        fontRendererObj.drawString(title, textX, textY, 0x404040);
     }
 
     private void drawBody(int x, int y, int width, int height) {
-        // 计算标题栏基准宽度（不含延伸部分）
-        int titleWidth = fontRendererObj.getStringWidth(title);
-        int titleBarWidth = 3 + Math.max(titleWidth + 8, 4) + 16;
 
         // 尺寸约束计算
         int actualWidth = Math.max(width, titleBarWidth); // 保证最小宽度
-        int actualHeight = Math.max(height, 3);           // 最小高度3px
-        actualHeight = Math.min(actualHeight, windowHeight - 3 - 16); // 最大高度限制
+        int actualHeight = Math.max(height - 3 - 16, 3);  // 最小高度3px
 
         // 左侧装饰（20,0-20,1）
-        drawModalRectWithCustomSizedTexture(
-            x, y, 20, 0,   // 纹理起点
+        drawModalRectWithCustomSizedTexture(x, y, // 绘制起点
+            0, 16,   // 纹理起点
             2, actualHeight, // 绘制尺寸
-            1, 2      // 纹理截取尺寸（1x2像素）
+            2, 1      // 纹理截取尺寸（1x2像素）
         );
 
         // 中间平铺区域（16,0-18,2）
-        int middleWidth = actualWidth - 2 - 2; // 总宽 - 左右装饰
-        for (int dx = 0; dx < middleWidth; dx += 3) {
-            int segmentWidth = Math.min(3, middleWidth - dx);
-            drawModalRectWithCustomSizedTexture(
-                x + 3 + dx, y, 16, 0,       // 纹理起点
-                segmentWidth, actualHeight, 3, 3         // 使用3x3纹理块
-            );
-        }
+        int middleWidth = actualWidth - 2 - 1; // 总宽 - 左右装饰
+        int segmentWidth = Math.max(3, middleWidth);
+        drawModalRectWithCustomSizedTexture(x + 2, y, 0, 17, segmentWidth, 3, 1, 3);
+        drawModalRectWithCustomSizedTexture(x + 2, y + 3, 2, 16,       // 纹理起点
+            segmentWidth, actualHeight - 3, 1, 1         // 使用3x3纹理块
+        );
 
         // 右侧装饰
-        if (actualWidth <= titleBarWidth) {
-            // 使用16,2-18,5的三行装饰
-            for (int row = 0; row < 3; row++) {
-                drawModalRectWithCustomSizedTexture(
-                    x + actualWidth - 3, y + row * 3, 16, 2 + row * 3, // 每行下移3像素
-                    3, 3, 3, 3);
-            }
+        if (actualWidth > titleBarWidth) {
+            drawTexturedModalRect(x + actualWidth - 2, y, 1, 17, 3, 3);
+            drawModalRectWithCustomSizedTexture(x + actualWidth - 1, y + 3, 3, 16, 2, actualHeight - 3, 2, 1);
         } else {
-            // 使用20,1-20,2的拉伸装饰
-            drawModalRectWithCustomSizedTexture(
-                x + actualWidth - 1, y, 20, 1,       // 纹理起点
-                1, actualHeight, 1, 2         // 1x2像素拉伸
-            );
+            drawModalRectWithCustomSizedTexture(x + actualWidth - 1, y, 3, 16, 2, actualHeight, 2, 1);
         }
     }
 
-    private void drawBottom(int x, int y, int width, int height) {
+    private void drawBottom(int x, int y, int width) {
         // 底部左 (16x16)
-        drawTexturedModalRect(x, y, 0, 32, 16, 16);
+        drawTexturedModalRect(x, y, 4, 17, 3, 3);
         // 底部中 (动态拉伸)
-        drawModalRectWithCustomSizedTexture(x + 16, y, 16, 32, width - 32, 16, 16, 16);
+        drawModalRectWithCustomSizedTexture(x + 3, y-1, 7, 17, width - 3 - 2, 4, 1, 3);
         // 底部右 (16x16)
-        drawTexturedModalRect(x + width - 16, y, 32, 32, 16, 16);
+        drawTexturedModalRect(x + width - 2, y, 8, 17, 3, 3);
     }
 
     private void drawModalRectWithCustomSizedTexture(int x, int y, int textureX, int textureY, int width, int height,
