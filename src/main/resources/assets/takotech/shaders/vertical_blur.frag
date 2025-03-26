@@ -3,11 +3,12 @@ in vec2 fragTexCoord;
 out vec4 color;
 
 uniform sampler2D image;
-uniform float height; // 纹理高度
+uniform float blurScale; // 新增 uniform，控制模糊强度
 const float weights[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
 
 void main() {
-    vec2 tex_offset = 1.0 / vec2(1.0, height); // 垂直偏移
+    float height = float(textureSize(image, 0).y);
+    vec2 tex_offset = blurScale / vec2(1.0, height); // 增加偏移量
     vec3 result = texture(image, fragTexCoord).rgb * weights[0];
 
     for (int i = 1; i < 5; ++i) {
