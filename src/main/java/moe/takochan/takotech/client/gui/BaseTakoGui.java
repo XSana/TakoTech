@@ -1,42 +1,40 @@
 package moe.takochan.takotech.client.gui;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
-import javax.imageio.ImageIO;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.ResourceLocation;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.client.gui.container.BaseContainer;
 import moe.takochan.takotech.client.renderer.shader.Framebuffer;
 import moe.takochan.takotech.client.renderer.shader.ShaderProgram;
 import moe.takochan.takotech.client.renderer.shader.ShaderType;
 import moe.takochan.takotech.common.Reference;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL30;
-import org.lwjgl.util.glu.GLU;
 
 @SideOnly(Side.CLIENT)
 public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer {
 
     private final static Minecraft mc = Minecraft.getMinecraft();
 
-    private final static ResourceLocation GUI_TEXTURE = new ResourceLocation(Reference.RESOURCE_ROOT_ID,
+    private final static ResourceLocation GUI_TEXTURE = new ResourceLocation(
+        Reference.RESOURCE_ROOT_ID,
         "textures/guis/base_gui.png");
 
+    private Framebuffer fboHorizontal;
+    private Framebuffer fboVertical;
+    private int lastFboWidth = -1;
+    private int lastFboHeight = -1;
+
+    private final float maxBlurScale = 2.0f;
+    private long openTime;
+
     private final T container;
-
     private final String title;
-
     private final int windowWidth;
     private final int windowHeight;
     private int titleBarWidth;
@@ -67,12 +65,22 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
 
     @Override
     public void initGui() {
+        // 初始化 GUI
         this.xSize = windowWidth;
         this.ySize = windowHeight + 16;
-
-        titleBarWidth = calculateTitleBarWidth();
-
         super.initGui();
+        // 计算标题栏宽度
+        this.titleBarWidth = calculateTitleBarWidth();
+        // 初始化或重建 FBO
+        this.updateFBO();
+        // 记录打开时间
+        this.openTime = System.currentTimeMillis();
+    }
+
+    @Override
+    public void onGuiClosed() {
+        this.deleteFBO();
+        super.onGuiClosed();
     }
 
     @Override
@@ -80,9 +88,9 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         int middleWidth = Math.max(fontRendererObj.getStringWidth(title) + 8, 4);
 
         // 标题文字居中绘制
-        //        int textX = guiLeft + 4 + (middleWidth - fontRendererObj.getStringWidth(title)) / 2;
-        //        int textY = guiTop + 5; // 垂直居中
-        //        fontRendererObj.drawString(title, textX, textY, 0x404040);
+        // int textX = guiLeft + 4 + (middleWidth - fontRendererObj.getStringWidth(title)) / 2;
+        // int textY = guiTop + 5; // 垂直居中
+        // fontRendererObj.drawString(title, textX, textY, 0x404040);
     }
 
     @Override
@@ -101,298 +109,119 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
 
     @Override
     public void drawDefaultBackground() {
+
         int screenWidth = mc.displayWidth;
         int screenHeight = mc.displayHeight;
 
-        // 获取原始纹理ID
+        mc.getFramebuffer()
+            .bindFramebuffer(false);
         int mcTextureId = mc.getFramebuffer().framebufferTexture;
 
-        // --- Pass 1: 水平模糊 ---
-        Framebuffer fboHorizontal = new Framebuffer(screenWidth, screenHeight);
-        fboHorizontal.bind();
+        float blurScale = getDynamicBlurScale();
+        // 水平模糊
+        applyShaderPass(fboHorizontal, mcTextureId, ShaderType.HORIZONTAL_BLUR, blurScale);
+        // 垂直模糊
+        applyShaderPass(fboVertical, fboHorizontal.getTextureId(), ShaderType.VERTICAL_BLUR, blurScale);
 
-        // 绑定原始纹理
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, mcTextureId);
-
-        // 使用水平模糊 shader
-        ShaderProgram horizontalShader = ShaderType.HORIZONTAL_BLUR.get();
-        horizontalShader.use();
-        horizontalShader.setUniform("image", 0);
-        horizontalShader.setUniform("blurScale", 50.0f);
-
-        // 绘制全屏四边形
-        // 保存当前状态
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
-
-        // 设置视口、正交投影和其他状态
+        // 最终输出: 绘制到当前缓冲帧
+        mc.getFramebuffer()
+            .bindFramebuffer(true);
         GL11.glViewport(0, 0, screenWidth, screenHeight);
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glLoadIdentity();
-        GL11.glOrtho(0, screenWidth, screenHeight, 0, -1, 1);
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glLoadIdentity();
 
-        // 确保禁用深度测试和启用混合（如果需要）
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
-        // 绘制全屏四边形
-        GL11.glBegin(GL11.GL_QUADS);
-        GL11.glTexCoord2f(0.0f, 0.0f);
-        GL11.glVertex2f(0.0f, 0.0f);
-        GL11.glTexCoord2f(1.0f, 0.0f);
-        GL11.glVertex2f(screenWidth, 0.0f);
-        GL11.glTexCoord2f(1.0f, 1.0f);
-        GL11.glVertex2f(screenWidth, screenHeight);
-        GL11.glTexCoord2f(0.0f, 1.0f);
-        GL11.glVertex2f(0.0f, screenHeight);
-        GL11.glEnd();
-
-        // 恢复状态
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPopMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPopMatrix();
-        GL11.glPopAttrib();
-        fboHorizontal.unbind();
-        ShaderProgram.clear();
-
-        // --- Pass 2: 垂直模糊 ---
-        Framebuffer fboVertical = new Framebuffer(screenWidth, screenHeight);
-        fboVertical.bind();
-
-        // 将水平模糊结果作为输入
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fboHorizontal.getTextureId());
-
-        // 使用垂直模糊 shader
-        ShaderProgram verticalShader = ShaderType.VERTICAL_BLUR.get();
-        verticalShader.use();
-        verticalShader.setUniform("image", 0);
-        horizontalShader.setUniform("blurScale", 50.0f);
-
-        // 保存当前状态
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
-
-        // 设置视口、正交投影和其他状态
-        GL11.glViewport(0, 0, screenWidth, screenHeight);
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glLoadIdentity();
-        GL11.glOrtho(0, screenWidth, screenHeight, 0, -1, 1);
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glLoadIdentity();
-
-        // 确保禁用深度测试和启用混合（如果需要）
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
-        // 绘制全屏四边形
-        GL11.glBegin(GL11.GL_QUADS);
-        GL11.glTexCoord2f(0.0f, 0.0f);
-        GL11.glVertex2f(0.0f, 0.0f);
-        GL11.glTexCoord2f(1.0f, 0.0f);
-        GL11.glVertex2f(screenWidth, 0.0f);
-        GL11.glTexCoord2f(1.0f, 1.0f);
-        GL11.glVertex2f(screenWidth, screenHeight);
-        GL11.glTexCoord2f(0.0f, 1.0f);
-        GL11.glVertex2f(0.0f, screenHeight);
-        GL11.glEnd();
-
-        // 恢复状态
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPopMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPopMatrix();
-        GL11.glPopAttrib();
-
-        fboVertical.unbind();
-        ShaderProgram.clear();
-
-        // --- 最终输出: 绘制到屏幕 ---
-        mc.getFramebuffer().bindFramebuffer(false);
-
+        // 设置正交投影
+        setupMatrix(screenWidth, screenHeight);
+        // 绑定贴图
         GL13.glActiveTexture(GL13.GL_TEXTURE0);
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fboVertical.getTextureId());
-
-        // 直接绘制全屏四边形到屏幕
-        // 保存当前状态
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
-
-        // 设置视口、正交投影和其他状态
-        GL11.glViewport(0, 0, screenWidth, screenHeight);
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glLoadIdentity();
-        GL11.glOrtho(0, screenWidth, screenHeight, 0, -1, 1);
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glLoadIdentity();
-
-        // 确保禁用深度测试和启用混合（如果需要）
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
-        // 绘制全屏四边形
-        GL11.glBegin(GL11.GL_QUADS);
-        GL11.glTexCoord2f(0.0f, 0.0f);
-        GL11.glVertex2f(0.0f, 0.0f);
-        GL11.glTexCoord2f(1.0f, 0.0f);
-        GL11.glVertex2f(screenWidth, 0.0f);
-        GL11.glTexCoord2f(1.0f, 1.0f);
-        GL11.glVertex2f(screenWidth, screenHeight);
-        GL11.glTexCoord2f(0.0f, 1.0f);
-        GL11.glVertex2f(0.0f, screenHeight);
-        GL11.glEnd();
-
-        // 恢复状态
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPopMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPopMatrix();
-        GL11.glPopAttrib();
-
-        // 清理 shader 状态（如果需要）
-        ShaderProgram.clear();
-
-        fboVertical.delete();
-        fboHorizontal.delete();
-
-        //        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-        //        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        //        GL11.glLoadIdentity();
-        //        GL11.glOrtho(0, screenWidth, 0, screenHeight, -1, 1);
-        //        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        //        GL11.glLoadIdentity();
-        //
-        //        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        //        fboBackground.bindTexture();        // 绘制四边形
-        //        GL11.glBegin(GL11.GL_QUADS);
-        //        // 左下角
-        //        GL11.glTexCoord2f(0.0f, 0.0f);
-        //        GL11.glVertex2f(0.0f, 0.0f);
-        //        // 右下角
-        //        GL11.glTexCoord2f(1.0f, 0.0f);
-        //        GL11.glVertex2f(width, 0.0f);
-        //        // 右上角
-        //        GL11.glTexCoord2f(1.0f, 1.0f);
-        //        GL11.glVertex2f(width, height);
-        //        // 左上角
-        //        GL11.glTexCoord2f(0.0f, 1.0f);
-        //        GL11.glVertex2f(0.0f, height);
-        //        GL11.glEnd();
-
-        //        mc.getFramebuffer().bindFramebuffer(true);
-        //        err = GL11.glGetError();
-
-        //        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(screenWidth * screenHeight * 4);
-        //        byteBuffer.order(ByteOrder.nativeOrder());
-        //        fboBackground.bindTexture();
-        //        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, byteBuffer);
-        //
-        //        BufferedImage image = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
-        //        byteBuffer.rewind();
-        //
-        //        for (int y = 0; y < height; y++) {
-        //            for (int x = 0; x < width; x++) {
-        //                int i = (x + (width * y)) * 4;
-        //                // 注意取出无符号字节
-        //                int r = byteBuffer.get(i) & 0xFF;
-        //                int g = byteBuffer.get(i + 1) & 0xFF;
-        //                int b = byteBuffer.get(i + 2) & 0xFF;
-        //                int a = byteBuffer.get(i + 3) & 0xFF;
-        //                // 组合成ARGB像素值
-        //                int pixel = ((a << 24) | (r << 16) | (g << 8) | b);
-        //                // 翻转y坐标（OpenGL与BufferedImage的坐标系差异）
-        //                image.setRGB(x, height - y - 1, pixel);
-        //            }
-        //        }
-        //        try {
-        //
-        //            ImageIO.write(image, "PNG", new File("D://texture.png"));
-        //        } catch (Exception e) {
-        //        }
-        //
-        //        int err = GL11.glGetError();
-        //        if (err != 0) {
-        //            String s1 = GLU.gluErrorString(err);
-        //            TakoTechMod.LOG.error("OpenGL error: " + s1);
-        //        }
-
-        //        fboBackground.unbind();
-
-        //        Framebuffer outFboBackground = new Framebuffer(screenWidth, screenHeight);
-        //        // Shader
-        //        ShaderProgram shaderProgram = ShaderType.HORIZONTAL_BLUR.get();
-        //        shaderProgram.use();
-        //        shaderProgram.setUniform("image", fboBackground.getTextureId());
-        //        shaderProgram.setUniform("width", screenWidth);
-        //        // 绑定fbo并绘制
-        //        outFboBackground.bind();
-        //        fboBackground.bindTexture();
-        //        fboBackground.renderToScreen();
-        //        outFboBackground.unbind();
-        //        // 解绑Shader
-        //        ShaderProgram.clear();
-        //
-        //
-        //        // Shader
-        //        shaderProgram = ShaderType.VERTICAL_BLUR.get();
-        //        shaderProgram.use();
-        //        shaderProgram.setUniform("image", outFboBackground.getTextureId());
-        //        //        shaderProgram.setUniform("height", screenHeight);
-        //        // 绘制
-        //        outFboBackground.bindTexture();
-        //        outFboBackground.renderToScreen();
-        //        ShaderProgram.clear();
-        //
-        //        // 释放 FBO 资源
-        //        outFboBackground.delete();
-        //        fboBackground.delete();
-        //
-        //        mc.getFramebuffer()
-        //            .bindFramebuffer(true);
+        // 绘制全屏矩形
+        renderFullscreenQuad(screenWidth, screenHeight);
+        // 恢复矩阵
+        restoreMatrix();
     }
 
-    /**
-     * 绘制覆盖全屏的四边形，供后处理阶段使用
-     *
-     * @param width  目标宽度
-     * @param height 目标高度
-     */
-    private void renderFullScreenQuad(int width, int height) {
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glBegin(GL11.GL_QUADS);
-        // 左下角
-        GL11.glTexCoord2f(0.0f, 0.0f);
-        GL11.glVertex2f(0.0f, 0.0f);
-        // 右下角
-        GL11.glTexCoord2f(1.0f, 0.0f);
-        GL11.glVertex2f(width, 0.0f);
-        // 右上角
-        GL11.glTexCoord2f(1.0f, 1.0f);
-        GL11.glVertex2f(width, height);
-        // 左上角
-        GL11.glTexCoord2f(0.0f, 1.0f);
-        GL11.glVertex2f(0.0f, height);
-        GL11.glEnd();
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
+    private float getDynamicBlurScale() {
+        float elapsed = (System.currentTimeMillis() - openTime) / 1000.0f;
+        float t = Math.min(elapsed, 1.0f); // 正规化时间
+        float eased = 1.0f - (float) Math.pow(1.0f - t, 3);
+        return eased * maxBlurScale;
+    }
+
+    private void updateFBO() {
+        int screenWidth = mc.displayWidth;
+        int screenHeight = mc.displayHeight;
+
+        if (fboHorizontal == null || fboVertical == null
+            || lastFboWidth != screenWidth
+            || lastFboHeight != screenHeight) {
+            deleteFBO();
+            fboHorizontal = new Framebuffer(screenWidth, screenHeight);
+            fboVertical = new Framebuffer(screenWidth, screenHeight);
+            lastFboWidth = screenWidth;
+            lastFboHeight = screenHeight;
+        }
+    }
+
+    private void deleteFBO() {
+        if (fboHorizontal != null) fboHorizontal.delete();
+        if (fboVertical != null) fboVertical.delete();
+        fboHorizontal = null;
+        fboVertical = null;
+    }
+
+    private void applyShaderPass(Framebuffer targetFBO, int textureId, ShaderType shaderType, float blurScale) {
+        // 获取屏幕尺寸
+        int screenWidth = mc.displayWidth;
+        int screenHeight = mc.displayHeight;
+        // 绑定目标FBO
+        targetFBO.bind();
+        // 设置矩阵和纹理
+        setupMatrix(screenWidth, screenHeight);
+        GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+        // 应用着色器
+        ShaderProgram shader = shaderType.get();
+        shader.use();
+        shader.setUniform("image", 0);
+        shader.setUniform("blurScale", blurScale);
+        shader.setUniform("texSize", (float) screenWidth, (float) screenHeight);
+        // 绘制全屏矩形
+        renderFullscreenQuad(screenWidth, screenHeight);
+        // 清除着色器
+        ShaderProgram.clear();
+        // 恢复矩阵
+        restoreMatrix();
+        // 解绑FBO
+        targetFBO.unbind();
+    }
+
+    private void setupMatrix(int width, int height) {
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        GL11.glOrtho(0, width, height, 0, -1, 1);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+    }
+
+    private void restoreMatrix() {
+        GL11.glPopMatrix();
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPopMatrix();
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+    }
+
+    private void renderFullscreenQuad(int width, int height) {
+        Tessellator tess = Tessellator.instance;
+        tess.startDrawingQuads();
+        tess.setColorOpaque_I(0xFFFFFF);
+        tess.addVertexWithUV(0, height, 0, 0.0, 0.0);
+        tess.addVertexWithUV(width, height, 0, 1.0, 0.0);
+        tess.addVertexWithUV(width, 0, 0, 1.0, 1.0);
+        tess.addVertexWithUV(0, 0, 0, 0.0, 1.0);
+        tess.draw();
     }
 
     private int calculateTitleBarWidth() {
@@ -425,7 +254,7 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
 
         // 尺寸约束计算
         int actualWidth = Math.max(width, titleBarWidth); // 保证最小宽度
-        int actualHeight = Math.max(height - 3 - 16, 3);  // 最小高度3px
+        int actualHeight = Math.max(height - 3 - 16, 3); // 最小高度3px
 
         // 左侧装饰（20,0-20,1）
         drawScaledSegment(x, y, 0, 16, 2, actualHeight, 2, 1);
