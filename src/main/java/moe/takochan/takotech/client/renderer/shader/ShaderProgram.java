@@ -1,7 +1,8 @@
 package moe.takochan.takotech.client.renderer.shader;
 
-import moe.takochan.takotech.TakoTechMod;
 import org.lwjgl.opengl.GL20;
+
+import moe.takochan.takotech.TakoTechMod;
 
 public class ShaderProgram extends com.gtnewhorizon.gtnhlib.client.renderer.shader.ShaderProgram {
 
@@ -13,6 +14,15 @@ public class ShaderProgram extends com.gtnewhorizon.gtnhlib.client.renderer.shad
         int loc = GL20.glGetUniformLocation(this.getProgram(), name);
         if (loc >= 0) {
             GL20.glUniform1f(loc, value);
+        } else {
+            TakoTechMod.LOG.warn("Uniform '{}' not found in shader {}", name, this.getProgram());
+        }
+    }
+
+    public void setUniform(String name, float x, float y) {
+        int loc = GL20.glGetUniformLocation(this.getProgram(), name);
+        if (loc >= 0) {
+            setUniform2f(name, x, y);
         } else {
             TakoTechMod.LOG.warn("Uniform '{}' not found in shader {}", name, this.getProgram());
         }

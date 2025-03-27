@@ -3,10 +3,11 @@ package moe.takochan.takotech.client.renderer.shader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.lwjgl.opengl.GL20;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.common.Reference;
-import org.lwjgl.opengl.GL20;
 
 @SideOnly(Side.CLIENT)
 public enum ShaderType {
