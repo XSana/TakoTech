@@ -19,32 +19,43 @@ import moe.takochan.takotech.common.Reference;
 @SideOnly(Side.CLIENT)
 public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer {
 
+    // 静态资源与常量
     private final static Minecraft mc = Minecraft.getMinecraft();
-
     private final static ResourceLocation GUI_TEXTURE = new ResourceLocation(
         Reference.RESOURCE_ROOT_ID,
         "textures/guis/base_gui.png");
 
+    // FBO 渲染状态
+    private Framebuffer fboDownscale;
     private Framebuffer fboHorizontal;
     private Framebuffer fboVertical;
-    private int lastFboWidth = -1;
-    private int lastFboHeight = -1;
+    private int fboWidth = -1;
+    private int fboHeight = -1;
 
-    private final float maxBlurScale = 2.0f;
+    // 动画
+    private final float maxBlurScale;
     private long openTime;
 
+    // GUI 相关字段
+    private final int guiWidth;
+    private final int guiHeight;
     private final T container;
     private final String title;
-    private final int windowWidth;
-    private final int windowHeight;
     private int titleBarWidth;
+    private int screenWidth = -1;
+    private int screenHeight = -1;
 
-    public BaseTakoGui(T container, String title, int windowWidth, int windowHeight) {
+    public BaseTakoGui(T container, String title, int guiWidth, int guiHeight) {
+        this(container, title, guiWidth, guiHeight, 1.0f);
+    }
+
+    public BaseTakoGui(T container, String title, int guiWidth, int guiHeight, float maxBlurScale) {
         super(container);
         this.container = container;
         this.title = title;
-        this.windowWidth = windowWidth;
-        this.windowHeight = windowHeight;
+        this.guiWidth = guiWidth;
+        this.guiHeight = guiHeight;
+        this.maxBlurScale = maxBlurScale;
     }
 
     public T getContainer() {
@@ -55,20 +66,23 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         return title;
     }
 
-    public int getWindowWidth() {
-        return windowWidth;
+    public int getGuiWidth() {
+        return guiWidth;
     }
 
-    public int getWindowHeight() {
-        return windowHeight;
+    public int getGuiHeight() {
+        return guiHeight;
     }
 
     @Override
     public void initGui() {
         // 初始化 GUI
-        this.xSize = windowWidth;
-        this.ySize = windowHeight + 16;
+        this.xSize = guiWidth;
+        this.ySize = guiHeight + 16;
         super.initGui();
+        // 记录屏幕尺寸
+        screenWidth = mc.displayWidth;
+        screenHeight = mc.displayHeight;
         // 计算标题栏宽度
         this.titleBarWidth = calculateTitleBarWidth();
         // 初始化或重建 FBO
@@ -84,13 +98,29 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
     }
 
     @Override
-    protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-        int middleWidth = Math.max(fontRendererObj.getStringWidth(title) + 8, 4);
+    public void drawDefaultBackground() {
 
-        // 标题文字居中绘制
-        // int textX = guiLeft + 4 + (middleWidth - fontRendererObj.getStringWidth(title)) / 2;
-        // int textY = guiTop + 5; // 垂直居中
-        // fontRendererObj.drawString(title, textX, textY, 0x404040);
+        // 计算模糊度
+        float blurScale = getDynamicBlurScale();
+        // 绘制黑色半透明背景
+        this.drawGradientRect(0, 0, this.width, this.height, 0x33101010, 0x4C101010);
+        // 获取MC当前缓冲帧的纹理ID
+        int mainFboTexture = mc.getFramebuffer().framebufferTexture;
+        // 降采样
+        fboDownscale.bind();
+        drawFullscreenQuadWithTexture(fboWidth, fboHeight, mainFboTexture);
+        fboDownscale.unbind();
+        // 水平模糊
+        applyShaderPass(fboHorizontal, fboDownscale.getTextureId(), ShaderType.HORIZONTAL_BLUR, blurScale);
+        // 垂直模糊
+        applyShaderPass(fboVertical, fboHorizontal.getTextureId(), ShaderType.VERTICAL_BLUR, blurScale);
+        // 最终输出，绘制到当前缓冲帧
+        // 将MC的当前缓冲帧绑定为当前FBO
+        mc.getFramebuffer()
+            .bindFramebuffer(true);
+        GL11.glViewport(0, 0, screenWidth, screenHeight);
+        // 绘制全屏矩形
+        drawFullscreenQuadWithTexture(fboWidth, fboHeight, fboVertical.getTextureId());
     }
 
     @Override
@@ -100,86 +130,34 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
         // 绘制标题栏
-        drawTitleBar(guiLeft, guiTop, windowWidth);
+        drawTitleBar(guiLeft, guiTop, guiWidth);
         // 绘制主体
-        drawBody(guiLeft, guiTop + 16, windowWidth, windowHeight);
+        drawBody(guiLeft, guiTop + 16, guiWidth, guiHeight);
         // 绘制底部
-        drawBottom(guiLeft, guiTop + windowHeight - 3, windowWidth);
+        drawBottom(guiLeft, guiTop + guiHeight - 3, guiWidth);
     }
 
     @Override
-    public void drawDefaultBackground() {
+    protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+        int middleWidth = Math.max(fontRendererObj.getStringWidth(title) + 8, 4);
 
-        int screenWidth = mc.displayWidth;
-        int screenHeight = mc.displayHeight;
-
-        mc.getFramebuffer()
-            .bindFramebuffer(false);
-        int mcTextureId = mc.getFramebuffer().framebufferTexture;
-
-        float blurScale = getDynamicBlurScale();
-        // 水平模糊
-        applyShaderPass(fboHorizontal, mcTextureId, ShaderType.HORIZONTAL_BLUR, blurScale);
-        // 垂直模糊
-        applyShaderPass(fboVertical, fboHorizontal.getTextureId(), ShaderType.VERTICAL_BLUR, blurScale);
-
-        // 最终输出: 绘制到当前缓冲帧
-        mc.getFramebuffer()
-            .bindFramebuffer(true);
-        GL11.glViewport(0, 0, screenWidth, screenHeight);
-
-        // 设置正交投影
-        setupMatrix(screenWidth, screenHeight);
-        // 绑定贴图
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fboVertical.getTextureId());
-        // 绘制全屏矩形
-        renderFullscreenQuad(screenWidth, screenHeight);
-        // 恢复矩阵
-        restoreMatrix();
+        // 标题文字居中绘制
+        // int textX = guiLeft + 4 + (middleWidth - fontRendererObj.getStringWidth(title)) / 2;
+        // int textY = guiTop + 5; // 垂直居中
+        // fontRendererObj.drawString(title, textX, textY, 0x404040);
     }
 
     private float getDynamicBlurScale() {
-        float elapsed = (System.currentTimeMillis() - openTime) / 1000.0f;
+        float elapsed = (System.currentTimeMillis() - openTime) / 600.0f;
         float t = Math.min(elapsed, 1.0f); // 正规化时间
         float eased = 1.0f - (float) Math.pow(1.0f - t, 3);
         return eased * maxBlurScale;
     }
 
-    private void updateFBO() {
-        int screenWidth = mc.displayWidth;
-        int screenHeight = mc.displayHeight;
-
-        if (fboHorizontal == null || fboVertical == null
-            || lastFboWidth != screenWidth
-            || lastFboHeight != screenHeight) {
-            deleteFBO();
-            fboHorizontal = new Framebuffer(screenWidth, screenHeight);
-            fboVertical = new Framebuffer(screenWidth, screenHeight);
-            lastFboWidth = screenWidth;
-            lastFboHeight = screenHeight;
-        }
-    }
-
-    private void deleteFBO() {
-        if (fboHorizontal != null) fboHorizontal.delete();
-        if (fboVertical != null) fboVertical.delete();
-        fboHorizontal = null;
-        fboVertical = null;
-    }
-
     private void applyShaderPass(Framebuffer targetFBO, int textureId, ShaderType shaderType, float blurScale) {
-        // 获取屏幕尺寸
-        int screenWidth = mc.displayWidth;
-        int screenHeight = mc.displayHeight;
+
         // 绑定目标FBO
         targetFBO.bind();
-        // 设置矩阵和纹理
-        setupMatrix(screenWidth, screenHeight);
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
         // 应用着色器
         ShaderProgram shader = shaderType.get();
         shader.use();
@@ -187,16 +165,15 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         shader.setUniform("blurScale", blurScale);
         shader.setUniform("texSize", (float) screenWidth, (float) screenHeight);
         // 绘制全屏矩形
-        renderFullscreenQuad(screenWidth, screenHeight);
+        drawFullscreenQuadWithTexture(screenWidth, screenHeight, textureId);
         // 清除着色器
         ShaderProgram.clear();
-        // 恢复矩阵
-        restoreMatrix();
         // 解绑FBO
         targetFBO.unbind();
     }
 
-    private void setupMatrix(int width, int height) {
+    private void drawFullscreenQuadWithTexture(int width, int height, int textureId) {
+        // 设置矩阵
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glPushMatrix();
         GL11.glLoadIdentity();
@@ -204,24 +181,42 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
         GL11.glPushMatrix();
         GL11.glLoadIdentity();
-    }
-
-    private void restoreMatrix() {
+        // 绑定纹理
+        GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+        // 绘制全屏矩形
+        drawFullscreenQuad(width, height);
+        // 恢复矩阵
         GL11.glPopMatrix();
         GL11.glMatrixMode(GL11.GL_PROJECTION);
         GL11.glPopMatrix();
         GL11.glMatrixMode(GL11.GL_MODELVIEW);
     }
 
-    private void renderFullscreenQuad(int width, int height) {
-        Tessellator tess = Tessellator.instance;
-        tess.startDrawingQuads();
-        tess.setColorOpaque_I(0xFFFFFF);
-        tess.addVertexWithUV(0, height, 0, 0.0, 0.0);
-        tess.addVertexWithUV(width, height, 0, 1.0, 0.0);
-        tess.addVertexWithUV(width, 0, 0, 1.0, 1.0);
-        tess.addVertexWithUV(0, 0, 0, 0.0, 1.0);
-        tess.draw();
+    private void updateFBO() {
+        // 计算新的 FBO 尺寸
+        int newFboWidth = screenWidth / 2;
+        int newFboHeight = screenHeight / 2;
+        // 检查是否需要重建 FBO
+        if (fboWidth != newFboWidth || fboHeight != newFboHeight) {
+            // 删除旧的 FBO
+            deleteFBO();
+            // 更新 FBO 尺寸
+            fboWidth = newFboWidth;
+            fboHeight = newFboHeight;
+            // 创建新的 FBO
+            fboDownscale = new Framebuffer(fboWidth, fboHeight);
+            fboHorizontal = new Framebuffer(fboWidth, fboHeight);
+            fboVertical = new Framebuffer(fboWidth, fboHeight);
+        }
+    }
+
+    private void deleteFBO() {
+        if (fboDownscale != null) fboDownscale.delete();
+        if (fboHorizontal != null) fboHorizontal.delete();
+        if (fboVertical != null) fboVertical.delete();
+        fboDownscale = fboHorizontal = fboVertical = null;
     }
 
     private int calculateTitleBarWidth() {
@@ -303,6 +298,17 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         tessellator.addVertexWithUV(x + width, y, this.zLevel, u2, v);
         tessellator.addVertexWithUV(x, y, this.zLevel, u, v);
         tessellator.draw();
+    }
+
+    private void drawFullscreenQuad(int width, int height) {
+        Tessellator tess = Tessellator.instance;
+        tess.startDrawingQuads();
+        tess.setColorOpaque_I(0xFFFFFF);
+        tess.addVertexWithUV(0, height, 0, 0.0, 0.0);
+        tess.addVertexWithUV(width, height, 0, 1.0, 0.0);
+        tess.addVertexWithUV(width, 0, 0, 1.0, 1.0);
+        tess.addVertexWithUV(0, 0, 0, 0.0, 1.0);
+        tess.draw();
     }
 
 }
