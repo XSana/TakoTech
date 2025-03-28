@@ -3,6 +3,8 @@ package moe.takochan.takotech.client.gui;
 import java.util.List;
 
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 
 import codechicken.nei.VisiblityData;
@@ -16,12 +18,24 @@ import moe.takochan.takotech.client.gui.container.ContainerOreStorageCell;
 public class GuiOreStorageCell extends BaseTakoGui<ContainerOreStorageCell> implements INEIGuiHandler {
 
     public GuiOreStorageCell(ContainerOreStorageCell container) {
-        super(container, "测试窗口", 150, 200);
+        super(container, "测试窗口", 200, 200);
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
-        super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
+    protected void drawComponents(float partialTicks, int mouseX, int mouseY) {
+        ItemStack iconStack = new ItemStack(Blocks.iron_ore);
+        RenderHelper.enableGUIStandardItemLighting();
+        itemRender.renderItemAndEffectIntoGUI(fontRendererObj, mc.getTextureManager(), iconStack, 0, 0);
+        RenderHelper.disableStandardItemLighting();
+    }
+
+    @Override
+    protected void drawForeground(int mouseX, int mouseY) {
+        fontRendererObj.drawString("Stores ores only!", 0, 16, 0x808080);
+        fontRendererObj.drawString("mouseX: " + mouseX, 0, 24, 0x808080);
+        fontRendererObj.drawString("Relative mouseX: " + getRelativeMouseX(mouseX), 0, 32, 0x808080);
+        fontRendererObj.drawString("mouseY: " + mouseY, 0, 40, 0x808080);
+        fontRendererObj.drawString("Relative mouseY: " + getRelativeMouseY(mouseY), 0, 48, 0x808080);
     }
 
     // region NEI
