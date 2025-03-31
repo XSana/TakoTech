@@ -331,9 +331,9 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         // 应用着色器
         ShaderProgram shader = shaderType.get();
         shader.use();
-        shader.setUniform("image", 0);
-        shader.setUniform("blurScale", blurScale);
-        shader.setUniform("texSize", (float) screenWidth, (float) screenHeight);
+        shader.setUniformWithInt("image", 0);
+        shader.setUniformWithFloat("blurScale", blurScale);
+        shader.setUniformWithFloat("texSize", screenWidth, screenHeight);
         // 绘制全屏矩形
         drawFullscreenQuadWithTexture(screenWidth, screenHeight, textureId);
         // 清除着色器
