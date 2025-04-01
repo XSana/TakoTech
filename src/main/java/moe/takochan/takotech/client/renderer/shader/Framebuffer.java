@@ -86,4 +86,12 @@ public class Framebuffer {
     public int getTextureId() {
         return textureId;
     }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
 }
