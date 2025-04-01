@@ -1,14 +1,13 @@
 package moe.takochan.takotech.client.gui;
 
 import java.awt.Rectangle;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.ResourceLocation;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -17,6 +16,12 @@ import moe.takochan.takotech.client.renderer.shader.Framebuffer;
 import moe.takochan.takotech.client.renderer.shader.ShaderProgram;
 import moe.takochan.takotech.client.renderer.shader.ShaderType;
 import moe.takochan.takotech.common.Reference;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 
 @SideOnly(Side.CLIENT)
 public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer {
@@ -28,9 +33,9 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         "textures/guis/base_gui.png");
 
     // FBO 渲染状态
-    private Framebuffer fboDownscale;
-    private Framebuffer fboHorizontal;
-    private Framebuffer fboVertical;
+    private static int VAO = -1;
+    private Framebuffer[] fboBlur;
+    private Framebuffer fboAero;
     private int fboWidth = -1;
     private int fboHeight = -1;
 
@@ -169,6 +174,9 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         this.titleBarWidth = calculateTitleBarWidth();
         // 初始化或重建 FBO
         this.updateFBO();
+        // 初始化 VAO
+        this.initQuad();
+
     }
 
     /**
@@ -192,27 +200,20 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
     @Override
     public void drawDefaultBackground() {
 
-        // 计算模糊度
-        float blurScale = getDynamicBlurScale();
         // 绘制黑色半透明背景
         this.drawGradientRect(0, 0, this.width, this.height, 0x33101010, 0x4C101010);
         // 获取MC当前缓冲帧的纹理ID
         int mainFboTexture = mc.getFramebuffer().framebufferTexture;
-        // 降采样
-        fboDownscale.bind();
-        drawFullscreenQuadWithTexture(fboWidth, fboHeight, mainFboTexture);
-        fboDownscale.unbind();
-        // 水平模糊
-        applyShaderPass(fboHorizontal, fboDownscale.getTextureId(), ShaderType.HORIZONTAL_BLUR, blurScale);
-        // 垂直模糊
-        applyShaderPass(fboVertical, fboHorizontal.getTextureId(), ShaderType.VERTICAL_BLUR, blurScale);
-        // 最终输出，绘制到当前缓冲帧
-        // 将MC的当前缓冲帧绑定为当前FBO
+        // 计算模糊度
+        float blurScale = getDynamicBlurScale();
+        Framebuffer blurFbo = applyGaussianBlur(mainFboTexture, 10, blurScale);
+
+        applyAero(blurFbo.getTextureId());
+        // 输出最终模糊结果到默认帧缓冲
         mc.getFramebuffer()
             .bindFramebuffer(true);
         GL11.glViewport(0, 0, screenWidth, screenHeight);
-        // 绘制全屏矩形
-        drawFullscreenQuadWithTexture(fboWidth, fboHeight, fboVertical.getTextureId());
+        drawFullscreenQuadWithTexture(fboWidth, fboHeight, fboAero.getTextureId());
     }
 
     /**
@@ -315,51 +316,79 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
 
     // endregion
 
-    // region FBO 相关
+    // region OpenGL相关
 
-    /**
-     * 应用模糊着色器，并绘制到目标 FBO。
-     *
-     * @param targetFBO  目标帧缓冲对象
-     * @param textureId  输入纹理 ID
-     * @param shaderType 着色器类型（水平 / 垂直）
-     * @param blurScale  模糊强度
-     */
-    private void applyShaderPass(Framebuffer targetFBO, int textureId, ShaderType shaderType, float blurScale) {
-        // 绑定目标FBO
-        targetFBO.bind();
-        // 应用着色器
-        ShaderProgram shader = shaderType.get();
+    private Framebuffer applyGaussianBlur(int sceneTextureId, int iterations, float blurScale) {
+        boolean horizontal = true;
+        boolean firstIteration = true;
+
+        ShaderProgram shader = ShaderType.BLUR.get();
         shader.use();
-        shader.setUniformWithInt("image", 0);
+        shader.setUniformWithInt("mainTexture", 0);
         shader.setUniformWithFloat("blurScale", blurScale);
-        shader.setUniformWithFloat("texSize", screenWidth, screenHeight);
-        // 绘制全屏矩形
-        drawFullscreenQuadWithTexture(screenWidth, screenHeight, textureId);
-        // 清除着色器
+
+        for (int i = 0; i < iterations; ++i) {
+            Framebuffer targetFbo = fboBlur[horizontal ? 0 : 1];
+            targetFbo.bind();
+
+            shader.setUniformWithInt("isHorizontal", !horizontal ? 0 : 1);
+
+            GL11.glViewport(0, 0, targetFbo.getWidth(), targetFbo.getHeight());
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glDisable(GL11.GL_CULL_FACE);
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
+
+            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+            GL11.glBindTexture(
+                GL11.GL_TEXTURE_2D,
+                firstIteration ? sceneTextureId : fboBlur[!horizontal ? 0 : 1].getTextureId());
+
+            GL30.glBindVertexArray(VAO);
+            GL11.glDrawElements(GL11.GL_TRIANGLES, 6, GL11.GL_UNSIGNED_INT, 0);
+            GL30.glBindVertexArray(0);
+
+            targetFbo.unbind();
+
+            horizontal = !horizontal;
+            if (firstIteration) firstIteration = false;
+        }
+
         ShaderProgram.clear();
-        // 解绑FBO
-        targetFBO.unbind();
+
+        return fboBlur[!horizontal ? 0 : 1];
+    }
+
+    private void applyAero(int textureId) {
+        fboAero.bind();
+
+        ShaderProgram shader = ShaderType.AERO.get();
+        shader.use();
+        shader.setUniformWithInt("blurredTexture", 0);
+        GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+        GL30.glBindVertexArray(VAO);
+        GL11.glDrawElements(GL11.GL_TRIANGLES, 6, GL11.GL_UNSIGNED_INT, 0);
+        GL30.glBindVertexArray(0);
+
+        fboAero.unbind();
+
+        ShaderProgram.clear();
     }
 
     /**
      * 根据屏幕尺寸更新或创建 FBO。
      */
     private void updateFBO() {
-        // 计算新的 FBO 尺寸
-        int newFboWidth = screenWidth / 2;
-        int newFboHeight = screenHeight / 2;
         // 检查是否需要重建 FBO
-        if (fboWidth != newFboWidth || fboHeight != newFboHeight) {
+        if (fboWidth != screenWidth || fboHeight != screenHeight) {
             // 删除旧的 FBO
             deleteFBO();
             // 更新 FBO 尺寸
-            fboWidth = newFboWidth;
-            fboHeight = newFboHeight;
+            fboWidth = screenWidth;
+            fboHeight = screenHeight;
             // 创建新的 FBO
-            fboDownscale = new Framebuffer(fboWidth, fboHeight);
-            fboHorizontal = new Framebuffer(fboWidth, fboHeight);
-            fboVertical = new Framebuffer(fboWidth, fboHeight);
+            fboBlur = new Framebuffer[] { new Framebuffer(fboWidth, fboHeight), new Framebuffer(fboWidth, fboHeight) };
+            fboAero = new Framebuffer(fboWidth, fboHeight);
         }
     }
 
@@ -367,10 +396,47 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
      * 删除所有 FBO 缓冲资源。
      */
     private void deleteFBO() {
-        if (fboDownscale != null) fboDownscale.delete();
-        if (fboHorizontal != null) fboHorizontal.delete();
-        if (fboVertical != null) fboVertical.delete();
-        fboDownscale = fboHorizontal = fboVertical = null;
+        if (fboBlur != null) {
+            for (Framebuffer fbo : fboBlur) {
+                if (fbo != null) fbo.delete();
+            }
+        }
+        if (fboAero != null) fboAero.delete();
+        fboBlur = null;
+        fboAero = null;
+    }
+
+    private void initQuad() {
+        if (VAO == -1) {
+            final float[] vertices = new float[] { -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 1.0f,
+                0.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+            final int[] indices = { 0, 1, 2, 0, 2, 3 };
+            final FloatBuffer verticesBuffer = BufferUtils.createFloatBuffer(vertices.length)
+                .put(vertices);
+            verticesBuffer.flip();
+            final IntBuffer indicesBuffer = BufferUtils.createIntBuffer(indices.length)
+                .put(indices);
+            indicesBuffer.flip();
+
+            VAO = GL30.glGenVertexArrays();
+            final int vbo = GL15.glGenBuffers();
+            final int ibo = GL15.glGenBuffers();
+
+            GL30.glBindVertexArray(VAO);
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
+            GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW);
+            GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 4 * Float.BYTES, 0);
+            GL20.glEnableVertexAttribArray(0);
+            GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 4 * Float.BYTES, 2 * Float.BYTES);
+            GL20.glEnableVertexAttribArray(1);
+
+            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ibo);
+            GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW);
+
+            GL30.glBindVertexArray(0);
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+        }
     }
 
     // endregion

@@ -3,17 +3,16 @@ package moe.takochan.takotech.client.renderer.shader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.lwjgl.opengl.GL20;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.common.Reference;
+import org.lwjgl.opengl.GL20;
 
 @SideOnly(Side.CLIENT)
 public enum ShaderType {
 
-    HORIZONTAL_BLUR("shaders/blur.vert", "shaders/horizontal_blur.frag"),
-    VERTICAL_BLUR("shaders/blur.vert", "shaders/vertical_blur.frag");
+    BLUR("shaders/blur.vert", "shaders/blur.frag"),
+    AERO("shaders/aero.vert", "shaders/aero.frag");
 
     private final String vertFilepath;
     private final String fragFilepath;
