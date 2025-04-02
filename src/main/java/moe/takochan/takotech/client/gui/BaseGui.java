@@ -9,6 +9,13 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.ResourceLocation;
 
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.client.gui.container.BaseContainer;
@@ -16,12 +23,6 @@ import moe.takochan.takotech.client.renderer.shader.Framebuffer;
 import moe.takochan.takotech.client.renderer.shader.ShaderProgram;
 import moe.takochan.takotech.client.renderer.shader.ShaderType;
 import moe.takochan.takotech.common.Reference;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 
 @SideOnly(Side.CLIENT)
 public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
@@ -538,29 +539,14 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
      */
     protected void drawScaledSegment(int x, int y, int textureX, int textureY, int textureWidth, int textureHeight,
         int width, int height) {
+        // 计算UV
         float uScale = 1.0F / 256.0F; // 贴图宽度比例
         float vScale = 1.0F / 256.0F; // 贴图高度比例
         float u = textureX * uScale;
         float v = textureY * vScale;
         float u2 = (textureX + textureWidth) * uScale;
         float v2 = (textureY + textureHeight) * vScale;
-
-        drawScaledTexture(x, y, width, height, u, v, u2, v2);
-    }
-
-    /**
-     * 实际执行贴图坐标映射并绘制一个矩形。
-     *
-     * @param x      左上角屏幕坐标 X
-     * @param y      左上角屏幕坐标 Y
-     * @param width  要绘制的目标宽度
-     * @param height 要绘制的目标高度
-     * @param u      贴图左上角 U 坐标（0~1）
-     * @param v      贴图左上角 V 坐标（0~1）
-     * @param u2     贴图右下角 U 坐标（0~1）
-     * @param v2     贴图右下角 V 坐标（0~1）
-     */
-    protected void drawScaledTexture(int x, int y, int width, int height, float u, float v, float u2, float v2) {
+        // 绘制
         Tessellator tessellator = Tessellator.instance;
         tessellator.startDrawingQuads();
         tessellator.addVertexWithUV(x, y + height, this.zLevel, u, v2);
@@ -573,8 +559,6 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
     /**
      * 将给定的纹理绘制为一个全屏矩形，自动设置投影和纹理绑定。
      *
-     * @param width     当前目标区域的宽度（通常为 FBO 尺寸）
-     * @param height    当前目标区域的高度
      * @param textureId 要绑定的纹理 ID（OpenGL 纹理对象）
      */
     protected void drawFullscreenQuadWithTexture(int textureId) {

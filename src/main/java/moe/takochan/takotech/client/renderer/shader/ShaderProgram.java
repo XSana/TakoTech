@@ -1,7 +1,8 @@
 package moe.takochan.takotech.client.renderer.shader;
 
-import moe.takochan.takotech.TakoTechMod;
 import org.lwjgl.opengl.GL20;
+
+import moe.takochan.takotech.TakoTechMod;
 
 /**
  * ShaderProgram 是对 GTNHLib 中的 ShaderProgram 的扩展， 提供更简洁的 uniform 设置接口（支持 int 和 float 类型）。
@@ -28,10 +29,8 @@ public class ShaderProgram extends com.gtnewhorizon.gtnhlib.client.renderer.shad
      */
     public boolean setUniformInt(String name, int... args) {
         if (args.length < 1 || args.length > 4) {
-            TakoTechMod.LOG.warn(
-                "Invalid number of int arguments ({}) for uniform '{}'. Expected 1~4.",
-                args.length,
-                name);
+            TakoTechMod.LOG
+                .warn("Invalid number of int arguments ({}) for uniform '{}'. Expected 1~4.", args.length, name);
             return false;
         }
 
@@ -64,10 +63,8 @@ public class ShaderProgram extends com.gtnewhorizon.gtnhlib.client.renderer.shad
      */
     public boolean setUniformFloat(String name, float... args) {
         if (args.length < 1 || args.length > 4) {
-            TakoTechMod.LOG.warn(
-                "Invalid number of float arguments ({}) for uniform '{}'. Expected 1~4.",
-                args.length,
-                name);
+            TakoTechMod.LOG
+                .warn("Invalid number of float arguments ({}) for uniform '{}'. Expected 1~4.", args.length, name);
             return false;
         }
 

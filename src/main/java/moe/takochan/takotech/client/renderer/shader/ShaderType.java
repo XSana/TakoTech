@@ -3,11 +3,12 @@ package moe.takochan.takotech.client.renderer.shader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.lwjgl.opengl.GL20;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.common.Reference;
-import org.lwjgl.opengl.GL20;
 
 @SideOnly(Side.CLIENT)
 public enum ShaderType {
@@ -96,10 +97,8 @@ public enum ShaderType {
             ShaderProgram shader = new ShaderProgram(DOMAIN, type.vertFilepath, type.fragFilepath);
             if (shader.getProgram() != 0) {
                 SHADER_CACHE.put(type, shader);
-                TakoTechMod.LOG.info(
-                    "Shader '{}' loaded successfully. (Program ID = {})",
-                    type.name(),
-                    shader.getProgram());
+                TakoTechMod.LOG
+                    .info("Shader '{}' loaded successfully. (Program ID = {})", type.name(), shader.getProgram());
             } else {
                 TakoTechMod.LOG.error(
                     "Failed to load shader '{}'. vert='{}', frag='{}'.",
