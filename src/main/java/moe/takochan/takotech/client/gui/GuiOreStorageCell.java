@@ -15,7 +15,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.client.gui.container.ContainerOreStorageCell;
 
 @SideOnly(Side.CLIENT)
-public class GuiOreStorageCell extends BaseTakoGui<ContainerOreStorageCell> implements INEIGuiHandler {
+public class GuiOreStorageCell extends BaseGui<ContainerOreStorageCell> implements INEIGuiHandler {
 
     public GuiOreStorageCell(ContainerOreStorageCell container) {
         super(container, "测试窗口", 200, 200);

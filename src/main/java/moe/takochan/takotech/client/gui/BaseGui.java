@@ -24,7 +24,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 @SideOnly(Side.CLIENT)
-public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer {
+public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
 
     // 静态资源与常量
     protected final static Minecraft mc = Minecraft.getMinecraft();
@@ -35,7 +35,6 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
     // FBO 渲染状态
     private static int VAO = -1;
     private Framebuffer[] fboBlur;
-    private Framebuffer fboAero;
     private int fboWidth = -1;
     private int fboHeight = -1;
 
@@ -52,11 +51,11 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
     private int screenWidth = -1;
     private int screenHeight = -1;
 
-    public BaseTakoGui(T container, String title, int guiWidth, int guiHeight) {
+    public BaseGui(T container, String title, int guiWidth, int guiHeight) {
         this(container, title, guiWidth, guiHeight, 1.0f);
     }
 
-    public BaseTakoGui(T container, String title, int guiWidth, int guiHeight, float maxBlurScale) {
+    public BaseGui(T container, String title, int guiWidth, int guiHeight, float maxBlurScale) {
         super(container);
         this.container = container;
         this.title = title;
@@ -199,21 +198,16 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
      */
     @Override
     public void drawDefaultBackground() {
-
-        // 绘制黑色半透明背景
-        this.drawGradientRect(0, 0, this.width, this.height, 0x33101010, 0x4C101010);
         // 获取MC当前缓冲帧的纹理ID
         int mainFboTexture = mc.getFramebuffer().framebufferTexture;
         // 计算模糊度
         float blurScale = getDynamicBlurScale();
-        Framebuffer blurFbo = applyGaussianBlur(mainFboTexture, 10, blurScale);
-
-        applyAero(blurFbo.getTextureId());
+        Framebuffer blurFbo = applyGaussianBlur(mainFboTexture, 5, blurScale);
         // 输出最终模糊结果到默认帧缓冲
         mc.getFramebuffer()
             .bindFramebuffer(true);
         GL11.glViewport(0, 0, screenWidth, screenHeight);
-        drawFullscreenQuadWithTexture(fboWidth, fboHeight, fboAero.getTextureId());
+        drawFullscreenQuadWithTexture(blurFbo.getTextureId());
     }
 
     /**
@@ -324,14 +318,15 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
 
         ShaderProgram shader = ShaderType.BLUR.get();
         shader.use();
-        shader.setUniformWithInt("mainTexture", 0);
-        shader.setUniformWithFloat("blurScale", blurScale);
+        shader.setUniformInt("mainTexture", 0);
+        shader.setUniformFloat("blurScale", blurScale);
 
-        for (int i = 0; i < iterations; ++i) {
+        final int amount = iterations * 2;
+        for (int i = 0; i < amount; ++i) {
             Framebuffer targetFbo = fboBlur[horizontal ? 0 : 1];
             targetFbo.bind();
 
-            shader.setUniformWithInt("isHorizontal", !horizontal ? 0 : 1);
+            shader.setUniformFloat("isHorizontal", !horizontal ? 0 : 1);
 
             GL11.glViewport(0, 0, targetFbo.getWidth(), targetFbo.getHeight());
             GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -358,23 +353,6 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
         return fboBlur[!horizontal ? 0 : 1];
     }
 
-    private void applyAero(int textureId) {
-        fboAero.bind();
-
-        ShaderProgram shader = ShaderType.AERO.get();
-        shader.use();
-        shader.setUniformWithInt("blurredTexture", 0);
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-        GL30.glBindVertexArray(VAO);
-        GL11.glDrawElements(GL11.GL_TRIANGLES, 6, GL11.GL_UNSIGNED_INT, 0);
-        GL30.glBindVertexArray(0);
-
-        fboAero.unbind();
-
-        ShaderProgram.clear();
-    }
-
     /**
      * 根据屏幕尺寸更新或创建 FBO。
      */
@@ -388,7 +366,6 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
             fboHeight = screenHeight;
             // 创建新的 FBO
             fboBlur = new Framebuffer[] { new Framebuffer(fboWidth, fboHeight), new Framebuffer(fboWidth, fboHeight) };
-            fboAero = new Framebuffer(fboWidth, fboHeight);
         }
     }
 
@@ -401,9 +378,7 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
                 if (fbo != null) fbo.delete();
             }
         }
-        if (fboAero != null) fboAero.delete();
         fboBlur = null;
-        fboAero = null;
     }
 
     private void initQuad() {
@@ -602,43 +577,21 @@ public abstract class BaseTakoGui<T extends BaseContainer> extends GuiContainer 
      * @param height    当前目标区域的高度
      * @param textureId 要绑定的纹理 ID（OpenGL 纹理对象）
      */
-    protected void drawFullscreenQuadWithTexture(int width, int height, int textureId) {
-        // 设置矩阵
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
-        GL11.glOrtho(0, width, height, 0, -1, 1);
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
+    protected void drawFullscreenQuadWithTexture(int textureId) {
+        // 绑定Shader
+        ShaderProgram shader = ShaderType.SIMPLE.get();
+        shader.use();
+        shader.setUniformInt("mainTexture", 0);
         // 绑定纹理
         GL13.glActiveTexture(GL13.GL_TEXTURE0);
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
         // 绘制全屏矩形
-        drawFullscreenQuad(width, height);
-        // 恢复矩阵
-        GL11.glPopMatrix();
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPopMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-    }
+        GL30.glBindVertexArray(VAO);
+        GL11.glDrawElements(GL11.GL_TRIANGLES, 6, GL11.GL_UNSIGNED_INT, 0);
+        GL30.glBindVertexArray(0);
 
-    /**
-     * 绘制一个满屏矩形（UV 坐标固定为 (0,0)-(1,1)），使用当前绑定纹理。
-     *
-     * @param width  绘制宽度
-     * @param height 绘制高度
-     */
-    protected void drawFullscreenQuad(int width, int height) {
-        Tessellator tess = Tessellator.instance;
-        tess.startDrawingQuads();
-        tess.setColorOpaque_I(0xFFFFFF);
-        tess.addVertexWithUV(0, height, 0, 0.0, 0.0);
-        tess.addVertexWithUV(width, height, 0, 1.0, 0.0);
-        tess.addVertexWithUV(width, 0, 0, 1.0, 1.0);
-        tess.addVertexWithUV(0, 0, 0, 0.0, 1.0);
-        tess.draw();
+        ShaderProgram.clear();
     }
 
     /**
