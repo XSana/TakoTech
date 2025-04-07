@@ -32,10 +32,10 @@ public class GuiOreStorageCell extends BaseGui<ContainerOreStorageCell> implemen
     @Override
     protected void drawForeground(int mouseX, int mouseY) {
         fontRendererObj.drawString("Stores ores only!", 0, 16, 0x808080);
-        fontRendererObj.drawString("mouseX: " + mouseX, 0, 24, 0x808080);
-        fontRendererObj.drawString("Relative mouseX: " + getRelativeMouseX(mouseX), 0, 32, 0x808080);
-        fontRendererObj.drawString("mouseY: " + mouseY, 0, 40, 0x808080);
-        fontRendererObj.drawString("Relative mouseY: " + getRelativeMouseY(mouseY), 0, 48, 0x808080);
+        fontRendererObj.drawString("mouseX: " + getAbsoluteMouseX(mouseX), 0, 24, 0x808080);
+        fontRendererObj.drawString("Relative mouseX: " + mouseX, 0, 32, 0x808080);
+        fontRendererObj.drawString("mouseY: " + getAbsoluteMouseY(mouseY), 0, 40, 0x808080);
+        fontRendererObj.drawString("Relative mouseY: " + mouseY, 0, 48, 0x808080);
     }
 
     // region NEI

@@ -32,6 +32,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
     protected final static ResourceLocation GUI_TEXTURE = new ResourceLocation(
         Reference.RESOURCE_ROOT_ID,
         "textures/guis/base_gui.png");
+    protected final static float TEXTURE_ATLAS_SIZE = 256.0f;
 
     // FBO 渲染状态
     private static int VAO = -1;
@@ -40,10 +41,16 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
     private int fboHeight = -1;
 
     // 动画
+    private final static int GAUSSIAN_BLUR_ITERATIONS = 5 * 2;
+    private final static float BLUR_ANIMATION_DURATION_MS = 600.0f;
+    private final static float OPEN_ANIMATION_DURATION_MS = 500.0f;
     private final float maxBlurScale;
     private final long openTime;
 
     // GUI 相关字段
+    private final static int TITLE_BAR_HEIGHT = 16;
+    private final static int BODY_PADDING = 4;
+
     private final int guiWidth;
     private final int guiHeight;
     private final T container;
@@ -77,8 +84,8 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
      * </p>
      *
      * @param partialTicks 渲染补间时间
-     * @param mouseX       鼠标屏幕坐标 X（绝对坐标）
-     * @param mouseY       鼠标屏幕坐标 Y（绝对坐标）
+     * @param mouseX       鼠标在 GUI 主体区域内的相对 X 坐标
+     * @param mouseY       鼠标在 GUI 主体区域内的相对 Y 坐标
      */
     protected abstract void drawComponents(float partialTicks, int mouseX, int mouseY);
 
@@ -90,8 +97,8 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
      * 鼠标坐标为屏幕绝对位置，如需绘制悬浮提示等交互内容，请将其转换为相对坐标后处理。
      * </p>
      *
-     * @param mouseX 鼠标屏幕坐标 X（绝对坐标）
-     * @param mouseY 鼠标屏幕坐标 Y（绝对坐标）
+     * @param mouseX 鼠标在 GUI 主体区域内的相对 X 坐标
+     * @param mouseY 鼠标在 GUI 主体区域内的相对 Y 坐标
      */
     protected abstract void drawForeground(int mouseX, int mouseY);
 
@@ -131,7 +138,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
      * @return 可绘制区域相对坐标矩形（去除边框与标题栏）
      */
     public Rectangle getContentArea() {
-        return new Rectangle(0, 0, guiWidth - 6, guiHeight - 16 - 6);
+        return new Rectangle(0, 0, guiWidth - BODY_PADDING * 2, guiHeight - TITLE_BAR_HEIGHT - BODY_PADDING * 2);
     }
 
     /**
@@ -141,7 +148,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
      * @return 相对于 GUI 主体区域左上角的 X 坐标
      */
     protected int getRelativeMouseX(int mouseX) {
-        return mouseX - (guiLeft + 3); // 主体区域起始 X：含边框偏移
+        return mouseX - (guiLeft + BODY_PADDING);
     }
 
     /**
@@ -151,7 +158,21 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
      * @return 相对于 GUI 主体区域左上角的 Y 坐标
      */
     protected int getRelativeMouseY(int mouseY) {
-        return mouseY - (guiTop + 16 + 3); // 主体区域起始 Y：标题栏 + 上边框偏移
+        return mouseY - (guiTop + TITLE_BAR_HEIGHT + BODY_PADDING);
+    }
+
+    /**
+     * 将 GUI 主体区域内的相对 X 坐标转换为屏幕绝对 X 坐标。
+     */
+    protected int getAbsoluteMouseX(int relativeX) {
+        return relativeX + (guiLeft + BODY_PADDING);
+    }
+
+    /**
+     * 将 GUI 主体区域内的相对 Y 坐标转换为屏幕绝对 Y 坐标。
+     */
+    protected int getAbsoluteMouseY(int relativeY) {
+        return relativeY + (guiTop + TITLE_BAR_HEIGHT + BODY_PADDING);
     }
 
     // endregion
@@ -165,7 +186,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
     public void initGui() {
         // 初始化 GUI
         this.xSize = guiWidth;
-        this.ySize = guiHeight + 16;
+        this.ySize = guiHeight + TITLE_BAR_HEIGHT;
         super.initGui();
         // 记录屏幕尺寸
         screenWidth = mc.displayWidth;
@@ -203,7 +224,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
         int mainFboTexture = mc.getFramebuffer().framebufferTexture;
         // 计算模糊度
         float blurScale = getDynamicBlurScale();
-        Framebuffer blurFbo = applyGaussianBlur(mainFboTexture, 5, blurScale);
+        Framebuffer blurFbo = applyGaussianBlur(mainFboTexture, blurScale);
         // 输出最终模糊结果到默认帧缓冲
         mc.getFramebuffer()
             .bindFramebuffer(true);
@@ -240,12 +261,12 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
         // 绘制标题栏
         drawTitleBar(0, 0, guiWidth);
         // 绘制主体
-        drawBody(0, 16, guiWidth, guiHeight - 16);
+        drawBody(0, TITLE_BAR_HEIGHT, guiWidth, guiHeight);
 
         // 绘制组件
         GL11.glPushMatrix();
         transformToContentArea();
-        drawComponents(partialTicks, mouseX, mouseY);
+        drawComponents(partialTicks, getRelativeMouseX(mouseX), getRelativeMouseY(mouseY));
         GL11.glPopMatrix();
 
         GL11.glPopMatrix();
@@ -275,7 +296,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
         // 绘制前景
         GL11.glPushMatrix();
         transformToContentArea();
-        drawForeground(mouseX, mouseY);
+        drawForeground(getRelativeMouseX(mouseX), getRelativeMouseY(mouseY));
         GL11.glPopMatrix();
 
         GL11.glPopMatrix();
@@ -291,7 +312,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
      * @return 当前帧模糊强度
      */
     private float getDynamicBlurScale() {
-        float elapsed = (System.currentTimeMillis() - openTime) / 600.0f;
+        float elapsed = (System.currentTimeMillis() - openTime) / BLUR_ANIMATION_DURATION_MS;
         float t = Math.min(elapsed, 1.0f); // 正规化时间
         float eased = 1.0f - (float) Math.pow(1.0f - t, 3);
         return eased * maxBlurScale;
@@ -303,7 +324,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
      * @return 当前缩放系数（0.8 ~ 1.0）
      */
     private float getOpenAnimationScale() {
-        float elapsed = (System.currentTimeMillis() - openTime) / 500.0f;
+        float elapsed = (System.currentTimeMillis() - openTime) / OPEN_ANIMATION_DURATION_MS;
         float t = Math.min(elapsed, 1.0f); // 归一化时间 0~1
         float eased = 1.0f - (float) Math.pow(1.0f - t, 3); // 缓入效果
         return 0.8f + 0.2f * eased; // 初始缩放0.8，过渡到1.0
@@ -313,7 +334,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
 
     // region OpenGL相关
 
-    private Framebuffer applyGaussianBlur(int sceneTextureId, int iterations, float blurScale) {
+    private Framebuffer applyGaussianBlur(int sceneTextureId, float blurScale) {
         boolean horizontal = true;
         boolean firstIteration = true;
 
@@ -322,8 +343,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
         shader.setUniformInt("mainTexture", 0);
         shader.setUniformFloat("blurScale", blurScale);
 
-        final int amount = iterations * 2;
-        for (int i = 0; i < amount; ++i) {
+        for (int i = 0; i < GAUSSIAN_BLUR_ITERATIONS; ++i) {
             Framebuffer targetFbo = fboBlur[horizontal ? 0 : 1];
             targetFbo.bind();
 
@@ -540,8 +560,8 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
     protected void drawScaledSegment(int x, int y, int textureX, int textureY, int textureWidth, int textureHeight,
         int width, int height) {
         // 计算UV
-        float uScale = 1.0F / 256.0F; // 贴图宽度比例
-        float vScale = 1.0F / 256.0F; // 贴图高度比例
+        float uScale = 1.0F / TEXTURE_ATLAS_SIZE; // 贴图宽度比例
+        float vScale = 1.0F / TEXTURE_ATLAS_SIZE; // 贴图高度比例
         float u = textureX * uScale;
         float v = textureY * vScale;
         float u2 = (textureX + textureWidth) * uScale;
@@ -582,7 +602,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
      * 将 OpenGL 坐标原点移动到 GUI 的内容区域左上角。 内容区域是去除标题栏和边框之后的内部矩形区域。 通常配合绘制组件内容使用。
      */
     protected void transformToContentArea() {
-        GL11.glTranslatef(3, 16 + 3, 0);
+        GL11.glTranslatef(BODY_PADDING, 16 + BODY_PADDING, 0);
     }
 
     // endregion
