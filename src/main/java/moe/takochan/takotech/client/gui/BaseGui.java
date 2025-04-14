@@ -9,20 +9,19 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.ResourceLocation;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import moe.takochan.takotech.client.gui.container.BaseContainer;
+import moe.takochan.takotech.client.renderer.graphics.framebuffer.Framebuffer;
+import moe.takochan.takotech.client.renderer.graphics.shader.ShaderProgram;
+import moe.takochan.takotech.client.renderer.graphics.shader.ShaderType;
+import moe.takochan.takotech.common.Reference;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
-
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-import moe.takochan.takotech.client.gui.container.BaseContainer;
-import moe.takochan.takotech.client.renderer.shader.Framebuffer;
-import moe.takochan.takotech.client.renderer.shader.ShaderProgram;
-import moe.takochan.takotech.client.renderer.shader.ShaderType;
-import moe.takochan.takotech.common.Reference;
 
 @SideOnly(Side.CLIENT)
 public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
@@ -577,7 +576,7 @@ public abstract class BaseGui<T extends BaseContainer> extends GuiContainer {
     }
 
     /**
-     * 将给定的纹理绘制为一个全屏矩形，自动设置投影和纹理绑定。
+     * 将给定的纹理绘制为一个全屏矩形
      *
      * @param textureId 要绑定的纹理 ID（OpenGL 纹理对象）
      */
