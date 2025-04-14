@@ -3,7 +3,7 @@ package moe.takochan.takotech.client;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import moe.takochan.takotech.client.renderer.shader.ShaderType;
+import moe.takochan.takotech.client.renderer.graphics.shader.ShaderType;
 import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.CommonProxy;
 

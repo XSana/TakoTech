@@ -1,4 +1,4 @@
-package moe.takochan.takotech.client.renderer.shader;
+package moe.takochan.takotech.client.renderer.graphics.framebuffer;
 
 import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
 
