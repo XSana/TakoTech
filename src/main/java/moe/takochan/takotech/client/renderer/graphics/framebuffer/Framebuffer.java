@@ -1,31 +1,35 @@
 package moe.takochan.takotech.client.renderer.graphics.framebuffer;
 
-import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
-
 import java.nio.ByteBuffer;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL30;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
 
 @SideOnly(Side.CLIENT)
 public class Framebuffer {
 
     private int framebufferId;
     private int textureId;
+    private int depthBufferId;
     private final int width;
     private final int height;
 
     public Framebuffer(int width, int height) {
-        this.width = width;
-        this.height = height;
-        init();
+        this(width, height, false);
     }
 
-    public void init() {
+    public Framebuffer(int width, int height, boolean useDepth) {
+        this.width = width;
+        this.height = height;
+        init(useDepth);
+    }
+
+    public void init(boolean useDepth) {
         // 创建FBO
         framebufferId = GL30.glGenFramebuffers();
         GL30.glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
@@ -48,6 +52,18 @@ public class Framebuffer {
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
         GL30.glFramebufferTexture2D(GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, textureId, 0);
+
+        // 创建DepthBuffer
+        if (useDepth) {
+            depthBufferId = GL30.glGenRenderbuffers();
+            GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, depthBufferId);
+            GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL11.GL_DEPTH_COMPONENT, width, height);
+            GL30.glFramebufferRenderbuffer(
+                GL_FRAMEBUFFER,
+                GL30.GL_DEPTH_ATTACHMENT,
+                GL30.GL_RENDERBUFFER,
+                depthBufferId);
+        }
 
         if (GL30.glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL30.GL_FRAMEBUFFER_COMPLETE) {
             throw new RuntimeException("Framebuffer is not complete!");
