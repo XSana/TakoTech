@@ -51,18 +51,30 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
 
     private static String oreDefs;
 
+    private final OreStorageType type;
     private final int perType = 1;
     private final double idleDrain;
 
     @SuppressWarnings("Guava")
     public ItemOreStorageCell() {
+        this(OreStorageType.GENERAL);
+    }
+
+    @SuppressWarnings("Guava")
+    public ItemOreStorageCell(OreStorageType type) {
         super(NameConstants.ITEM_ORE_STORAGE_CELL);
+        this.type = type;
 
         idleDrain = 1.14;
 
         this.setMaxStackSize(1);
         this.setTextureName(CommonUtils.resource(NameConstants.ITEM_ORE_STORAGE_CELL));
         this.setFeature(EnumSet.of(AEFeature.StorageCells));
+    }
+
+    @Override
+    public int getMetadata(int damage) {
+        return this.type.getMeta();
     }
 
     /**
@@ -152,7 +164,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
 
                 String defs = getOreDefs();
                 if (defs != null && !defs.isEmpty()) {
-                    lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC_1) + ": ");
+                    lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC_INCLUDE) + ": ");
                     lines.add(defs);
                 }
             }
