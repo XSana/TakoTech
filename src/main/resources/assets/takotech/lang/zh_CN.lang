@@ -1,12 +1,19 @@
 itemGroup.TakoTech=塔可科技
 
-item.takotech.ore_storage_cell.name=ME矿物存储原件
+item.takotech.ore_storage_cell.0.name=ME矿物存储元件
+item.takotech.ore_storage_cell.1.name=ME矿物存储元件（原矿）
+item.takotech.ore_storage_cell.2.name=ME矿物存储元件（粉碎矿）
+item.takotech.ore_storage_cell.3.name=ME矿物存储元件（洗净矿）
+item.takotech.ore_storage_cell.4.name=ME矿物存储元件（离心矿）
+item.takotech.ore_storage_cell.5.name=ME矿物存储元件（含杂粉）
+item.takotech.ore_storage_cell.6.name=ME矿物存储元件（洗净粉）
 item.takotech.toolbox_plus.name=高级工具箱
 
 tile.takotech.web_controller.name=Web控制器
 
 tooltip.takotech.ore_storage_cell.desc=一个近乎无限容量的存储元件，只能用于矿物存储
-tooltip.takotech.ore_storage_cell.desc.1=可存入矿典前缀
+tooltip.takotech.ore_storage_cell.desc.include=可存入矿典前缀
+tooltip.takotech.ore_storage_cell.desc.exclude=排除矿典前缀
 
 tooltip.takotech.web_controller.desc=未完成，请勿使用，可能会导致存档损坏
 tooltip.takotech.web_controller.desc.1=控制器Id
