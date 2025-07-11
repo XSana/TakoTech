@@ -1,7 +1,7 @@
 itemGroup.TakoTech=塔可科技
 
 item.takotech.ore_storage_cell.0.name=ME矿物存储元件
-item.takotech.ore_storage_cell.1.name=ME矿物存储元件（原矿）
+item.takotech.ore_storage_cell.1.name=ME矿物存储元件（矿石）
 item.takotech.ore_storage_cell.2.name=ME矿物存储元件（粉碎矿）
 item.takotech.ore_storage_cell.3.name=ME矿物存储元件（洗净矿）
 item.takotech.ore_storage_cell.4.name=ME矿物存储元件（离心矿）
