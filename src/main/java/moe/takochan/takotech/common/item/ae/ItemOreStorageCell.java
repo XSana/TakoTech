@@ -1,14 +1,13 @@
 package moe.takochan.takotech.common.item.ae;
 
 import java.text.NumberFormat;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
@@ -41,6 +40,7 @@ import moe.takochan.takotech.config.TakoTechConfig;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
+import net.minecraft.util.StatCollector;
 
 /**
  * 矿物存储元件
@@ -49,32 +49,48 @@ import moe.takochan.takotech.utils.I18nUtils;
  */
 public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
 
-    private static String oreDefs;
+    private static final EnumMap<OreStorageType, Map<String, Boolean>> oreWhitelistCache = new EnumMap<>(OreStorageType.class);
 
-    private final OreStorageType type;
     private final int perType = 1;
     private final double idleDrain;
 
     @SuppressWarnings("Guava")
     public ItemOreStorageCell() {
-        this(OreStorageType.GENERAL);
-    }
-
-    @SuppressWarnings("Guava")
-    public ItemOreStorageCell(OreStorageType type) {
         super(NameConstants.ITEM_ORE_STORAGE_CELL);
-        this.type = type;
 
         idleDrain = 1.14;
 
         this.setMaxStackSize(1);
         this.setTextureName(CommonUtils.resource(NameConstants.ITEM_ORE_STORAGE_CELL));
         this.setFeature(EnumSet.of(AEFeature.StorageCells));
+
+        this.setHasSubtypes(true);
     }
 
     @Override
+    protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab, final List<ItemStack> itemStacks) {
+        for (final OreStorageType type : OreStorageType.values()) {
+            itemStacks.add(new ItemStack(this, 1, type.getMeta()));
+        }
+    }
+
+    @Override
+    public String getItemStackDisplayName(final ItemStack itemStack) {
+        // return super.getItemStackDisplayName(itemStack);
+        int meta = itemStack.getItemDamage();
+        String key = this.getUnlocalizedName() + "." + meta + ".name";
+        return "" + StatCollector.translateToLocal(key).trim();
+
+    }
+
+    // @Override
+    // public String getUnlocalizedName(ItemStack itemStack) {
+    //     return super.getUnlocalizedName(itemStack) + "." + itemStack.getItemDamage();
+    // }
+
+    @Override
     public int getMetadata(int damage) {
-        return this.type.getMeta();
+        return damage;
     }
 
     /**
@@ -100,7 +116,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     @SideOnly(Side.CLIENT)
     @Override
     public void addCheckedInformation(final ItemStack itemStack, final EntityPlayer player, final List<String> lines,
-        final boolean displayMoreInfo) {
+                                      final boolean displayMoreInfo) {
         lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC)); // 添加物品的描述
 
         // 获取物品堆栈关联的存储单元库存处理器
@@ -126,7 +142,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                         + GuiText.Of.getLocal()
                         + ' '
                         + NumberFormat.getInstance()
-                            .format(this.getTotalTypes(itemStack))
+                        .format(this.getTotalTypes(itemStack))
                         + ' '
                         + GuiText.Types.getLocal());
 
@@ -162,10 +178,17 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                     }
                 }
 
-                String defs = getOreDefs();
-                if (defs != null && !defs.isEmpty()) {
+                OreStorageType type = getStorageType(itemStack);
+                String joinedIncludeDefs = type.getJoinedIncludes();
+                String joinedExcludeDefs = type.getJoinedExcludes();
+
+                if (!joinedIncludeDefs.isEmpty()) {
                     lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC_INCLUDE) + ": ");
-                    lines.add(defs);
+                    lines.add(joinedIncludeDefs);
+                }
+                if (!joinedExcludeDefs.isEmpty()) {
+                    lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC_EXCLUDE) + ": ");
+                    lines.add(joinedExcludeDefs);
                 }
             }
         }
@@ -238,19 +261,22 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public boolean isBlackListed(ItemStack cellItem, IAEItemStack requestedAddition) {
-        if (requestedAddition instanceof AEItemStack itemStack) {
-            // 获取矿物信息
-            OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
-            if (oreReference != null) {
-                // 存在矿典标签，获列表
-                Collection<String> oreDefs = oreReference.getEquivalents();
-                for (String oreDef : oreDefs) {
-                    for (String prefix : TakoTechConfig.oreDefs) {
-                        if (oreDef.startsWith(prefix)) {
-                            return false;
-                        }
-                    }
-                }
+        if (!(requestedAddition instanceof AEItemStack itemStack)) {
+            return true;
+        }
+        // 获取矿物信息
+        OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
+        if (oreReference == null) {
+            return true;
+        }
+        // 存在矿典标签，获列表
+        Collection<String> oreDefs = oreReference.getEquivalents();
+        OreStorageType storageType = getStorageType(cellItem);
+
+        for (String oreDef : oreDefs) {
+            if (isOreAllowed(storageType, oreDef)) {
+                // 白名单命中
+                return false;
             }
         }
         return true;
@@ -386,24 +412,46 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public void register() {
-        GameRegistry.registerItem(this, NameConstants.ITEM_ORE_STORAGE_CELL);
+        GameRegistry.registerItem(this, this.name);
         setCreativeTab(TakoTechTabs.getInstance());
 
-        ItemStack itemStack = new ItemStack(this);
-        // 反向卡
-        Upgrades.INVERTER.registerItem(itemStack, 1);
-        // 矿典卡
-        Upgrades.ORE_FILTER.registerItem(itemStack, 1);
+        for (OreStorageType type : OreStorageType.values()) {
+            ItemStack itemStack = new ItemStack(this, 1, type.getMeta());
+            Upgrades.INVERTER.registerItem(itemStack, 1);
+            Upgrades.ORE_FILTER.registerItem(itemStack, 1);
+        }
     }
 
-    private String getOreDefs() {
-        if (oreDefs == null) {
-            if (TakoTechConfig.oreDefs.length > 0) {
-                oreDefs = String.join(" | ", TakoTechConfig.oreDefs);
-            } else {
-                oreDefs = "";
-            }
-        }
-        return oreDefs;
+    private OreStorageType getStorageType(ItemStack itemStack) {
+        return OreStorageType.byMeta(itemStack.getItemDamage());
+    }
+
+    /**
+     * 判断某个 oreDef 是否被指定的存储类型允许。
+     * <p>
+     * 使用 EnumMap 缓存每个 OreStorageType 对每个 oreDef 的判断结果，
+     * 避免重复进行 startsWith 匹配。
+     * <p>
+     * 匹配逻辑：
+     * - 若前缀匹配 Excluded，则视为不允许（黑名单优先）
+     * - 否则，若前缀匹配 Included，则视为允许
+     * - 其余情况默认视为不允许
+     *
+     * @param type   存储元件类型
+     * @param oreDef 矿典标签（如 "oreIron"）
+     * @return 是否允许该矿典标签被存入此元件
+     */
+    private boolean isOreAllowed(OreStorageType type, String oreDef) {
+        return oreWhitelistCache
+            .computeIfAbsent(type, t -> new HashMap<>())
+            .computeIfAbsent(oreDef, def -> {
+                for (String exclude : type.getExcludedPrefixes()) {
+                    if (def.startsWith(exclude)) return false;
+                }
+                for (String include : type.getIncludedPrefixes()) {
+                    if (def.startsWith(include)) return true;
+                }
+                return false;
+            });
     }
 }

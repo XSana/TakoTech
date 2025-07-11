@@ -17,6 +17,7 @@ public class TakoTechConfig {
             "dustImpure", // 含杂粉
             "dustPure" // 洁净粉
         })
+    @Config.Sync
     public static String[] oreDefs;
 
     /**

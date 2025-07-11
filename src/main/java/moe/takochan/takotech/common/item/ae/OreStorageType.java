@@ -1,5 +1,7 @@
 package moe.takochan.takotech.common.item.ae;
 
+import moe.takochan.takotech.config.TakoTechConfig;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -59,12 +61,12 @@ public enum OreStorageType {
     /**
      * 此类型所允许接收的矿物词典前缀。
      */
-    private final List<String> includedPrefixes;
+    private final String[] includedPrefixes;
 
     /**
      * 此类型明确排除的矿物词典前缀。
      */
-    private final List<String> excludedPrefixes;
+    private final String[] excludedPrefixes;
 
     /**
      * 构造方法，在加载阶段解析前缀字符串为 List。
@@ -85,11 +87,11 @@ public enum OreStorageType {
      * @param str 原始前缀字符串
      * @return 解析后的前缀列表，若为空则返回空列表
      */
-    private static List<String> parseList(String str) {
+    private static String[] parseList(String str) {
         if (str == null || str.isEmpty()) {
-            return Collections.emptyList();
+            return new String[0];
         }
-        return Arrays.asList(str.split("\\|"));
+        return str.split("\\|");
     }
 
     /**
@@ -106,7 +108,10 @@ public enum OreStorageType {
      *
      * @return 前缀列表，永不为 null
      */
-    public List<String> getIncludedPrefixes() {
+    public String[] getIncludedPrefixes() {
+        if (this == GENERAL) {
+            return TakoTechConfig.oreDefs; // 动态获取
+        }
         return includedPrefixes;
     }
 
@@ -115,7 +120,7 @@ public enum OreStorageType {
      *
      * @return 前缀列表，永不为 null
      */
-    public List<String> getExcludedPrefixes() {
+    public String[] getExcludedPrefixes() {
         return excludedPrefixes;
     }
 
@@ -130,5 +135,13 @@ public enum OreStorageType {
             if (t.meta == meta) return t;
         }
         return GENERAL;
+    }
+
+    public String getJoinedIncludes() {
+        return String.join(" | ", getIncludedPrefixes());
+    }
+
+    public String getJoinedExcludes() {
+        return String.join(" | ", getExcludedPrefixes());
     }
 }
