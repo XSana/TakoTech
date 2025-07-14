@@ -25,6 +25,9 @@ import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
+import appeng.util.item.AEItemStack;
+import appeng.util.item.OreHelper;
+import appeng.util.item.OreReference;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -249,26 +252,25 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public boolean isBlackListed(ItemStack cellItem, IAEItemStack requestedAddition) {
-        // if (!(requestedAddition instanceof AEItemStack itemStack)) {
-        // return true;
-        // }
-        // // 获取矿物信息
-        // OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
-        // if (oreReference == null) {
-        // return true;
-        // }
-        // // 存在矿典标签，获列表
-        // Collection<String> oreDefs = oreReference.getEquivalents();
-        // OreStorageType storageType = getStorageType(cellItem);
-        //
-        // for (String oreDef : oreDefs) {
-        // if (isOreAllowed(storageType, oreDef)) {
-        // // 白名单命中
-        // return false;
-        // }
-        // }
-        // return true;
-        return false;
+        if (!(requestedAddition instanceof AEItemStack itemStack)) {
+            return true;
+        }
+        // 获取矿物信息
+        OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
+        if (oreReference == null) {
+            return true;
+        }
+        // 存在矿典标签，获列表
+        Collection<String> oreDefs = oreReference.getEquivalents();
+        OreStorageType storageType = getStorageType(cellItem);
+
+        for (String oreDef : oreDefs) {
+            if (isOreAllowed(storageType, oreDef)) {
+                // 白名单命中
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
