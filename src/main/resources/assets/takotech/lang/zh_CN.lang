@@ -1,12 +1,21 @@
 itemGroup.TakoTech=塔可科技
 
-item.takotech.ore_storage_cell.name=ME矿物存储原件
+item.takotech.ore_storage_cell.0.name=ME矿物存储元件
+item.takotech.ore_storage_cell.1.name=ME矿物存储元件 - 矿石
+item.takotech.ore_storage_cell.2.name=ME矿物存储元件 - 粉碎矿
+item.takotech.ore_storage_cell.3.name=ME矿物存储元件 - 洗净矿
+item.takotech.ore_storage_cell.4.name=ME矿物存储元件 - 离心矿
+item.takotech.ore_storage_cell.5.name=ME矿物存储元件 - 含杂粉
+item.takotech.ore_storage_cell.6.name=ME矿物存储元件 - 洁净粉
 item.takotech.toolbox_plus.name=高级工具箱
 
 tile.takotech.web_controller.name=Web控制器
 
-tooltip.takotech.ore_storage_cell.desc=一个近乎无限容量的存储元件，只能用于矿物存储
-tooltip.takotech.ore_storage_cell.desc.1=可存入矿典前缀
+tooltip.takotech.ore_storage_cell.desc=§r近乎无限容量的矿物专用存储元件，可与反向卡原件工作台配合使用。
+tooltip.takotech.ore_storage_cell.desc.1=§3可通过工作台合成为单矿物类型存储，合成会保留原有存储内容与升级组件。
+tooltip.takotech.ore_storage_cell.desc.2=§6注: 转换后若原有存储矿物与当前类型不匹配，仍可取出但无法继续存入。
+tooltip.takotech.ore_storage_cell.desc.include=可存入矿典前缀
+tooltip.takotech.ore_storage_cell.desc.exclude=排除矿典前缀
 
 tooltip.takotech.web_controller.desc=未完成，请勿使用，可能会导致存档损坏
 tooltip.takotech.web_controller.desc.1=控制器Id
@@ -14,4 +23,4 @@ tooltip.takotech.web_controller.desc.1=控制器Id
 tooltip.takotech.toolbox_plus.desc=§r按 §6[%s] §r键切换工具
 
 key.takotech.category=塔可科技
-key.takotech.toolbox_plus.desc=切换工具（高级工具箱）
+key.takotech.toolbox_plus.desc=切换工具 - 高级工具箱
