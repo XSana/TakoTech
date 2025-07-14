@@ -6,7 +6,7 @@ item.takotech.ore_storage_cell.2.name=ME矿物存储元件 - 粉碎矿
 item.takotech.ore_storage_cell.3.name=ME矿物存储元件 - 洗净矿
 item.takotech.ore_storage_cell.4.name=ME矿物存储元件 - 离心矿
 item.takotech.ore_storage_cell.5.name=ME矿物存储元件 - 含杂粉
-item.takotech.ore_storage_cell.6.name=ME矿物存储元件 - 洗净粉
+item.takotech.ore_storage_cell.6.name=ME矿物存储元件 - 洁净粉
 item.takotech.toolbox_plus.name=高级工具箱
 
 tile.takotech.web_controller.name=Web控制器
