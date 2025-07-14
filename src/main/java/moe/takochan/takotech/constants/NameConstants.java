@@ -11,7 +11,6 @@ public class NameConstants {
     public static final String ITEM_ORE_STORAGE_CELL_DESC_INCLUDE = ITEM_ORE_STORAGE_CELL_DESC + ".include";
     public static final String ITEM_ORE_STORAGE_CELL_DESC_EXCLUDE = ITEM_ORE_STORAGE_CELL_DESC + ".exclude";
 
-
     public static final String ITEM_TOOLBOX_PLUS = "toolbox_plus";
     public static final String ITEM_TOOLBOX_PLUS_DESC = ITEM_TOOLBOX_PLUS + ".desc";
 

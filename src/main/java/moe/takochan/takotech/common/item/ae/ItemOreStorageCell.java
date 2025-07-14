@@ -25,9 +25,6 @@ import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
-import appeng.util.item.AEItemStack;
-import appeng.util.item.OreHelper;
-import appeng.util.item.OreReference;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -36,11 +33,9 @@ import moe.takochan.takotech.common.item.BaseAECellItem;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
 import moe.takochan.takotech.common.storage.ITakoCellInventoryHandler;
 import moe.takochan.takotech.common.storage.inventory.OreStorageCellInventory;
-import moe.takochan.takotech.config.TakoTechConfig;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
-import net.minecraft.util.StatCollector;
 
 /**
  * 矿物存储元件
@@ -49,7 +44,8 @@ import net.minecraft.util.StatCollector;
  */
 public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
 
-    private static final EnumMap<OreStorageType, Map<String, Boolean>> oreWhitelistCache = new EnumMap<>(OreStorageType.class);
+    private static final EnumMap<OreStorageType, Map<String, Boolean>> oreWhitelistCache = new EnumMap<>(
+        OreStorageType.class);
 
     private final int perType = 1;
     private final double idleDrain;
@@ -65,28 +61,20 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
         this.setFeature(EnumSet.of(AEFeature.StorageCells));
 
         this.setHasSubtypes(true);
+        this.setMaxDamage(0);
     }
 
     @Override
-    protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab, final List<ItemStack> itemStacks) {
+    public void getCheckedSubItems(final Item item, final CreativeTabs creativeTab, final List<ItemStack> itemStacks) {
         for (final OreStorageType type : OreStorageType.values()) {
-            itemStacks.add(new ItemStack(this, 1, type.getMeta()));
+            itemStacks.add(new ItemStack(item, 1, type.getMeta()));
         }
     }
 
     @Override
-    public String getItemStackDisplayName(final ItemStack itemStack) {
-        // return super.getItemStackDisplayName(itemStack);
-        int meta = itemStack.getItemDamage();
-        String key = this.getUnlocalizedName() + "." + meta + ".name";
-        return "" + StatCollector.translateToLocal(key).trim();
-
+    public String getUnlocalizedName(final ItemStack itemStack) {
+        return super.getUnlocalizedName() + "." + itemStack.getItemDamage();
     }
-
-    // @Override
-    // public String getUnlocalizedName(ItemStack itemStack) {
-    //     return super.getUnlocalizedName(itemStack) + "." + itemStack.getItemDamage();
-    // }
 
     @Override
     public int getMetadata(int damage) {
@@ -116,7 +104,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     @SideOnly(Side.CLIENT)
     @Override
     public void addCheckedInformation(final ItemStack itemStack, final EntityPlayer player, final List<String> lines,
-                                      final boolean displayMoreInfo) {
+        final boolean displayMoreInfo) {
         lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC)); // 添加物品的描述
 
         // 获取物品堆栈关联的存储单元库存处理器
@@ -142,7 +130,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                         + GuiText.Of.getLocal()
                         + ' '
                         + NumberFormat.getInstance()
-                        .format(this.getTotalTypes(itemStack))
+                            .format(this.getTotalTypes(itemStack))
                         + ' '
                         + GuiText.Types.getLocal());
 
@@ -261,25 +249,26 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public boolean isBlackListed(ItemStack cellItem, IAEItemStack requestedAddition) {
-        if (!(requestedAddition instanceof AEItemStack itemStack)) {
-            return true;
-        }
-        // 获取矿物信息
-        OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
-        if (oreReference == null) {
-            return true;
-        }
-        // 存在矿典标签，获列表
-        Collection<String> oreDefs = oreReference.getEquivalents();
-        OreStorageType storageType = getStorageType(cellItem);
-
-        for (String oreDef : oreDefs) {
-            if (isOreAllowed(storageType, oreDef)) {
-                // 白名单命中
-                return false;
-            }
-        }
-        return true;
+        // if (!(requestedAddition instanceof AEItemStack itemStack)) {
+        // return true;
+        // }
+        // // 获取矿物信息
+        // OreReference oreReference = OreHelper.INSTANCE.isOre(itemStack.getItemStack());
+        // if (oreReference == null) {
+        // return true;
+        // }
+        // // 存在矿典标签，获列表
+        // Collection<String> oreDefs = oreReference.getEquivalents();
+        // OreStorageType storageType = getStorageType(cellItem);
+        //
+        // for (String oreDef : oreDefs) {
+        // if (isOreAllowed(storageType, oreDef)) {
+        // // 白名单命中
+        // return false;
+        // }
+        // }
+        // return true;
+        return false;
     }
 
     /**
@@ -442,8 +431,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      * @return 是否允许该矿典标签被存入此元件
      */
     private boolean isOreAllowed(OreStorageType type, String oreDef) {
-        return oreWhitelistCache
-            .computeIfAbsent(type, t -> new HashMap<>())
+        return oreWhitelistCache.computeIfAbsent(type, t -> new HashMap<>())
             .computeIfAbsent(oreDef, def -> {
                 for (String exclude : type.getExcludedPrefixes()) {
                     if (def.startsWith(exclude)) return false;
