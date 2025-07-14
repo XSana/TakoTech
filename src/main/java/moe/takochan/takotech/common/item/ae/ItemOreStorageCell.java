@@ -3,7 +3,10 @@ package moe.takochan.takotech.common.item.ae;
 import java.text.NumberFormat;
 import java.util.*;
 
+import moe.takochan.takotech.client.render.OreStorageCellRenderer;
+import moe.takochan.takotech.common.Reference;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -39,6 +42,8 @@ import moe.takochan.takotech.common.storage.inventory.OreStorageCellInventory;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
+import net.minecraft.util.IIcon;
+import net.minecraftforge.client.MinecraftForgeClient;
 
 /**
  * 矿物存储元件
@@ -47,8 +52,11 @@ import moe.takochan.takotech.utils.I18nUtils;
  */
 public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
 
+
     private static final EnumMap<OreStorageType, Map<String, Boolean>> oreWhitelistCache = new EnumMap<>(
         OreStorageType.class);
+
+    private final IIcon[] overlayIcons = new IIcon[OreStorageType.values().length];
 
     private final int perType = 1;
     private final double idleDrain;
@@ -65,6 +73,10 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
 
         this.setHasSubtypes(true);
         this.setMaxDamage(0);
+
+        if (CommonUtils.isClient()) {
+            MinecraftForgeClient.registerItemRenderer(this, new OreStorageCellRenderer());
+        }
     }
 
     @Override
@@ -82,6 +94,15 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     @Override
     public int getMetadata(int damage) {
         return damage;
+    }
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    public void registerIcons(IIconRegister register) {
+        super.registerIcons(register);
+        for (final OreStorageType type : OreStorageType.values()) {
+            this.overlayIcons[type.getMeta()] = register.registerIcon(Reference.RESOURCE_ROOT_ID + ":ore_" + type.getMeta());
+        }
     }
 
     /**
@@ -107,7 +128,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     @SideOnly(Side.CLIENT)
     @Override
     public void addCheckedInformation(final ItemStack itemStack, final EntityPlayer player, final List<String> lines,
-        final boolean displayMoreInfo) {
+                                      final boolean displayMoreInfo) {
         lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC)); // 添加物品的描述
 
         // 获取物品堆栈关联的存储单元库存处理器
@@ -133,7 +154,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                         + GuiText.Of.getLocal()
                         + ' '
                         + NumberFormat.getInstance()
-                            .format(this.getTotalTypes(itemStack))
+                        .format(this.getTotalTypes(itemStack))
                         + ' '
                         + GuiText.Types.getLocal());
 
@@ -411,6 +432,14 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
             Upgrades.INVERTER.registerItem(itemStack, 1);
             Upgrades.ORE_FILTER.registerItem(itemStack, 1);
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    public IIcon getOverlayIcon(int meta) {
+        if (meta >= 0 && meta < overlayIcons.length) {
+            return overlayIcons[meta];
+        }
+        return null;
     }
 
     private OreStorageType getStorageType(ItemStack itemStack) {
