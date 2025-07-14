@@ -1,12 +1,21 @@
 itemGroup.TakoTech=TakoTech
 
-item.takotech.ore_storage_cell.name=ME Ore Storage Cell
+item.takotech.ore_storage_cell.0.name=ME Ore Storage Cell
+item.takotech.ore_storage_cell.1.name=ME Ore Storage Cell - Ore
+item.takotech.ore_storage_cell.2.name=ME Ore Storage Cell - Crushed
+item.takotech.ore_storage_cell.3.name=ME Ore Storage Cell - Purified
+item.takotech.ore_storage_cell.4.name=ME Ore Storage Cell - Centrifuged
+item.takotech.ore_storage_cell.5.name=ME Ore Storage Cell - Impure Dust
+item.takotech.ore_storage_cell.6.name=ME Ore Storage Cell - Pure Dust
 item.takotech.toolbox_plus.name=Tool Box Plus
 
 tile.takotech.web_controller.name=Web Controller
 
-tooltip.takotech.ore_storage_cell.desc=An almost infinite capacity storage component, only usable for mineral storage.
-tooltip.takotech.ore_storage_cell.desc.1=Can store ore dictionary prefixes.
+tooltip.takotech.ore_storage_cell.desc=§rA near-limit capacity mineral storage cell, compatible with reverse-card crafting benches.
+tooltip.takotech.ore_storage_cell.desc.1=§3Can be synthesized into single-mineral-type storage via workbench while preserving original contents and upgrade components.
+tooltip.takotech.ore_storage_cell.desc.2=§6Note: After conversion, mismatched minerals can still be extracted but cannot be stored further.
+tooltip.takotech.ore_storage_cell.desc.include=Storable Ore Dictionary Prefixes
+tooltip.takotech.ore_storage_cell.desc.exclude=Excluded Ore Dictionary Prefixes
 
 tooltip.takotech.web_controller.desc=Unfinished, do not use. It may cause archive corruption.
 tooltip.takotech.web_controller.desc.1=Controller Id
@@ -14,4 +23,4 @@ tooltip.takotech.web_controller.desc.1=Controller Id
 tooltip.takotech.toolbox_plus.desc=§rPress §6%s §rto switch tools
 
 key.takotech.category=Tako Tech
-key.takotech.toolbox_plus.desc=Selector Tool (Toolbox Plus)
+key.takotech.toolbox_plus.desc=Selector Tool - Toolbox Plus

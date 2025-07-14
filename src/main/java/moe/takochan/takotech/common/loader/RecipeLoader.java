@@ -9,6 +9,8 @@ import appeng.core.ApiDefinitions;
 import appeng.core.api.definitions.ApiMaterials;
 import cpw.mods.fml.common.registry.GameRegistry;
 import ic2.core.Ic2Items;
+import moe.takochan.takotech.common.item.ae.OreStorageType;
+import moe.takochan.takotech.common.recipe.OreStorageCellRecipe;
 import moe.takochan.takotech.common.recipe.ToolboxPlusRecipe;
 
 /**
@@ -51,7 +53,7 @@ public class RecipeLoader implements Runnable {
         // 矿物存储元件
         GameRegistry.addRecipe(
             new ShapedOreRecipe(
-                new ItemStack(ItemLoader.ITEM_ORE_STORAGE_CELL, 1),
+                new ItemStack(ItemLoader.ITEM_ORE_STORAGE_CELL, 1, 0),
                 "CDC",
                 "DED",
                 "CDC",
@@ -61,6 +63,27 @@ public class RecipeLoader implements Runnable {
                 BLOCK_COBBLESTONE,
                 'E',
                 ITEM_AE2_CELL_64_PART));
+
+        for (OreStorageType type : OreStorageType.values()) {
+            int meta = type.getMeta(); // 0~6
+
+            int x = meta % 3;
+            int y = meta / 3;
+
+            String[] pattern = { "   ", "   ", "   " };
+            StringBuilder row = new StringBuilder(pattern[y]);
+            row.setCharAt(x, 'C');
+            pattern[y] = row.toString();
+
+            GameRegistry.addRecipe(
+                new OreStorageCellRecipe(
+                    new ItemStack(ItemLoader.ITEM_ORE_STORAGE_CELL, 1, meta),
+                    pattern[0],
+                    pattern[1],
+                    pattern[2],
+                    'C',
+                    new ItemStack(ItemLoader.ITEM_ORE_STORAGE_CELL, 1, 32767)));
+        }
 
         GameRegistry.addRecipe(new ToolboxPlusRecipe(new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS, 1), ITEM_IC2_TOOLBOX));
     }
