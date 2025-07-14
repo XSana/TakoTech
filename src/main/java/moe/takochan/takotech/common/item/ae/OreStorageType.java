@@ -2,10 +2,6 @@ package moe.takochan.takotech.common.item.ae;
 
 import moe.takochan.takotech.config.TakoTechConfig;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 /**
  * 表示矿物存储元件的分类类型。
  * <p>
