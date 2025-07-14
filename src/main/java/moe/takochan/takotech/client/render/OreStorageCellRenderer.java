@@ -2,24 +2,30 @@ package moe.takochan.takotech.client.render;
 
 import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.item.ae.ItemOreStorageCell;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
+
 import net.minecraftforge.client.IItemRenderer;
+
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+
+import static net.minecraft.client.renderer.ItemRenderer.renderItemIn2D;
 
 public class OreStorageCellRenderer implements IItemRenderer {
 
-
-    public OreStorageCellRenderer() {
-    }
-
     @Override
     public boolean handleRenderType(ItemStack item, ItemRenderType type) {
+        //        return false;
         return type == ItemRenderType.INVENTORY
             && item != null
             && item.getItem() instanceof ItemOreStorageCell
@@ -28,7 +34,7 @@ public class OreStorageCellRenderer implements IItemRenderer {
 
     @Override
     public boolean shouldUseRenderHelper(ItemRenderType type, ItemStack item, ItemRendererHelper helper) {
-        return type == ItemRenderType.INVENTORY;
+        return false;
     }
 
     @Override
@@ -36,60 +42,60 @@ public class OreStorageCellRenderer implements IItemRenderer {
         if (!(item.getItem() instanceof ItemOreStorageCell cell)) return;
         int meta = item.getItemDamage();
 
-        IIcon overlay = cell.getOverlayIcon(meta);
-        IIcon baseIcon = item.getIconIndex();
-
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glPushMatrix();
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 
-        // GL11.glScalef(1F, 1F, 1F);
-        // GL11.glTranslatef(0.0F, 1.0F, 0.0F);
-        GL11.glRotatef(0F, 1F, 0F, 0F);
+        // 获取物品的基础图标
+        final IIcon baseIcon = item.getIconIndex();
+        final IIcon overlay = cell.getOverlayIcon(meta);
 
+        // 基础设置
+        GL11.glColor4f(1, 1, 1, 1.0F);
         GL11.glEnable(GL11.GL_ALPHA_TEST);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GL11.glDisable(GL11.GL_LIGHTING);
-        GL11.glColor4f(1, 1, 1, 1);
+        // 物品栏变换
+        GL11.glScalef(16F, 16F, 10F);
+        GL11.glTranslatef(0.0F, 1.0F, 0.0F);
+        GL11.glRotatef(180F, 1.0F, 0.0F, 0.0F);
 
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationItemsTexture);
-
-        if (baseIcon != null) {
-            drawIcon(baseIcon);
-        }
+        drawIcon(baseIcon);
 
         if (overlay != null) {
-            float scale = 0.5f;
-            float offset = (1.0f - scale) * 16.0f;
             GL11.glPushMatrix();
-            GL11.glTranslatef(offset, offset, 0.01f);
-            GL11.glScalef(scale, scale, 1.0f);
+
+            // 将叠加图标缩小到原大小的1/2
+            float scale = 0.4f;
+            GL11.glScalef(scale, scale, scale);
+
+            // 移动到右下角 (计算缩放后的位置)
+            float offsetX = (1 - scale) / scale;
+            float offsetY = 0.01f;
+            GL11.glTranslatef(offsetX, offsetY, -0.1f);
 
             drawIcon(overlay);
 
             GL11.glPopMatrix();
         }
 
-        GL11.glColor4f(1, 1, 1, 1);
-        GL11.glDisable(GL11.GL_BLEND);
-        GL11.glPopMatrix();
         GL11.glPopAttrib();
+        GL11.glPopMatrix();
     }
 
-    private void drawIcon(IIcon icon) {
-        Tessellator t = Tessellator.instance;
+    private static void drawIcon(IIcon icon) {
+        final Tessellator tessellator = Tessellator.instance;
 
-        float minU = icon.getMinU();
-        float maxU = icon.getMaxU();
-        float minV = icon.getMinV();
-        float maxV = icon.getMaxV();
+        // 获取图标的UV坐标
+        final float f4 = icon.getMinU();
+        final float f5 = icon.getMaxU();
+        final float f6 = icon.getMinV();
+        final float f7 = icon.getMaxV();
 
-        t.startDrawingQuads();
-        t.setNormal(0.0F, 0.0F, 1.0F);
-        t.addVertexWithUV(0, 1, 0, minU, maxV);
-        t.addVertexWithUV(1, 1, 0, maxU, maxV);
-        t.addVertexWithUV(1, 0, 0, maxU, minV);
-        t.addVertexWithUV(0, 0, 0, minU, minV);
-        t.draw();
+        // 绘制图标
+        tessellator.startDrawingQuads();
+        tessellator.setNormal(0.0F, 1.0F, 0.0F);
+        tessellator.addVertexWithUV(0, 0, 0, f4, f7);
+        tessellator.addVertexWithUV(1, 0, 0, f5, f7);
+        tessellator.addVertexWithUV(1, 1, 0, f5, f6);
+        tessellator.addVertexWithUV(0, 1, 0, f4, f6);
+        tessellator.draw();
     }
 }
