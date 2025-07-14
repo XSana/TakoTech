@@ -3,9 +3,6 @@ package moe.takochan.takotech.common.item.ae;
 import java.text.NumberFormat;
 import java.util.*;
 
-import moe.takochan.takotech.client.render.OreStorageCellRenderer;
-import moe.takochan.takotech.common.Reference;
-
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
@@ -13,6 +10,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
+import net.minecraftforge.client.MinecraftForgeClient;
 
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
@@ -35,7 +34,9 @@ import appeng.util.item.OreReference;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import moe.takochan.takotech.client.render.OreStorageCellRenderer;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
+import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.common.item.BaseAECellItem;
 import moe.takochan.takotech.common.storage.ITakoCellInventory;
 import moe.takochan.takotech.common.storage.ITakoCellInventoryHandler;
@@ -44,10 +45,6 @@ import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
 
-import net.minecraft.util.IIcon;
-
-import net.minecraftforge.client.MinecraftForgeClient;
-
 /**
  * 矿物存储元件
  * <p>
@@ -55,10 +52,10 @@ import net.minecraftforge.client.MinecraftForgeClient;
  */
 public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
 
-    private static final EnumMap<OreStorageType, Map<String, Boolean>> oreWhitelistCache = new EnumMap<>(OreStorageType.class);
+    private static final EnumMap<OreStorageType, Map<String, Boolean>> oreWhitelistCache = new EnumMap<>(
+        OreStorageType.class);
 
     private final IIcon[] overlayIcons = new IIcon[OreStorageType.values().length];
-    //    private IIcon specialBaseIcon;
 
     private final int perType = 1;
     private final double idleDrain;
@@ -102,23 +99,11 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     @Override
     public void registerIcons(IIconRegister register) {
         super.registerIcons(register);
-        //        this.specialBaseIcon = register.registerIcon(Reference.RESOURCE_ROOT_ID
-        //            + ":"
-        //            + NameConstants.ITEM_ORE_STORAGE_CELL
-        //            + "_1");
-
         for (final OreStorageType type : OreStorageType.values()) {
-            this.overlayIcons[type.getMeta()] = register.registerIcon(Reference.RESOURCE_ROOT_ID
-                + ":ore_"
-                + type.getMeta());
+            this.overlayIcons[type.getMeta()] = register
+                .registerIcon(Reference.RESOURCE_ROOT_ID + ":ore_" + type.getMeta());
         }
     }
-
-    //    @Override
-    //    @SideOnly(Side.CLIENT)
-    //    public IIcon getIconFromDamage(int meta) {
-    //        return meta == 0 ? this.itemIcon : specialBaseIcon;
-    //    }
 
     /**
      * 获取物品组未本地化字符串
@@ -144,7 +129,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
     @Override
     public void addCheckedInformation(final ItemStack itemStack, final EntityPlayer player, final List<String> lines,
         final boolean displayMoreInfo) {
-        lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC)); // 添加物品的描述
+        lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC));
 
         // 获取物品堆栈关联的存储单元库存处理器
         final IMEInventoryHandler<?> inventory = AEApi.instance()
@@ -163,15 +148,15 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                 }
 
                 // 显示已存储的物品类型数量和总物品类型数量
-                lines.add(NumberFormat.getInstance()
-                    .format(cellInventory.getStoredItemTypes())
-                    + " "
-                    + GuiText.Of.getLocal()
-                    + ' '
-                    + NumberFormat.getInstance()
-                    .format(this.getTotalTypes(itemStack))
-                    + ' '
-                    + GuiText.Types.getLocal());
+                lines.add(
+                    NumberFormat.getInstance()
+                        .format(cellInventory.getStoredItemTypes()) + " "
+                        + GuiText.Of.getLocal()
+                        + ' '
+                        + NumberFormat.getInstance()
+                            .format(this.getTotalTypes(itemStack))
+                        + ' '
+                        + GuiText.Types.getLocal());
 
                 // 如果存储单元启用了预格式化
                 if (handler.isPreformatted()) {
@@ -219,6 +204,9 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                 }
             }
         }
+
+        lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC_1));
+        lines.add(I18nUtils.tooltip(NameConstants.ITEM_ORE_STORAGE_CELL_DESC_2));
 
         super.addCheckedInformation(itemStack, player, lines, displayMoreInfo); // 调用父类方法，添加其他信息
     }

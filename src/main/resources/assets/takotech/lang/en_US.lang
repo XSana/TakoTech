@@ -11,7 +11,9 @@ item.takotech.toolbox_plus.name=Tool Box Plus
 
 tile.takotech.web_controller.name=Web Controller
 
-tooltip.takotech.ore_storage_cell.desc=An almost infinite capacity storage cell, only usable for mineral storage.
+tooltip.takotech.ore_storage_cell.desc=§rA near-limit capacity mineral storage cell, compatible with reverse-card crafting benches.
+tooltip.takotech.ore_storage_cell.desc.1=§3Can be synthesized into single-mineral-type storage via workbench while preserving original contents and upgrade components.
+tooltip.takotech.ore_storage_cell.desc.2=§6Note: After conversion, mismatched minerals can still be extracted but cannot be stored further.
 tooltip.takotech.ore_storage_cell.desc.include=Storable Ore Dictionary Prefixes
 tooltip.takotech.ore_storage_cell.desc.exclude=Excluded Ore Dictionary Prefixes
 

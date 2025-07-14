@@ -11,7 +11,9 @@ item.takotech.toolbox_plus.name=高级工具箱
 
 tile.takotech.web_controller.name=Web控制器
 
-tooltip.takotech.ore_storage_cell.desc=一个近乎无限容量的存储元件，只能用于矿物存储
+tooltip.takotech.ore_storage_cell.desc=§r近乎无限容量的矿物专用存储元件，可与反向卡原件工作台配合使用。
+tooltip.takotech.ore_storage_cell.desc.1=§3可通过工作台合成为单矿物类型存储，合成会保留原有存储内容与升级组件。
+tooltip.takotech.ore_storage_cell.desc.2=§6注: 转换后若原有存储矿物与当前类型不匹配，仍可取出但无法继续存入。
 tooltip.takotech.ore_storage_cell.desc.include=可存入矿典前缀
 tooltip.takotech.ore_storage_cell.desc.exclude=排除矿典前缀
 
