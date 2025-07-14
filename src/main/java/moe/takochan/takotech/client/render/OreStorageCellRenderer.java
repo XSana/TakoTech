@@ -1,33 +1,20 @@
 package moe.takochan.takotech.client.render;
 
-import moe.takochan.takotech.common.Reference;
-import moe.takochan.takotech.common.item.ae.ItemOreStorageCell;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ItemRenderer;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderItem;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
-import net.minecraft.util.ResourceLocation;
-
 import net.minecraftforge.client.IItemRenderer;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 
-import static net.minecraft.client.renderer.ItemRenderer.renderItemIn2D;
+import moe.takochan.takotech.common.item.ae.ItemOreStorageCell;
 
 public class OreStorageCellRenderer implements IItemRenderer {
 
     @Override
     public boolean handleRenderType(ItemStack item, ItemRenderType type) {
-        //        return false;
-        return type == ItemRenderType.INVENTORY
-            && item != null
+        // return false;
+        return type == ItemRenderType.INVENTORY && item != null
             && item.getItem() instanceof ItemOreStorageCell
             && item.getItemDamage() > 0;
     }
