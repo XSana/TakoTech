@@ -34,7 +34,6 @@ public class LateMixinLoader implements ILateMixinLoader {
         if (map.containsKey("gregtech")) {
             if (isClient) {
                 mixins.add("gt.MetaGeneratedToolRendererMixin");
-                mixins.add("gt.MetaBaseItemMixin");
             }
             mixins.add("gt.MetaGeneratedToolMixin");
         }

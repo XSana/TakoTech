@@ -258,6 +258,11 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         return Long.MAX_VALUE;
     }
 
+    @Override
+    public long getRemainingItemsCountDist(IAEItemStack l) {
+        return Long.MAX_VALUE;
+    }
+
     /**
      * 获取元件未使用的物品数量。
      *
