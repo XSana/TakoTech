@@ -65,15 +65,8 @@ public class RecipeLoader implements Runnable {
                 'E',
                 ITEM_AE2_CELL_64_PART));
 
-        final String[][] patterns = {
-            {"C  ", "   ", "   "},
-            {" C ", "   ", "   "},
-            {"  C", "   ", "   "},
-            {"   ", "C  ", "   "},
-            {"   ", " C ", "   "},
-            {"   ", "  C", "   "},
-            {"   ", "   ", "C  "}
-        };
+        final String[][] patterns = { { "C  ", "   ", "   " }, { " C ", "   ", "   " }, { "  C", "   ", "   " },
+            { "   ", "C  ", "   " }, { "   ", " C ", "   " }, { "   ", "  C", "   " }, { "   ", "   ", "C  " } };
 
         ItemStack oreStorageCell = new ItemStack(ItemLoader.ITEM_ORE_STORAGE_CELL, 1, OreDictionary.WILDCARD_VALUE);
 
