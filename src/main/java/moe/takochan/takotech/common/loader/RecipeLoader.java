@@ -2,6 +2,7 @@ package moe.takochan.takotech.common.loader;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 import appeng.api.AEApi;
@@ -64,16 +65,22 @@ public class RecipeLoader implements Runnable {
                 'E',
                 ITEM_AE2_CELL_64_PART));
 
+        final String[][] patterns = {
+            {"C  ", "   ", "   "},
+            {" C ", "   ", "   "},
+            {"  C", "   ", "   "},
+            {"   ", "C  ", "   "},
+            {"   ", " C ", "   "},
+            {"   ", "  C", "   "},
+            {"   ", "   ", "C  "}
+        };
+
+        ItemStack oreStorageCell = new ItemStack(ItemLoader.ITEM_ORE_STORAGE_CELL, 1, OreDictionary.WILDCARD_VALUE);
+
         for (OreStorageType type : OreStorageType.values()) {
             int meta = type.getMeta(); // 0~6
 
-            int x = meta % 3;
-            int y = meta / 3;
-
-            String[] pattern = { "   ", "   ", "   " };
-            StringBuilder row = new StringBuilder(pattern[y]);
-            row.setCharAt(x, 'C');
-            pattern[y] = row.toString();
+            String[] pattern = patterns[meta];
 
             GameRegistry.addRecipe(
                 new OreStorageCellRecipe(
@@ -82,7 +89,7 @@ public class RecipeLoader implements Runnable {
                     pattern[1],
                     pattern[2],
                     'C',
-                    new ItemStack(ItemLoader.ITEM_ORE_STORAGE_CELL, 1, 32767)));
+                    oreStorageCell).setMirrored(false));
         }
 
         GameRegistry.addRecipe(new ToolboxPlusRecipe(new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS, 1), ITEM_IC2_TOOLBOX));
