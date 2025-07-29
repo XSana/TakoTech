@@ -50,7 +50,7 @@ dependencies {
     }
 
     // GT
-    api('com.github.GTNewHorizons:GT5-Unofficial:5.09.50.119:dev'){
+    api('com.github.GTNewHorizons:GT5-Unofficial:5.09.50.119:dev') {
         exclude group: 'com.github.GTNewHorizons', module: 'Applied-Energistics-2-Unofficial'
         exclude group: 'com.github.GTNewHorizons', module: 'AE2FluidCraft-Rework'
     }
