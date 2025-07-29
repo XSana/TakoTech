@@ -21,6 +21,7 @@ import appeng.util.item.AEItemStack;
 import appeng.util.prioitylist.FuzzyPriorityList;
 import appeng.util.prioitylist.OreFilteredList;
 import appeng.util.prioitylist.PrecisePriorityList;
+import moe.takochan.takotech.utils.OreCellFuzzyPartitionList;
 
 public class TakoCellInventoryHandler extends MEInventoryHandler<IAEItemStack>
     implements ITakoCellInventoryHandler, ICellCacheRegistry {
@@ -76,7 +77,7 @@ public class TakoCellInventoryHandler extends MEInventoryHandler<IAEItemStack>
                 }
                 if (!priorityList.isEmpty()) {
                     if (hasFuzzy) {
-                        this.setPartitionList(new FuzzyPriorityList<>(priorityList, fzMode));
+                        this.setPartitionList(new OreCellFuzzyPartitionList(priorityList));
                     } else {
                         this.setPartitionList(new PrecisePriorityList<>(priorityList));
                     }

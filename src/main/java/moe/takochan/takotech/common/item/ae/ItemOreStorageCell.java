@@ -440,6 +440,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
             ItemStack itemStack = new ItemStack(this, 1, type.getMeta());
             Upgrades.INVERTER.registerItem(itemStack, 1);
             Upgrades.ORE_FILTER.registerItem(itemStack, 1);
+            Upgrades.FUZZY.registerItem(itemStack, 1);
         }
     }
 
