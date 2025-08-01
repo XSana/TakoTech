@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import net.minecraft.item.ItemStack;
 
@@ -21,7 +22,7 @@ import gregtech.api.util.GTOreDictUnificator;
 
 public class OreCellFuzzyPartitionList implements IPartitionList<IAEItemStack> {
 
-    private static final Map<IAEItemStack, List<IAEItemStack>> CACHE = new HashMap<>();
+    private static final Map<IAEItemStack, List<IAEItemStack>> CACHE = new WeakHashMap<>();
     private static final List<OrePrefixes> PREFIXES = new ArrayList<>();
 
     static {
