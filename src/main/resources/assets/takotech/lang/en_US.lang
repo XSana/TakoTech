@@ -7,6 +7,8 @@ item.takotech.ore_storage_cell.3.name=ME Ore Storage Cell - Purified
 item.takotech.ore_storage_cell.4.name=ME Ore Storage Cell - Centrifuged
 item.takotech.ore_storage_cell.5.name=ME Ore Storage Cell - Impure Dust
 item.takotech.ore_storage_cell.6.name=ME Ore Storage Cell - Pure Dust
+item.takotech.ore_storage_cell.7.name=ME Ore Storage Cell - Gem
+item.takotech.ore_storage_cell.8.name=ME Ore Storage Cell - Dust
 item.takotech.toolbox_plus.name=Tool Box Plus
 
 tile.takotech.web_controller.name=Web Controller

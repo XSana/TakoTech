@@ -7,6 +7,8 @@ item.takotech.ore_storage_cell.3.name=ME矿物存储元件 - 洗净矿
 item.takotech.ore_storage_cell.4.name=ME矿物存储元件 - 离心矿
 item.takotech.ore_storage_cell.5.name=ME矿物存储元件 - 含杂粉
 item.takotech.ore_storage_cell.6.name=ME矿物存储元件 - 洁净粉
+item.takotech.ore_storage_cell.7.name=ME矿物存储元件 - 宝石
+item.takotech.ore_storage_cell.8.name=ME矿物存储元件 - 粉
 item.takotech.toolbox_plus.name=高级工具箱
 
 tile.takotech.web_controller.name=Web控制器
@@ -23,4 +25,4 @@ tooltip.takotech.web_controller.desc.1=控制器Id
 tooltip.takotech.toolbox_plus.desc=§r按 §6[%s] §r键切换工具
 
 key.takotech.category=塔可科技
-key.takotech.toolbox_plus.desc=切换工具 - 高级工具箱
+key.takotech.toolbox_plus.desc=切换工具 - 高级工具箱item.takotech.ore_storage_cell.7.name=ME Ore Storage Cell - Gem

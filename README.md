@@ -12,6 +12,7 @@ TakoTech(塔可科技)，主要用于改善在与我的小伙伴游玩[GTNH](htt
 
 - [X] 中文输入修正 ([InputFix](https://github.com/zlainsama/InputFix))
 - [X] **矿物存储元件**（灵感来源于[AE2Things](https://github.com/asdflj/AE2Things)，qz-miner太强了得有东西装下他挖的矿）
+  - [点击查看使用手册](https://github.com/XSana/TakoTech/wiki/%E7%9F%BF%E7%89%A9%E5%AD%98%E5%82%A8%E5%85%83%E4%BB%B6%E4%BD%BF%E7%94%A8%E6%89%8B%E5%86%8C)
   - 目标是简化矿物处理以及减少矿典卡使用
   - 近乎无限的矿物存储容量
   - 类型转换系统（可转换为单矿物类型存储且保留原有内容，不匹配的矿物仍可取出）
@@ -40,24 +41,3 @@ TakoTech(塔可科技)，主要用于改善在与我的小伙伴游玩[GTNH](htt
 > A: 因为这个名字来自我定制的虚拟角色（女儿），名字Hanami Tako中文名字是塔可，设定上喜欢吃Taco，所以以发音来命名，而不是日语中的タコ。
 >
 > [详细信息关注我的B站空间](https://space.bilibili.com/7742198?spm_id_from=333.1007.0.0)
-
-### 矿物存储元件使用手册
-
-**这是什么？**
-一个能装下qz-miner挖出所有矿物的AE存储原件！
-
-**使用指南：**
-
-- 将元件放入工作台合成即可转换存储类型
-- 转换后原有存储内容和升级组件完全保留
-- 类型不匹配的矿物：
-  - ✓ 可正常取出
-  - ✗ 禁止新增存入
-
-**高级技巧：**
-
-- 搭配反向卡实现单物品过滤（无需写矿典）
-- 插入矿典卡解锁矿典支持
-- 插入模糊卡，可对矿石（包括粗矿）进行模糊匹配（如下图）
-
-![ore_cell_fuzzy_card.gif](docs/image/ore_cell_fuzzy_card.gif)
