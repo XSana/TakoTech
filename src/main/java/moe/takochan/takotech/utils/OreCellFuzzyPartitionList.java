@@ -2,11 +2,14 @@ package moe.takochan.takotech.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import net.minecraft.item.ItemStack;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import appeng.api.AEApi;
 import appeng.api.storage.data.IAEItemStack;
@@ -19,10 +22,14 @@ import gregtech.api.enums.Materials;
 import gregtech.api.enums.OrePrefixes;
 import gregtech.api.util.GTOreDictUnificator;
 
+@SuppressWarnings("Guava")
 public class OreCellFuzzyPartitionList implements IPartitionList<IAEItemStack> {
 
-    private static final Map<IAEItemStack, List<IAEItemStack>> CACHE = new HashMap<>();
     private static final List<OrePrefixes> PREFIXES = new ArrayList<>();
+    private static final Cache<IAEItemStack, List<IAEItemStack>> CACHE = CacheBuilder.newBuilder()
+        .expireAfterAccess(24, TimeUnit.HOURS) // 过期时间
+        .maximumSize(10240) // 最大缓存数量
+        .build();
 
     static {
         PREFIXES.add(OrePrefixes.ore);
@@ -50,31 +57,36 @@ public class OreCellFuzzyPartitionList implements IPartitionList<IAEItemStack> {
             .createItemList();
 
         for (IAEItemStack priorityItem : priorityList) {
-            List<IAEItemStack> expanded = CACHE.computeIfAbsent(priorityItem, itemStack -> {
-                OreReference oreRef = OreHelper.INSTANCE.isOre(priorityItem.getItemStack());
-                if (oreRef == null) {
-                    return Collections.singletonList(itemStack);
-                }
-                List<IAEItemStack> result = new ArrayList<>();
-                for (String dict : oreRef.getEquivalents()) {
-                    if (!dict.startsWith("ore") && !dict.startsWith("rawOre")) {
-                        result.add(itemStack);
-                        continue;
+            List<IAEItemStack> expanded;
+            try {
+                expanded = CACHE.get(priorityItem, () -> {
+                    OreReference oreRef = OreHelper.INSTANCE.isOre(priorityItem.getItemStack());
+                    if (oreRef == null) {
+                        return Collections.singletonList(priorityItem);
                     }
+                    List<IAEItemStack> result = new ArrayList<>();
+                    for (String dict : oreRef.getEquivalents()) {
+                        if (!dict.startsWith("ore") && !dict.startsWith("rawOre")) {
+                            result.add(priorityItem);
+                            continue;
+                        }
 
-                    Materials materials = OrePrefixes.getMaterial(dict);
-                    if (materials == null) continue;
+                        Materials materials = OrePrefixes.getMaterial(dict);
+                        if (materials == null) continue;
 
-                    for (OrePrefixes prefix : PREFIXES) {
-                        List<ItemStack> itemStacks = GTOreDictUnificator.getOres(prefix, materials);
-                        for (ItemStack is : itemStacks) {
-                            result.add(AEItemStack.create(is));
+                        for (OrePrefixes prefix : PREFIXES) {
+                            List<ItemStack> itemStacks = GTOreDictUnificator.getOres(prefix, materials);
+                            for (ItemStack is : itemStacks) {
+                                result.add(AEItemStack.create(is));
+                            }
                         }
                     }
-                }
 
-                return result;
-            });
+                    return result;
+                });
+            } catch (ExecutionException e) {
+                expanded = Collections.singletonList(priorityItem);
+            }
             for (IAEItemStack expandedItem : expanded) {
                 this.list.add(expandedItem);
             }
