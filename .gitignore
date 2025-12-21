@@ -36,3 +36,7 @@ addon.local.gradle.kts
 addon.late.local.gradle
 addon.late.local.gradle.kts
 layout.json
+/identifier.sqlite
+/CLAUDE.md
+/src/main/resources/rebel.xml
+/.claude/
