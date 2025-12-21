@@ -14,6 +14,7 @@ import appeng.api.storage.StorageChannel;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.util.Platform;
+import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.common.item.BaseAECellItem;
 import moe.takochan.takotech.common.item.IBaseAECellItem;
 
@@ -43,7 +44,9 @@ public class TakoCellHandler implements ICellHandler {
         if (isCell(is) && is.getItem() instanceof IBaseAECellItem aci && channel == StorageChannel.ITEMS) {
             try {
                 return new TakoCellInventoryHandler(aci.getCellInv(is, host));
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                TakoTechMod.LOG.warn("Failed to create cell inventory for item: {}", is.getDisplayName(), e);
+            }
         }
         return null;
     }
