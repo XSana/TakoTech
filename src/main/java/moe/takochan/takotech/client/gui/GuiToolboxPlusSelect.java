@@ -1,6 +1,5 @@
 package moe.takochan.takotech.client.gui;
 
-import static moe.takochan.takotech.utils.SectorVertexUtils.DEFAULT_SECTOR_VERTEX_DATA;
 import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_IN;
 import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_OUT;
 
@@ -24,6 +23,8 @@ import codechicken.nei.api.TaggedInventoryArea;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
+import moe.takochan.takotech.client.renderer.RenderSystem;
+import moe.takochan.takotech.client.renderer.graphics.batch.SpriteBatch;
 import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.data.ToolData;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
@@ -31,6 +32,7 @@ import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.config.ToolboxConfig;
 import moe.takochan.takotech.network.NetworkHandler;
 import moe.takochan.takotech.network.PacketToolboxSelected;
+import moe.takochan.takotech.utils.SectorVertexUtils;
 
 @SideOnly(Side.CLIENT)
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
@@ -106,46 +108,12 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             }
         }
 
-        // 开始绘制
-        GL11.glPushMatrix();
-        GL11.glDisable(GL11.GL_ALPHA_TEST);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-
-        Tessellator tess = Tessellator.instance;
-        tess.startDrawingQuads();
-
-        // 使用预计算数据绘制扇区
-        if (n <= 9) {
-            List<List<float[][]>> sectors = DEFAULT_SECTOR_VERTEX_DATA.get(n);
-            if (sectors != null) {
-                for (int i = 0; i < n; i++) {
-                    int color = (i == selectIndex) ? 0xFFFFDD60 : 0x33333380;
-                    int r = (color >> 24) & 0xFF;
-                    int g = (color >> 16) & 0xFF;
-                    int b = (color >> 8) & 0xFF;
-                    int a = color & 0xFF;
-                    tess.setColorRGBA_F(r / 255F, g / 255F, b / 255F, a / 255F);
-
-                    List<float[][]> segments = sectors.get(i);
-                    for (float[][] segment : segments) {
-                        float[] pos1Out = segment[0];
-                        float[] pos1In = segment[1];
-                        float[] pos2In = segment[2];
-                        float[] pos2Out = segment[3];
-
-                        tess.addVertex(xCenter + pos1Out[0], yCenter + pos1Out[1], zLevel);
-                        tess.addVertex(xCenter + pos1In[0], yCenter + pos1In[1], zLevel);
-                        tess.addVertex(xCenter + pos2In[0], yCenter + pos2In[1], zLevel);
-                        tess.addVertex(xCenter + pos2Out[0], yCenter + pos2Out[1], zLevel);
-                    }
-                }
-            }
+        // 绘制扇区
+        if (RenderSystem.isShaderSupported() && RenderSystem.isInitialized()) {
+            drawSectorsWithShader(xCenter, yCenter, n);
+        } else {
+            drawSectorsWithTessellator(xCenter, yCenter, n);
         }
-
-        tess.draw();
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
 
         // 绘制物品图标
         RenderHelper.enableGUIStandardItemLighting();
@@ -168,6 +136,93 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             }
         }
         RenderHelper.disableStandardItemLighting();
+    }
+
+    /**
+     * 使用 Shader 渲染扇区（现代 OpenGL）
+     */
+    private void drawSectorsWithShader(int xCenter, int yCenter, int n) {
+        SpriteBatch batch = RenderSystem.getSpriteBatch();
+        if (batch == null) {
+            drawSectorsWithTessellator(xCenter, yCenter, n);
+            return;
+        }
+
+        batch.setProjectionOrtho(width, height);
+        batch.begin();
+
+        List<List<float[][]>> sectors = SectorVertexUtils.getSectorVertices(n);
+        for (int i = 0; i < n; i++) {
+            int color = (i == selectIndex) ? 0xFFFFDD60 : 0x33333380;
+            float r = ((color >> 24) & 0xFF) / 255f;
+            float g = ((color >> 16) & 0xFF) / 255f;
+            float b = ((color >> 8) & 0xFF) / 255f;
+            float a = (color & 0xFF) / 255f;
+
+            List<float[][]> segments = sectors.get(i);
+            for (float[][] segment : segments) {
+                float[] pos1Out = segment[0];
+                float[] pos1In = segment[1];
+                float[] pos2In = segment[2];
+                float[] pos2Out = segment[3];
+
+                batch.drawQuad(
+                    xCenter + pos1Out[0],
+                    yCenter + pos1Out[1],
+                    xCenter + pos1In[0],
+                    yCenter + pos1In[1],
+                    xCenter + pos2In[0],
+                    yCenter + pos2In[1],
+                    xCenter + pos2Out[0],
+                    yCenter + pos2Out[1],
+                    r,
+                    g,
+                    b,
+                    a);
+            }
+        }
+
+        batch.end();
+    }
+
+    /**
+     * 使用 Tessellator 渲染扇区（固定管线回退）
+     */
+    private void drawSectorsWithTessellator(int xCenter, int yCenter, int n) {
+        GL11.glPushMatrix();
+        GL11.glDisable(GL11.GL_ALPHA_TEST);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+
+        Tessellator tess = Tessellator.instance;
+        tess.startDrawingQuads();
+
+        List<List<float[][]>> sectors = SectorVertexUtils.getSectorVertices(n);
+        for (int i = 0; i < n; i++) {
+            int color = (i == selectIndex) ? 0xFFFFDD60 : 0x33333380;
+            int r = (color >> 24) & 0xFF;
+            int g = (color >> 16) & 0xFF;
+            int b = (color >> 8) & 0xFF;
+            int a = color & 0xFF;
+            tess.setColorRGBA(r, g, b, a);
+
+            List<float[][]> segments = sectors.get(i);
+            for (float[][] segment : segments) {
+                float[] pos1Out = segment[0];
+                float[] pos1In = segment[1];
+                float[] pos2In = segment[2];
+                float[] pos2Out = segment[3];
+
+                tess.addVertex(xCenter + pos1Out[0], yCenter + pos1Out[1], zLevel);
+                tess.addVertex(xCenter + pos1In[0], yCenter + pos1In[1], zLevel);
+                tess.addVertex(xCenter + pos2In[0], yCenter + pos2In[1], zLevel);
+                tess.addVertex(xCenter + pos2Out[0], yCenter + pos2Out[1], zLevel);
+            }
+        }
+
+        tess.draw();
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glPopMatrix();
     }
 
