@@ -28,6 +28,7 @@ public class TakoTechConfig {
             ConfigurationManager.registerConfig(TakoTechConfig.class);
             ConfigurationManager.registerConfig(WebControllerConfig.class);
             ConfigurationManager.registerConfig(ToolboxConfig.class);
+            ConfigurationManager.registerConfig(ClientConfig.class);
         } catch (ConfigException e) {
             throw new RuntimeException(e);
         }
