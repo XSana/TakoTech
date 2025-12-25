@@ -175,4 +175,32 @@ public final class IMEControl {
     public static boolean isEnabled() {
         return imeEnabled;
     }
+
+    /**
+     * 窗口失去焦点时恢复 IME
+     * 确保切换到其他应用时输入法正常工作
+     */
+    public static void restoreIME() {
+        if (!IS_WINDOWS || !initialized || imeEnabled) {
+            return;
+        }
+
+        try {
+            HWND hwnd = User32.INSTANCE.GetForegroundWindow();
+            if (hwnd == null) {
+                return;
+            }
+
+            if (savedIMC != null) {
+                Imm32.INSTANCE.ImmAssociateContext(hwnd, savedIMC);
+                savedIMC = null;
+            } else {
+                Imm32.INSTANCE.ImmAssociateContextEx(hwnd, null, IACE_DEFAULT);
+            }
+            imeEnabled = true;
+            TakoTechMod.LOG.debug("[IMEControl] IME restored");
+        } catch (Throwable e) {
+            TakoTechMod.LOG.error("[IMEControl] Failed to restore IME", e);
+        }
+    }
 }
