@@ -1,6 +1,6 @@
 package moe.takochan.takotech.common.item.ae;
 
-import moe.takochan.takotech.config.TakoTechConfig;
+import moe.takochan.takotech.config.ServerConfig;
 
 /**
  * 表示矿物存储元件的分类类型。
@@ -120,7 +120,7 @@ public enum OreStorageType {
      */
     public String[] getIncludedPrefixes() {
         if (this == GENERAL) {
-            return TakoTechConfig.oreDefs; // 动态获取
+            return ServerConfig.oreDefs; // 动态获取（从服务端同步）
         }
         return includedPrefixes;
     }

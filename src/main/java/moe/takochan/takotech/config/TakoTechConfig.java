@@ -1,36 +1,40 @@
 package moe.takochan.takotech.config;
 
-import com.gtnewhorizon.gtnhlib.config.Config;
-import com.gtnewhorizon.gtnhlib.config.ConfigException;
-import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
+import java.io.File;
 
-import moe.takochan.takotech.common.Reference;
+import moe.takochan.takotech.utils.CommonUtils;
 
-@Config(modid = Reference.MODID, configSubDirectory = "TakoTech", filename = "config")
+/**
+ * TakoTech 配置管理器
+ * 统一管理服务端配置和客户端配置的初始化
+ */
 public class TakoTechConfig {
 
-    @Config.Comment("匹配矿典前缀（不支持正则哦）")
-    @Config.DefaultStringList(
-        value = { "ore", // 矿石，粗矿oreRaw
-            "rawOre", // 粗矿
-            "crushed", // 粉碎，洗净，离心
-            "dustImpure", // 含杂粉
-            "dustPure" // 洁净粉
-        })
-    @Config.Sync
-    public static String[] oreDefs;
+    /**
+     * 初始化所有配置
+     */
+    public static void init(File configDir) {
+        // 服务端配置（双端都需要加载，但客户端的值会被服务端同步覆盖）
+        ServerConfig.init(configDir);
+
+        // 客户端配置（仅客户端加载）
+        if (CommonUtils.isClient()) {
+            ClientConfig.init(configDir);
+        }
+    }
 
     /**
-     * 初始化配置。
+     * 保存所有配置
+     * 多人模式下只保存客户端配置
      */
-    public static void init() {
-        try {
-            ConfigurationManager.registerConfig(TakoTechConfig.class);
-            ConfigurationManager.registerConfig(WebControllerConfig.class);
-            ConfigurationManager.registerConfig(ToolboxConfig.class);
-            ConfigurationManager.registerConfig(ClientConfig.class);
-        } catch (ConfigException e) {
-            throw new RuntimeException(e);
+    public static void save() {
+        // 单人模式下保存服务端配置
+        if (!ServerConfig.isSyncedFromServer()) {
+            ServerConfig.save();
+        }
+        // 客户端配置始终保存
+        if (CommonUtils.isClient()) {
+            ClientConfig.save();
         }
     }
 }
