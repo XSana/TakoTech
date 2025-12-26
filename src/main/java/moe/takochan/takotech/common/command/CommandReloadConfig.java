@@ -1,6 +1,5 @@
 package moe.takochan.takotech.common.command;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

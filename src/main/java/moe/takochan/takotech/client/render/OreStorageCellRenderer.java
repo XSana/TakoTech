@@ -30,13 +30,14 @@ public class OreStorageCellRenderer implements IItemRenderer {
         int meta = item.getItemDamage();
 
         GL11.glPushMatrix();
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        // 只保存需要的状态位：颜色和 alpha 测试
+        GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 
         // 获取物品的基础图标
         final IIcon baseIcon = item.getIconIndex();
         final IIcon overlay = cell.getOverlayIcon(meta);
 
-        // 基础设置
+        // 显式设置需要的状态
         GL11.glColor4f(1, 1, 1, 1.0F);
         GL11.glEnable(GL11.GL_ALPHA_TEST);
         // 物品栏变换

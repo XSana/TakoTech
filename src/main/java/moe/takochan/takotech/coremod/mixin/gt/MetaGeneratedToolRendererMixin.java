@@ -44,13 +44,11 @@ public abstract class MetaGeneratedToolRendererMixin {
             // 获取工具箱的基础图标
             IIcon baseIcon = ItemLoader.ITEM_TOOLBOX_PLUS.getBaseIcon();
             if (baseIcon != null) {
-                // 保存当前渲染状态
-                boolean wasBlendEnabled = GL11.glGetBoolean(GL11.GL_BLEND);
-                boolean wasDepthTestEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
-                int blendSrc = GL11.glGetInteger(GL11.GL_BLEND_SRC);
-                int blendDst = GL11.glGetInteger(GL11.GL_BLEND_DST);
+                // 保存矩阵和 GL 状态
+                GL11.glPushMatrix();
+                GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
-                // 设置新状态
+                // 设置渲染状态
                 GL11.glEnable(GL11.GL_BLEND);
                 GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
                 GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -67,14 +65,9 @@ public abstract class MetaGeneratedToolRendererMixin {
                 // 渲染工具箱的图标
                 GTRenderUtil.renderItem(IItemRenderer.ItemRenderType.INVENTORY, baseIcon);
 
-                // 恢复原始状态
-                GL11.glLoadIdentity();
-                if (wasBlendEnabled) GL11.glEnable(GL11.GL_BLEND);
-                else GL11.glDisable(GL11.GL_BLEND);
-                GL11.glBlendFunc(blendSrc, blendDst);
-                if (wasDepthTestEnabled) GL11.glEnable(GL11.GL_DEPTH_TEST);
-                else GL11.glDisable(GL11.GL_DEPTH_TEST);
-
+                // 恢复 GL 状态和矩阵
+                GL11.glPopAttrib();
+                GL11.glPopMatrix();
             }
         }
     }

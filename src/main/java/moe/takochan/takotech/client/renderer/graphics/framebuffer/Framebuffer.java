@@ -92,8 +92,18 @@ public class Framebuffer {
     }
 
     public void delete() {
-        GL30.glDeleteFramebuffers(framebufferId);
-        GL11.glDeleteTextures(textureId);
+        if (depthBufferId != 0) {
+            GL30.glDeleteRenderbuffers(depthBufferId);
+            depthBufferId = 0;
+        }
+        if (textureId != 0) {
+            GL11.glDeleteTextures(textureId);
+            textureId = 0;
+        }
+        if (framebufferId != 0) {
+            GL30.glDeleteFramebuffers(framebufferId);
+            framebufferId = 0;
+        }
     }
 
     public int getFramebufferId() {

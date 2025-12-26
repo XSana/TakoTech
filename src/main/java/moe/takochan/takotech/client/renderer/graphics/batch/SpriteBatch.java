@@ -3,6 +3,11 @@ package moe.takochan.takotech.client.renderer.graphics.batch;
 import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -10,7 +15,6 @@ import moe.takochan.takotech.client.renderer.graphics.mesh.DynamicMesh;
 import moe.takochan.takotech.client.renderer.graphics.mesh.VertexFormat;
 import moe.takochan.takotech.client.renderer.graphics.shader.ShaderProgram;
 import moe.takochan.takotech.client.renderer.graphics.shader.ShaderType;
-import moe.takochan.takotech.client.renderer.graphics.state.RenderState;
 
 /**
  * 批量渲染器，用于高效绘制 2D 图元。
@@ -19,9 +23,9 @@ import moe.takochan.takotech.client.renderer.graphics.state.RenderState;
  * <p>
  * 使用示例:
  * </p>
- * 
+ *
  * <pre>
- * 
+ *
  * {
  *     &#64;code
  *     SpriteBatch batch = new SpriteBatch();
@@ -67,8 +71,14 @@ public class SpriteBatch implements AutoCloseable {
 
     /** 是否正在绘制 */
     private boolean drawing = false;
-    /** 保存的状态快照 */
-    private RenderState.StateSnapshot savedState;
+
+    /** 保存的现代 GL 状态 (VAO/VBO/EBO/Program) */
+    private int savedVao;
+    private int savedVbo;
+    private int savedEbo;
+    private int savedProgram;
+    private int savedActiveTexture;
+    private int savedTexture2D;
 
     private boolean disposed = false;
 
@@ -136,14 +146,29 @@ public class SpriteBatch implements AutoCloseable {
             return;
         }
 
-        // 保存当前 GL 状态
-        savedState = RenderState.save();
+        // 保存需要修改的 GL 状态（避免使用 ALL_ATTRIB_BITS 防止栈溢出）
+        GL11.glPushAttrib(
+            GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_CURRENT_BIT);
+        GL11.glPushClientAttrib(GL11.GL_CLIENT_VERTEX_ARRAY_BIT);
 
-        // 设置渲染状态
-        RenderState.setBlendAlpha();
-        RenderState.disableDepthTest();
-        RenderState.disableTexture2D();
-        RenderState.disableCullFace();
+        // 保存现代 GL 状态（VAO/VBO/EBO/Program/Texture）
+        savedVao = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
+        savedVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
+        savedEbo = GL11.glGetInteger(GL15.GL_ELEMENT_ARRAY_BUFFER_BINDING);
+        savedProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
+        savedActiveTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        savedTexture2D = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+
+        // 显式设置所有需要的状态（不信任当前状态）
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+        GL11.glDisable(GL11.GL_ALPHA_TEST);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glDepthMask(false);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
         // 重置计数器
         vertexOffset = 0;
@@ -300,11 +325,17 @@ public class SpriteBatch implements AutoCloseable {
         // 刷新剩余数据
         flush();
 
-        // 恢复 GL 状态
-        if (savedState != null) {
-            RenderState.restore(savedState);
-            savedState = null;
-        }
+        // 恢复现代 GL 状态
+        GL20.glUseProgram(savedProgram);
+        GL30.glBindVertexArray(savedVao);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, savedVbo);
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, savedEbo);
+        GL13.glActiveTexture(savedActiveTexture);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, savedTexture2D);
+
+        // 恢复所有传统 GL 状态
+        GL11.glPopClientAttrib();
+        GL11.glPopAttrib();
 
         drawing = false;
     }
