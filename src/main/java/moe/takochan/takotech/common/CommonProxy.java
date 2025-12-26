@@ -3,13 +3,16 @@ package moe.takochan.takotech.common;
 import net.minecraftforge.common.MinecraftForge;
 
 import appeng.api.AEApi;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import moe.takochan.takotech.client.gui.GuiType;
+import moe.takochan.takotech.common.command.CommandReloadConfig;
 import moe.takochan.takotech.common.event.ItemTooltipEventHandler;
 import moe.takochan.takotech.common.event.PlayerDestroyItemEventHandler;
+import moe.takochan.takotech.common.event.PlayerEventHandler;
 import moe.takochan.takotech.common.event.RenderGameOverlayEventHandler;
 import moe.takochan.takotech.common.event.WorldEventHandler;
 import moe.takochan.takotech.common.loader.BlockLoader;
@@ -30,8 +33,12 @@ public class CommonProxy {
         MinecraftForge.EVENT_BUS.register(new RenderGameOverlayEventHandler());
         MinecraftForge.EVENT_BUS.register(new PlayerDestroyItemEventHandler());
         MinecraftForge.EVENT_BUS.register(new ItemTooltipEventHandler());
+        // 玩家事件（FML 事件总线）
+        FMLCommonHandler.instance()
+            .bus()
+            .register(new PlayerEventHandler());
         // 配置初始化
-        TakoTechConfig.init();
+        TakoTechConfig.init(event.getModConfigurationDirectory());
         // ModLoader
         new ModLoader().run();
         // 方块初始化
@@ -61,7 +68,9 @@ public class CommonProxy {
     }
 
     // register server commands in this event handler (Remove if not needed)
-    public void serverStarting(FMLServerStartingEvent event) {}
+    public void serverStarting(FMLServerStartingEvent event) {
+        event.registerServerCommand(new CommandReloadConfig());
+    }
 
     public void serverStopping(FMLServerStartingEvent event) {
         CellItemSavedData cellData = CellItemSavedData.getInstance();

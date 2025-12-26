@@ -2,3 +2,32 @@
 plugins {
     id 'com.gtnewhorizons.gtnhconvention'
 }
+
+// 配置运行任务使用不同的工作目录
+tasks.named("runClient", JavaExec) {
+    workingDir = file("${projectDir}/run/client")
+    doFirst {
+        workingDir.mkdirs()
+    }
+}
+
+tasks.named("runClient17", JavaExec) {
+    workingDir = file("${projectDir}/run/client17")
+    doFirst {
+        workingDir.mkdirs()
+    }
+}
+
+tasks.named("runServer", JavaExec) {
+    workingDir = file("${projectDir}/run/server")
+    doFirst {
+        workingDir.mkdirs()
+    }
+}
+
+tasks.named("runServer17", JavaExec) {
+    workingDir = file("${projectDir}/run/server17")
+    doFirst {
+        workingDir.mkdirs()
+    }
+}

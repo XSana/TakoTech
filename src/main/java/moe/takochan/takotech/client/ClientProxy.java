@@ -9,6 +9,7 @@ import moe.takochan.takotech.client.input.IMEStateHandler;
 import moe.takochan.takotech.client.renderer.RenderSystem;
 import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.CommonProxy;
+import moe.takochan.takotech.common.event.ConfigChangeHandler;
 
 public class ClientProxy extends CommonProxy {
 
@@ -37,6 +38,11 @@ public class ClientProxy extends CommonProxy {
                 .bus()
                 .register(new IMEStateHandler());
         }
+
+        // 注册配置变更事件处理（ConfigChangedEvent 在 FML 事件总线上）
+        FMLCommonHandler.instance()
+            .bus()
+            .register(new ConfigChangeHandler());
     }
 
     @Override

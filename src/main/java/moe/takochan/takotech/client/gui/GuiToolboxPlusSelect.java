@@ -29,7 +29,7 @@ import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.data.ToolData;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.common.loader.ItemLoader;
-import moe.takochan.takotech.config.ToolboxConfig;
+import moe.takochan.takotech.config.ClientConfig;
 import moe.takochan.takotech.network.NetworkHandler;
 import moe.takochan.takotech.network.PacketToolboxSelected;
 import moe.takochan.takotech.utils.SectorVertexUtils;
@@ -235,7 +235,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
         // 若存在工具提示物品则绘制其提示文本
-        if (ToolboxConfig.renderToolTip && selectIndex > -1) {
+        if (ClientConfig.renderToolTip && selectIndex > -1) {
             ToolData toolData = items.get(selectIndex);
             if (toolData.getSlot() == -1) return;
 
