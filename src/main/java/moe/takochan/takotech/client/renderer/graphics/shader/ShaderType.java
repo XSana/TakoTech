@@ -3,8 +3,6 @@ package moe.takochan.takotech.client.renderer.graphics.shader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.lwjgl.opengl.GL20;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.TakoTechMod;
@@ -87,9 +85,7 @@ public enum ShaderType {
     public static void cleanupAll() {
         SHADER_CACHE.forEach((type, shader) -> {
             try {
-                if (shader.getProgram() != 0) {
-                    GL20.glDeleteProgram(shader.getProgram());
-                }
+                shader.close();
             } catch (Exception e) {
                 // 忽略清理时的错误（可能没有 GL 上下文）
             }

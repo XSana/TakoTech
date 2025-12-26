@@ -9,13 +9,11 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
 
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
@@ -110,9 +108,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
         // 绘制扇区
         if (RenderSystem.isShaderSupported() && RenderSystem.isInitialized()) {
-            drawSectorsWithShader(xCenter, yCenter, n);
-        } else {
-            drawSectorsWithTessellator(xCenter, yCenter, n);
+            drawSectors(xCenter, yCenter, n);
         }
 
         // 绘制物品图标
@@ -139,14 +135,11 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     }
 
     /**
-     * 使用 Shader 渲染扇区（现代 OpenGL）
+     * 使用 Shader 渲染扇区
      */
-    private void drawSectorsWithShader(int xCenter, int yCenter, int n) {
+    private void drawSectors(int xCenter, int yCenter, int n) {
         SpriteBatch batch = RenderSystem.getSpriteBatch();
-        if (batch == null) {
-            drawSectorsWithTessellator(xCenter, yCenter, n);
-            return;
-        }
+        if (batch == null) return;
 
         batch.setProjectionOrtho(width, height);
         batch.begin();
@@ -183,47 +176,6 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         }
 
         batch.end();
-    }
-
-    /**
-     * 使用 Tessellator 渲染扇区（固定管线回退）
-     */
-    private void drawSectorsWithTessellator(int xCenter, int yCenter, int n) {
-        GL11.glPushMatrix();
-        GL11.glDisable(GL11.GL_ALPHA_TEST);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-
-        Tessellator tess = Tessellator.instance;
-        tess.startDrawingQuads();
-
-        List<List<float[][]>> sectors = SectorVertexUtils.getSectorVertices(n);
-        for (int i = 0; i < n; i++) {
-            int color = (i == selectIndex) ? 0xFFFFDD60 : 0x33333380;
-            int r = (color >> 24) & 0xFF;
-            int g = (color >> 16) & 0xFF;
-            int b = (color >> 8) & 0xFF;
-            int a = color & 0xFF;
-            tess.setColorRGBA(r, g, b, a);
-
-            List<float[][]> segments = sectors.get(i);
-            for (float[][] segment : segments) {
-                float[] pos1Out = segment[0];
-                float[] pos1In = segment[1];
-                float[] pos2In = segment[2];
-                float[] pos2Out = segment[3];
-
-                tess.addVertex(xCenter + pos1Out[0], yCenter + pos1Out[1], zLevel);
-                tess.addVertex(xCenter + pos1In[0], yCenter + pos1In[1], zLevel);
-                tess.addVertex(xCenter + pos2In[0], yCenter + pos2In[1], zLevel);
-                tess.addVertex(xCenter + pos2Out[0], yCenter + pos2Out[1], zLevel);
-            }
-        }
-
-        tess.draw();
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glPopMatrix();
     }
 
     /**

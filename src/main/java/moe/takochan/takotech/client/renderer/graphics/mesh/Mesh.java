@@ -106,10 +106,15 @@ public abstract class Mesh implements AutoCloseable {
     }
 
     /**
-     * 解绑 VAO
+     * 解绑 VAO、VBO、EBO 并禁用顶点属性
      */
     public void unbind() {
+        // 禁用顶点属性以恢复固定管线兼容状态
+        disableAttributes();
+        // 解绑所有缓冲区
         GL30.glBindVertexArray(0);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     /**
@@ -120,8 +125,6 @@ public abstract class Mesh implements AutoCloseable {
             bind();
             GL11.glDrawElements(drawMode, elementCount, GL11.GL_UNSIGNED_INT, 0);
             unbind();
-            // 禁用顶点属性以恢复固定管线兼容状态
-            disableAttributes();
         }
     }
 
@@ -135,8 +138,6 @@ public abstract class Mesh implements AutoCloseable {
             bind();
             GL11.glDrawElements(mode, elementCount, GL11.GL_UNSIGNED_INT, 0);
             unbind();
-            // 禁用顶点属性以恢复固定管线兼容状态
-            disableAttributes();
         }
     }
 
