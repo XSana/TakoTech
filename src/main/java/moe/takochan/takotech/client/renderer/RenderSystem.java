@@ -3,7 +3,10 @@ package moe.takochan.takotech.client.renderer;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.TakoTechMod;
+import moe.takochan.takotech.client.renderer.graphics.batch.BatchConfig;
 import moe.takochan.takotech.client.renderer.graphics.batch.SpriteBatch;
+import moe.takochan.takotech.client.renderer.graphics.batch.World3DBatch;
+import moe.takochan.takotech.client.renderer.graphics.camera.Camera;
 import moe.takochan.takotech.client.renderer.graphics.shader.ShaderProgram;
 import moe.takochan.takotech.client.renderer.graphics.shader.ShaderType;
 
@@ -14,7 +17,7 @@ import moe.takochan.takotech.client.renderer.graphics.shader.ShaderType;
  * <p>
  * 初始化示例（在 ClientProxy.init 中调用）:
  * </p>
- * 
+ *
  * <pre>
  * {@code
  * RenderSystem.init();
@@ -24,7 +27,7 @@ import moe.takochan.takotech.client.renderer.graphics.shader.ShaderType;
  * <p>
  * 使用示例:
  * </p>
- * 
+ *
  * <pre>
  * {@code
  * if (RenderSystem.isShaderSupported()) {
@@ -42,6 +45,22 @@ public final class RenderSystem {
 
     private static boolean initialized = false;
     private static SpriteBatch spriteBatch = null;
+    private static boolean spriteBatchInitialized = false;
+
+    /** GUI 相机 - 2D 正交投影，独立于 MC */
+    private static Camera guiCamera = null;
+    private static boolean guiCameraInitialized = false;
+
+    /** 世界相机 - 3D 透视投影，与 MC 相机同步 */
+    private static Camera worldCamera = null;
+    private static boolean worldCameraInitialized = false;
+
+    /** 3D 世界批量渲染器 - 用于在世界中渲染 3D 图元 */
+    private static World3DBatch world3DBatch = null;
+    private static boolean world3DBatchInitialized = false;
+
+    /** 批量渲染器配置 */
+    private static BatchConfig batchConfig = null;
 
     private RenderSystem() {}
 
@@ -67,8 +86,12 @@ public final class RenderSystem {
         // 注册 shaders
         ShaderType.register();
 
-        // 创建共享的 SpriteBatch
-        spriteBatch = new SpriteBatch();
+        // 检测 GL 硬件能力并初始化批量渲染器配置
+        batchConfig = BatchConfig.detect();
+        TakoTechMod.LOG.info("BatchConfig: {}", batchConfig.getSummary());
+
+        // 注意：SpriteBatch 延迟初始化，在第一次使用时创建
+        // 这是因为在 FML 初始化阶段创建的 VAO/VBO 可能会被 Angelica/Embeddium 污染
 
         initialized = true;
         TakoTechMod.LOG.info("RenderSystem initialized successfully");
@@ -88,9 +111,26 @@ public final class RenderSystem {
             spriteBatch.close();
             spriteBatch = null;
         }
+        spriteBatchInitialized = false;
+
+        // 释放相机
+        guiCamera = null;
+        guiCameraInitialized = false;
+        worldCamera = null;
+        worldCameraInitialized = false;
+
+        // 释放 World3DBatch
+        if (world3DBatch != null) {
+            world3DBatch.close();
+            world3DBatch = null;
+        }
+        world3DBatchInitialized = false;
 
         // 清理 shaders
         ShaderType.cleanupAll();
+
+        // 清理 BatchConfig
+        batchConfig = null;
 
         initialized = false;
         TakoTechMod.LOG.info("RenderSystem shutdown complete");
@@ -114,12 +154,25 @@ public final class RenderSystem {
      * 获取共享的 SpriteBatch 实例
      * 适用于大多数 2D 渲染场景
      *
+     * 注意：SpriteBatch 采用延迟初始化，在第一次调用时创建。
+     * 这是为了避免在 FML 初始化阶段创建的 VAO/VBO 被其他 mod 污染。
+     *
      * @return SpriteBatch 实例，如果系统不支持 shader 则返回 null
      * @throws IllegalStateException 如果 RenderSystem 未初始化
      */
     public static SpriteBatch getSpriteBatch() {
         if (!initialized) {
             throw new IllegalStateException("RenderSystem not initialized. Call RenderSystem.init() first.");
+        }
+        if (!isShaderSupported()) {
+            return null;
+        }
+        // 延迟初始化 SpriteBatch（使用 BatchConfig 的推荐值）
+        if (!spriteBatchInitialized) {
+            int maxQuads = batchConfig != null ? batchConfig.getSpriteMaxQuads() : BatchConfig.DEFAULT_SPRITE_QUADS;
+            spriteBatch = new SpriteBatch(maxQuads);
+            spriteBatchInitialized = true;
+            TakoTechMod.LOG.info("SpriteBatch lazily initialized with {} quads", maxQuads);
         }
         return spriteBatch;
     }
@@ -148,5 +201,124 @@ public final class RenderSystem {
             return null;
         }
         return new SpriteBatch(maxQuads);
+    }
+
+    /**
+     * 获取 GUI 相机（2D 正交投影，独立于 MC）
+     * 用于 HUD、菜单等 2D 渲染
+     *
+     * @return GUI 相机实例，如果系统不支持 shader 则返回 null
+     * @throws IllegalStateException 如果 RenderSystem 未初始化
+     */
+    public static Camera getGuiCamera() {
+        if (!initialized) {
+            throw new IllegalStateException("RenderSystem not initialized. Call RenderSystem.init() first.");
+        }
+        if (!isShaderSupported()) {
+            return null;
+        }
+        // 延迟初始化 GUI 相机
+        if (!guiCameraInitialized) {
+            guiCamera = Camera.orthographic(1920, 1080, -1000, 1000);
+            guiCameraInitialized = true;
+            TakoTechMod.LOG.info("GUI Camera lazily initialized");
+        }
+        return guiCamera;
+    }
+
+    /**
+     * 获取世界相机（3D 透视投影，与 MC 相机同步）
+     * 用于 3D 场景渲染，需要每帧调用 syncFromMinecraft() 同步
+     *
+     * @return 世界相机实例，如果系统不支持 shader 则返回 null
+     * @throws IllegalStateException 如果 RenderSystem 未初始化
+     */
+    public static Camera getWorldCamera() {
+        if (!initialized) {
+            throw new IllegalStateException("RenderSystem not initialized. Call RenderSystem.init() first.");
+        }
+        if (!isShaderSupported()) {
+            return null;
+        }
+        // 延迟初始化世界相机
+        if (!worldCameraInitialized) {
+            worldCamera = Camera.perspective(70.0f, 16.0f / 9.0f, 0.05f, 256.0f);
+            worldCameraInitialized = true;
+            TakoTechMod.LOG.info("World Camera lazily initialized");
+        }
+        return worldCamera;
+    }
+
+    /**
+     * 更新世界相机与 MC 同步（每帧调用）
+     *
+     * @param partialTicks 插值因子
+     */
+    public static void updateWorldCamera(float partialTicks) {
+        Camera camera = getWorldCamera();
+        if (camera != null) {
+            camera.syncFromMinecraft(partialTicks);
+        }
+    }
+
+    /**
+     * 获取共享的 World3DBatch 实例
+     * 用于在 MC 世界中渲染 3D 图元（线框、方块、粒子等）
+     *
+     * @return World3DBatch 实例，如果系统不支持 shader 则返回 null
+     * @throws IllegalStateException 如果 RenderSystem 未初始化
+     */
+    public static World3DBatch getWorld3DBatch() {
+        if (!initialized) {
+            throw new IllegalStateException("RenderSystem not initialized. Call RenderSystem.init() first.");
+        }
+        if (!isShaderSupported()) {
+            return null;
+        }
+        // 延迟初始化 World3DBatch（使用 BatchConfig 的推荐值）
+        if (!world3DBatchInitialized) {
+            int maxVerts = batchConfig != null ? batchConfig.getWorld3DMaxVertices()
+                : BatchConfig.DEFAULT_WORLD3D_VERTICES;
+            world3DBatch = new World3DBatch(maxVerts);
+            world3DBatchInitialized = true;
+            TakoTechMod.LOG.info("World3DBatch lazily initialized with {} vertices", maxVerts);
+        }
+        return world3DBatch;
+    }
+
+    /**
+     * 创建新的 World3DBatch 实例（使用 BatchConfig 推荐值）
+     *
+     * @return 新的 World3DBatch 实例，如果系统不支持 shader 则返回 null
+     */
+    public static World3DBatch createWorld3DBatch() {
+        if (!isShaderSupported()) {
+            return null;
+        }
+        int maxVerts = batchConfig != null ? batchConfig.getWorld3DMaxVertices() : BatchConfig.DEFAULT_WORLD3D_VERTICES;
+        return new World3DBatch(maxVerts);
+    }
+
+    /**
+     * 创建指定容量的 World3DBatch 实例
+     *
+     * @param maxVertices 最大顶点数
+     * @return 新的 World3DBatch 实例，如果系统不支持 shader 则返回 null
+     */
+    public static World3DBatch createWorld3DBatch(int maxVertices) {
+        if (!isShaderSupported()) {
+            return null;
+        }
+        return new World3DBatch(maxVertices);
+    }
+
+    /**
+     * 获取批量渲染器配置
+     * 可用于查询 GL 硬件限制和自定义批量渲染器容量
+     *
+     * @return BatchConfig 实例，如果 RenderSystem 未初始化则返回 null
+     */
+    public static BatchConfig getBatchConfig() {
+        return batchConfig;
     }
 }

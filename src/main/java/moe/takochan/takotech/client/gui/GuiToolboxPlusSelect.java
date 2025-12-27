@@ -14,6 +14,10 @@ import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
@@ -21,8 +25,6 @@ import codechicken.nei.api.TaggedInventoryArea;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
-import moe.takochan.takotech.client.renderer.RenderSystem;
-import moe.takochan.takotech.client.renderer.graphics.batch.SpriteBatch;
 import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.data.ToolData;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
@@ -106,10 +108,8 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
             }
         }
 
-        // 绘制扇区
-        if (RenderSystem.isShaderSupported() && RenderSystem.isInitialized()) {
-            drawSectors(xCenter, yCenter, n);
-        }
+        // 绘制扇区（临时使用固定管线渲染测试）
+        drawSectors(xCenter, yCenter, n);
 
         // 绘制物品图标
         RenderHelper.enableGUIStandardItemLighting();
@@ -135,16 +135,30 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     }
 
     /**
-     * 使用 Shader 渲染扇区
+     * 使用现代 GL 绘制扇区
      */
     private void drawSectors(int xCenter, int yCenter, int n) {
-        SpriteBatch batch = RenderSystem.getSpriteBatch();
-        if (batch == null) return;
+        // 保存当前状态
+        int savedVao = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
+        int savedVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
+        int savedEbo = GL11.glGetInteger(GL15.GL_ELEMENT_ARRAY_BUFFER_BINDING);
+        int savedProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
 
-        batch.setProjectionOrtho(width, height);
-        batch.begin();
-
+        // 获取扇区数据
         List<List<float[][]>> sectors = SectorVertexUtils.getSectorVertices(n);
+
+        // 计算顶点和索引数量
+        int totalQuads = 0;
+        for (List<float[][]> segments : sectors) {
+            totalQuads += segments.size();
+        }
+
+        // 每个四边形 4 顶点，每顶点 6 floats (x, y, r, g, b, a)
+        java.nio.FloatBuffer vertexBuffer = org.lwjgl.BufferUtils.createFloatBuffer(totalQuads * 4 * 6);
+        // 每个四边形 6 索引（2 个三角形）
+        java.nio.IntBuffer indexBuffer = org.lwjgl.BufferUtils.createIntBuffer(totalQuads * 6);
+
+        int vertexIndex = 0;
         for (int i = 0; i < n; i++) {
             int color = (i == selectIndex) ? 0xFFFFDD60 : 0x33333380;
             float r = ((color >> 24) & 0xFF) / 255f;
@@ -159,23 +173,142 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
                 float[] pos2In = segment[2];
                 float[] pos2Out = segment[3];
 
-                batch.drawQuad(
-                    xCenter + pos1Out[0],
-                    yCenter + pos1Out[1],
-                    xCenter + pos1In[0],
-                    yCenter + pos1In[1],
-                    xCenter + pos2In[0],
-                    yCenter + pos2In[1],
-                    xCenter + pos2Out[0],
-                    yCenter + pos2Out[1],
-                    r,
-                    g,
-                    b,
-                    a);
+                // 顶点 0
+                vertexBuffer.put(xCenter + pos1Out[0])
+                    .put(yCenter + pos1Out[1]);
+                vertexBuffer.put(r)
+                    .put(g)
+                    .put(b)
+                    .put(a);
+                // 顶点 1
+                vertexBuffer.put(xCenter + pos1In[0])
+                    .put(yCenter + pos1In[1]);
+                vertexBuffer.put(r)
+                    .put(g)
+                    .put(b)
+                    .put(a);
+                // 顶点 2
+                vertexBuffer.put(xCenter + pos2In[0])
+                    .put(yCenter + pos2In[1]);
+                vertexBuffer.put(r)
+                    .put(g)
+                    .put(b)
+                    .put(a);
+                // 顶点 3
+                vertexBuffer.put(xCenter + pos2Out[0])
+                    .put(yCenter + pos2Out[1]);
+                vertexBuffer.put(r)
+                    .put(g)
+                    .put(b)
+                    .put(a);
+
+                // 索引（两个三角形）
+                indexBuffer.put(vertexIndex)
+                    .put(vertexIndex + 1)
+                    .put(vertexIndex + 2);
+                indexBuffer.put(vertexIndex)
+                    .put(vertexIndex + 2)
+                    .put(vertexIndex + 3);
+                vertexIndex += 4;
             }
         }
+        vertexBuffer.flip();
+        indexBuffer.flip();
 
-        batch.end();
+        // 创建 VAO/VBO/EBO
+        int testVao = GL30.glGenVertexArrays();
+        int testVbo = GL15.glGenBuffers();
+        int testEbo = GL15.glGenBuffers();
+
+        GL30.glBindVertexArray(testVao);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, testVbo);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_DYNAMIC_DRAW);
+
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, testEbo);
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indexBuffer, GL15.GL_DYNAMIC_DRAW);
+
+        // 设置顶点属性
+        GL20.glEnableVertexAttribArray(0);
+        GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 24, 0);
+        GL20.glEnableVertexAttribArray(1);
+        GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 24, 8);
+
+        // 保存渲染状态
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+
+        // 设置渲染状态
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+
+        // 使用 Shader 并绘制
+        moe.takochan.takotech.client.renderer.graphics.shader.ShaderProgram shader = moe.takochan.takotech.client.renderer.graphics.shader.ShaderType.GUI_COLOR
+            .get();
+        if (shader != null && shader.isValid()) {
+            shader.use();
+
+            // 设置投影矩阵
+            net.minecraft.client.gui.ScaledResolution sr = new net.minecraft.client.gui.ScaledResolution(
+                mc,
+                mc.displayWidth,
+                mc.displayHeight);
+            int screenWidth = sr.getScaledWidth();
+            int screenHeight = sr.getScaledHeight();
+
+            java.nio.FloatBuffer projMatrix = org.lwjgl.BufferUtils.createFloatBuffer(16);
+            // 正交投影矩阵
+            float left = 0, right = screenWidth, bottom = screenHeight, top = 0, near = -1, far = 1;
+            projMatrix.put(2.0f / (right - left))
+                .put(0)
+                .put(0)
+                .put(0);
+            projMatrix.put(0)
+                .put(2.0f / (top - bottom))
+                .put(0)
+                .put(0);
+            projMatrix.put(0)
+                .put(0)
+                .put(-2.0f / (far - near))
+                .put(0);
+            projMatrix.put(-(right + left) / (right - left))
+                .put(-(top + bottom) / (top - bottom))
+                .put(-(far + near) / (far - near))
+                .put(1);
+            projMatrix.flip();
+
+            shader.setUniformMatrix4("uProjection", false, projMatrix);
+
+            GL11.glDrawElements(GL11.GL_TRIANGLES, totalQuads * 6, GL11.GL_UNSIGNED_INT, 0);
+        }
+
+        // 恢复渲染状态
+        GL11.glPopAttrib();
+
+        // 解绑 Shader
+        GL20.glUseProgram(0);
+
+        // 解绑 VAO
+        GL30.glBindVertexArray(0);
+
+        // 在 VAO 0 状态下禁用顶点属性
+        GL20.glDisableVertexAttribArray(0);
+        GL20.glDisableVertexAttribArray(1);
+
+        // 解绑 VBO/EBO
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        // 删除资源
+        GL30.glDeleteVertexArrays(testVao);
+        GL15.glDeleteBuffers(testVbo);
+        GL15.glDeleteBuffers(testEbo);
+
+        // 恢复状态
+        GL30.glBindVertexArray(savedVao);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, savedVbo);
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, savedEbo);
+        GL20.glUseProgram(savedProgram);
     }
 
     /**

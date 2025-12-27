@@ -4,10 +4,7 @@ import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -72,14 +69,6 @@ public class SpriteBatch implements AutoCloseable {
     /** 是否正在绘制 */
     private boolean drawing = false;
 
-    /** 保存的现代 GL 状态 (VAO/VBO/EBO/Program) */
-    private int savedVao;
-    private int savedVbo;
-    private int savedEbo;
-    private int savedProgram;
-    private int savedActiveTexture;
-    private int savedTexture2D;
-
     private boolean disposed = false;
 
     /**
@@ -134,7 +123,9 @@ public class SpriteBatch implements AutoCloseable {
 
     /**
      * 开始批量渲染
-     * 保存当前 GL 状态并设置渲染状态
+     *
+     * 注意：此方法不进行状态保存，调用者必须自行管理 GL 状态！
+     * 这是为了避免与调用者的状态管理冲突。
      */
     public void begin() {
         if (drawing) {
@@ -146,20 +137,7 @@ public class SpriteBatch implements AutoCloseable {
             return;
         }
 
-        // 保存需要修改的 GL 状态（避免使用 ALL_ATTRIB_BITS 防止栈溢出）
-        GL11.glPushAttrib(
-            GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_CURRENT_BIT);
-        GL11.glPushClientAttrib(GL11.GL_CLIENT_VERTEX_ARRAY_BIT);
-
-        // 保存现代 GL 状态（VAO/VBO/EBO/Program/Texture）
-        savedVao = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
-        savedVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
-        savedEbo = GL11.glGetInteger(GL15.GL_ELEMENT_ARRAY_BUFFER_BINDING);
-        savedProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
-        savedActiveTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
-        savedTexture2D = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-
-        // 显式设置所有需要的状态（不信任当前状态）
+        // 设置 SpriteBatch 需要的渲染状态
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -168,7 +146,6 @@ public class SpriteBatch implements AutoCloseable {
         GL11.glDisable(GL11.GL_ALPHA_TEST);
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glDepthMask(false);
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
         // 重置计数器
         vertexOffset = 0;
@@ -315,27 +292,19 @@ public class SpriteBatch implements AutoCloseable {
 
     /**
      * 结束批量渲染
-     * 提交绘制并恢复 GL 状态
+     *
+     * 注意：此方法不进行状态恢复，调用者必须自行管理 GL 状态！
      */
     public void end() {
         if (!drawing) {
             throw new IllegalStateException("SpriteBatch.begin() must be called before end()");
         }
 
-        // 刷新剩余数据
+        // 刷新剩余数据（Mesh.draw() 会自动保存/恢复状态）
         flush();
 
-        // 恢复现代 GL 状态
-        GL20.glUseProgram(savedProgram);
-        GL30.glBindVertexArray(savedVao);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, savedVbo);
-        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, savedEbo);
-        GL13.glActiveTexture(savedActiveTexture);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, savedTexture2D);
-
-        // 恢复所有传统 GL 状态
-        GL11.glPopClientAttrib();
-        GL11.glPopAttrib();
+        // 解绑 shader
+        GL20.glUseProgram(0);
 
         drawing = false;
     }

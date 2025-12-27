@@ -4,6 +4,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
 
@@ -85,8 +86,13 @@ public class DynamicMesh extends Mesh {
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ebo);
         GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, (long) maxIndices * 4, GL15.GL_DYNAMIC_DRAW);
 
-        // 解绑（注意：EBO 必须在 VAO 解绑后解绑，保持与原实现一致）
+        // 解绑 VAO（切换到默认 VAO 0）
         GL30.glBindVertexArray(0);
+
+        // 在 VAO 0 状态下禁用顶点属性，确保不影响固定管线渲染
+        disableAttributes();
+
+        // 解绑 VBO/EBO
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -106,6 +112,14 @@ public class DynamicMesh extends Mesh {
 
         elementCount = indexCount;
 
+        // 保存当前状态
+        int savedVao = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
+        int savedVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
+        int savedEbo = GL11.glGetInteger(GL15.GL_ELEMENT_ARRAY_BUFFER_BINDING);
+
+        // 绑定自己的 VAO（重要：EBO 绑定是 VAO 状态的一部分！）
+        GL30.glBindVertexArray(vao);
+
         // 更新顶点数据（复用预分配缓冲区）
         vertexBuffer.clear();
         vertexBuffer.put(vertexData, 0, vertexCount);
@@ -122,8 +136,14 @@ public class DynamicMesh extends Mesh {
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ebo);
         GL15.glBufferSubData(GL15.GL_ELEMENT_ARRAY_BUFFER, 0, indexBuffer);
 
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+        // 恢复状态
+        // 注意：EBO 绑定是 VAO 状态的一部分，恢复 VAO 会自动恢复其 EBO
+        GL30.glBindVertexArray(savedVao);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, savedVbo);
+        // 只有在 VAO 0 时才手动恢复 EBO
+        if (savedVao == 0) {
+            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, savedEbo);
+        }
     }
 
     /**

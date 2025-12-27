@@ -15,6 +15,9 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GLContext;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -33,9 +36,13 @@ public class ShaderProgram implements AutoCloseable {
     private int programId = 0;
     private int vertexShaderId = 0;
     private int fragmentShaderId = 0;
+    private int geometryShaderId = 0;
 
     /** Uniform location 缓存 */
     private final Map<String, Integer> uniformCache = new HashMap<>();
+
+    /** Geometry Shader 支持状态缓存 */
+    private static Boolean geometryShaderSupported = null;
 
     /**
      * 检查当前系统是否支持 Shader
@@ -44,6 +51,23 @@ public class ShaderProgram implements AutoCloseable {
      */
     public static boolean isSupported() {
         return OpenGlHelper.shadersSupported;
+    }
+
+    /**
+     * 检查是否支持 Geometry Shader (GL32)
+     *
+     * @return true 如果支持 Geometry Shader
+     */
+    public static boolean isGeometryShaderSupported() {
+        if (geometryShaderSupported == null) {
+            try {
+                geometryShaderSupported = GLContext.getCapabilities().OpenGL32
+                    || GLContext.getCapabilities().GL_ARB_geometry_shader4;
+            } catch (Exception e) {
+                geometryShaderSupported = false;
+            }
+        }
+        return geometryShaderSupported;
     }
 
     /**
@@ -68,7 +92,7 @@ public class ShaderProgram implements AutoCloseable {
                 return;
             }
 
-            createProgram(vertexSource, fragmentSource);
+            createProgram(vertexSource, null, fragmentSource);
 
         } catch (Exception e) {
             TakoTechMod.LOG.error("Failed to create shader program", e);
@@ -89,7 +113,7 @@ public class ShaderProgram implements AutoCloseable {
         }
 
         try {
-            createProgram(vertexSource, fragmentSource);
+            createProgram(vertexSource, null, fragmentSource);
         } catch (Exception e) {
             TakoTechMod.LOG.error("Failed to create shader program", e);
             cleanup();
@@ -97,9 +121,84 @@ public class ShaderProgram implements AutoCloseable {
     }
 
     /**
+     * 从资源文件创建带 Geometry Shader 的程序
+     *
+     * @param domain       资源域 (mod id)
+     * @param vertexPath   顶点着色器路径
+     * @param geometryPath 几何着色器路径 (可为 null)
+     * @param fragmentPath 片元着色器路径
+     */
+    public ShaderProgram(String domain, String vertexPath, String geometryPath, String fragmentPath) {
+        if (!isSupported()) {
+            TakoTechMod.LOG.warn("Shaders not supported on this system");
+            return;
+        }
+
+        if (geometryPath != null && !isGeometryShaderSupported()) {
+            TakoTechMod.LOG.warn("Geometry shaders not supported, falling back to vertex/fragment only");
+            geometryPath = null;
+        }
+
+        try {
+            String vertexSource = loadShaderSource(domain, vertexPath);
+            String geometrySource = geometryPath != null ? loadShaderSource(domain, geometryPath) : null;
+            String fragmentSource = loadShaderSource(domain, fragmentPath);
+
+            if (vertexSource == null || fragmentSource == null) {
+                TakoTechMod.LOG.error("Failed to load shader sources: {} / {}", vertexPath, fragmentPath);
+                return;
+            }
+
+            createProgram(vertexSource, geometrySource, fragmentSource);
+
+        } catch (Exception e) {
+            TakoTechMod.LOG.error("Failed to create shader program with geometry shader", e);
+            cleanup();
+        }
+    }
+
+    /**
+     * 从源码创建带 Geometry Shader 的程序（静态工厂方法）
+     *
+     * @param vertexSource   顶点着色器源码
+     * @param geometrySource 几何着色器源码 (可为 null)
+     * @param fragmentSource 片元着色器源码
+     * @return 创建的 ShaderProgram，如果失败则返回无效的程序
+     */
+    public static ShaderProgram createFromSource(String vertexSource, String geometrySource, String fragmentSource) {
+        ShaderProgram program = new ShaderProgram();
+
+        if (!isSupported()) {
+            TakoTechMod.LOG.warn("Shaders not supported on this system");
+            return program;
+        }
+
+        if (geometrySource != null && !isGeometryShaderSupported()) {
+            TakoTechMod.LOG.warn("Geometry shaders not supported, ignoring geometry shader");
+            geometrySource = null;
+        }
+
+        try {
+            program.createProgram(vertexSource, geometrySource, fragmentSource);
+        } catch (Exception e) {
+            TakoTechMod.LOG.error("Failed to create shader program", e);
+            program.cleanup();
+        }
+
+        return program;
+    }
+
+    /**
+     * 私有默认构造函数（用于静态工厂方法）
+     */
+    private ShaderProgram() {
+        // 空构造函数
+    }
+
+    /**
      * 创建着色器程序的核心逻辑
      */
-    private void createProgram(String vertexSource, String fragmentSource) {
+    private void createProgram(String vertexSource, String geometrySource, String fragmentSource) {
         vertexShaderId = compileShader(GL20.GL_VERTEX_SHADER, vertexSource);
         fragmentShaderId = compileShader(GL20.GL_FRAGMENT_SHADER, fragmentSource);
 
@@ -108,7 +207,15 @@ public class ShaderProgram implements AutoCloseable {
             return;
         }
 
-        programId = linkProgram(vertexShaderId, fragmentShaderId);
+        // 编译几何着色器（可选）
+        if (geometrySource != null && isGeometryShaderSupported()) {
+            geometryShaderId = compileShader(GL32.GL_GEOMETRY_SHADER, geometrySource);
+            if (geometryShaderId == 0) {
+                TakoTechMod.LOG.warn("Geometry shader compilation failed, continuing without it");
+            }
+        }
+
+        programId = linkProgram(vertexShaderId, geometryShaderId, fragmentShaderId);
 
         if (programId != 0) {
             validateProgram();
@@ -146,7 +253,7 @@ public class ShaderProgram implements AutoCloseable {
 
         if (GL20.glGetShaderi(shaderId, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
             String log = GL20.glGetShaderInfoLog(shaderId, 1024);
-            String typeName = (type == GL20.GL_VERTEX_SHADER) ? "vertex" : "fragment";
+            String typeName = getShaderTypeName(type);
             TakoTechMod.LOG.error("Failed to compile {} shader:\n{}", typeName, log);
             GL20.glDeleteShader(shaderId);
             return 0;
@@ -156,11 +263,24 @@ public class ShaderProgram implements AutoCloseable {
     }
 
     /**
+     * 获取着色器类型名称
+     */
+    private static String getShaderTypeName(int type) {
+        if (type == GL20.GL_VERTEX_SHADER) return "vertex";
+        if (type == GL20.GL_FRAGMENT_SHADER) return "fragment";
+        if (type == GL32.GL_GEOMETRY_SHADER) return "geometry";
+        return "unknown";
+    }
+
+    /**
      * 链接着色器程序
      */
-    private int linkProgram(int vertexId, int fragmentId) {
+    private int linkProgram(int vertexId, int geometryId, int fragmentId) {
         int program = GL20.glCreateProgram();
         GL20.glAttachShader(program, vertexId);
+        if (geometryId != 0) {
+            GL20.glAttachShader(program, geometryId);
+        }
         GL20.glAttachShader(program, fragmentId);
 
         GL20.glLinkProgram(program);
@@ -174,10 +294,17 @@ public class ShaderProgram implements AutoCloseable {
 
         // 链接成功后可以删除着色器对象
         GL20.glDetachShader(program, vertexId);
-        GL20.glDetachShader(program, fragmentId);
         GL20.glDeleteShader(vertexId);
-        GL20.glDeleteShader(fragmentId);
         vertexShaderId = 0;
+
+        if (geometryId != 0) {
+            GL20.glDetachShader(program, geometryId);
+            GL20.glDeleteShader(geometryId);
+            geometryShaderId = 0;
+        }
+
+        GL20.glDetachShader(program, fragmentId);
+        GL20.glDeleteShader(fragmentId);
         fragmentShaderId = 0;
 
         return program;
@@ -246,6 +373,10 @@ public class ShaderProgram implements AutoCloseable {
             GL20.glDeleteShader(vertexShaderId);
             vertexShaderId = 0;
         }
+        if (geometryShaderId != 0) {
+            GL20.glDeleteShader(geometryShaderId);
+            geometryShaderId = 0;
+        }
         if (fragmentShaderId != 0) {
             GL20.glDeleteShader(fragmentShaderId);
             fragmentShaderId = 0;
@@ -255,6 +386,7 @@ public class ShaderProgram implements AutoCloseable {
             programId = 0;
         }
         uniformCache.clear();
+        blockIndexCache.clear();
     }
 
     // ==================== Uniform Location ====================
@@ -356,5 +488,63 @@ public class ShaderProgram implements AutoCloseable {
         if (loc == -1) return false;
         GL20.glUniformMatrix4(loc, transpose, matrix);
         return true;
+    }
+
+    // ==================== Uniform Block (UBO) ====================
+
+    /** Uniform Block index 缓存 */
+    private final Map<String, Integer> blockIndexCache = new HashMap<>();
+
+    /**
+     * 获取 Uniform Block 的索引
+     *
+     * @param blockName uniform block 名称
+     * @return block index，如果不存在返回 -1
+     */
+    public int getUniformBlockIndex(String blockName) {
+        if (!isValid()) {
+            return -1;
+        }
+
+        return blockIndexCache.computeIfAbsent(blockName, name -> {
+            int index = GL31.glGetUniformBlockIndex(programId, name);
+            if (index == GL31.GL_INVALID_INDEX) {
+                TakoTechMod.LOG.warn("Uniform block '{}' not found in shader program (ID = {})", name, programId);
+                return -1;
+            }
+            return index;
+        });
+    }
+
+    /**
+     * 将 Uniform Block 绑定到指定的 binding point
+     *
+     * @param blockName    uniform block 名称
+     * @param bindingPoint 绑定点（与 UBO 绑定的 binding point 对应）
+     * @return true 如果绑定成功
+     */
+    public boolean bindUniformBlock(String blockName, int bindingPoint) {
+        int blockIndex = getUniformBlockIndex(blockName);
+        if (blockIndex == -1) {
+            return false;
+        }
+
+        GL31.glUniformBlockBinding(programId, blockIndex, bindingPoint);
+        return true;
+    }
+
+    /**
+     * 获取 Uniform Block 的大小（字节）
+     *
+     * @param blockName uniform block 名称
+     * @return block 大小，如果不存在返回 -1
+     */
+    public int getUniformBlockSize(String blockName) {
+        int blockIndex = getUniformBlockIndex(blockName);
+        if (blockIndex == -1) {
+            return -1;
+        }
+
+        return GL31.glGetActiveUniformBlocki(programId, blockIndex, GL31.GL_UNIFORM_BLOCK_DATA_SIZE);
     }
 }

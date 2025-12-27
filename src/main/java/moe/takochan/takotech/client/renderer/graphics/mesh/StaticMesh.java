@@ -49,8 +49,13 @@ public class StaticMesh extends Mesh {
             .flip();
         GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, ib, GL15.GL_STATIC_DRAW);
 
-        // 解绑（注意：EBO 必须在 VAO 解绑后解绑）
+        // 解绑 VAO（切换到默认 VAO 0）
         GL30.glBindVertexArray(0);
+
+        // 在 VAO 0 状态下禁用顶点属性，确保不影响固定管线渲染
+        disableAttributes();
+
+        // 解绑 VBO/EBO
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
 

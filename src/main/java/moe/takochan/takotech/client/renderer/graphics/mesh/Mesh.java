@@ -89,39 +89,63 @@ public abstract class Mesh implements AutoCloseable {
         }
     }
 
+    /** 保存的状态 */
+    private int savedVao, savedVbo, savedEbo;
+
     /**
-     * 绑定 VAO、VBO 和 EBO，并重新设置顶点属性
-     * 注意：由于 Angelica/Embeddium GLStateManager 可能不完全兼容 VAO 状态，
-     * 需要显式绑定所有缓冲区并重新设置属性以确保兼容性。
+     * 绑定 VAO、VBO、EBO
+     * 会保存当前状态，unbind() 时恢复
      */
     public void bind() {
         if (valid) {
+            // 保存当前状态
+            savedVao = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
+            savedVbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
+            savedEbo = GL11.glGetInteger(GL15.GL_ELEMENT_ARRAY_BUFFER_BINDING);
+
+            // 绑定 VAO 和显式绑定 VBO/EBO（某些驱动需要）
             GL30.glBindVertexArray(vao);
-            // 显式绑定 VBO 和 EBO 以兼容 Angelica GLStateManager
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
             GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ebo);
-            // 重新启用并设置顶点属性
+
+            // 确保顶点属性正确配置（不依赖 VAO 状态记录，更可靠）
             setupVertexAttributes();
         }
     }
 
     /**
-     * 解绑 VAO、VBO、EBO 并禁用顶点属性
+     * 解绑并恢复之前的状态
+     *
+     * 注意 OpenGL 状态：
+     * - VBO 绑定（GL_ARRAY_BUFFER）是全局状态，不存储在 VAO 中
+     * - EBO 绑定（GL_ELEMENT_ARRAY_BUFFER）是 VAO 状态的一部分
+     * - 恢复 VAO 会自动恢复其记录的 EBO 绑定
      */
     public void unbind() {
-        // 禁用顶点属性以恢复固定管线兼容状态
+        // 先在当前 VAO（我们的 VAO）中禁用顶点属性
+        // 这样切换回 savedVao 后不会有遗留的启用状态
         disableAttributes();
-        // 解绑所有缓冲区
-        GL30.glBindVertexArray(0);
+
+        // 解绑 VBO（在切换 VAO 之前）
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        // 恢复 VAO（会自动恢复其记录的 EBO 绑定）
+        GL30.glBindVertexArray(savedVao);
+
+        // 恢复 VBO（全局状态）
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, savedVbo);
+
+        // 只有在 VAO 0 时才需要手动恢复 EBO
+        if (savedVao == 0) {
+            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, savedEbo);
+        }
     }
 
     /**
      * 绘制 Mesh
      */
     public void draw() {
-        if (valid && elementCount > 0) {
+        if (valid && elementCount > 0 && vao != 0 && vbo != 0 && ebo != 0) {
             bind();
             GL11.glDrawElements(drawMode, elementCount, GL11.GL_UNSIGNED_INT, 0);
             unbind();
@@ -134,7 +158,7 @@ public abstract class Mesh implements AutoCloseable {
      * @param mode 绘制模式 (GL_TRIANGLES, GL_LINES, etc.)
      */
     public void draw(int mode) {
-        if (valid && elementCount > 0) {
+        if (valid && elementCount > 0 && vao != 0 && vbo != 0 && ebo != 0) {
             bind();
             GL11.glDrawElements(mode, elementCount, GL11.GL_UNSIGNED_INT, 0);
             unbind();
@@ -205,6 +229,13 @@ public abstract class Mesh implements AutoCloseable {
 
     public int getEbo() {
         return ebo;
+    }
+
+    /**
+     * 是否使用索引缓冲区
+     */
+    public boolean hasIndices() {
+        return ebo != 0;
     }
 
     public VertexFormat getFormat() {

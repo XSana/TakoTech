@@ -24,7 +24,28 @@ public enum ShaderType {
     /**
      * 用于 GUI 纯色渲染的着色器（支持顶点颜色）。
      */
-    GUI_COLOR("shaders/gui_color.vert", "shaders/gui_color.frag");
+    GUI_COLOR("shaders/gui_color.vert", "shaders/gui_color.frag"),
+
+    /**
+     * 统一着色器（Uber Shader），支持多种渲染模式。
+     * 通过 uniform 切换模式，减少 shader 切换开销。
+     * 支持：纯色、纹理、纹理+颜色调制、高斯模糊等。
+     */
+    UBER("shaders/uber.vert", "shaders/uber.frag"),
+
+    /**
+     * PBR 着色器（Physically Based Rendering）。
+     * 基于 Cook-Torrance BRDF，支持金属度/粗糙度工作流。
+     * 支持：IBL 环境光照、法线贴图、自发光等。
+     */
+    PBR("shaders/pbr.vert", "shaders/pbr.frag"),
+
+    /**
+     * 3D 世界渲染着色器（GLSL 1.20 兼容）。
+     * 用于在 MC 世界中渲染 3D 图元（线框、方块、粒子等）。
+     * 支持顶点颜色和 ViewProjection 矩阵变换。
+     */
+    WORLD_3D("shaders/world3d.vert", "shaders/world3d.frag");
 
     private final String vertFilepath;
     private final String fragFilepath;
