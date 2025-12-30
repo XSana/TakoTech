@@ -1,0 +1,370 @@
+#version 430 core
+
+// particle_update.comp - Particle physics update compute shader
+// Updates particle position, velocity, lifetime, handles forces and collisions
+
+layout(local_size_x = 256) in;
+
+// ==================== Data Structures ====================
+
+struct Particle {
+    vec4 position;  // xyz: position, w: current lifetime
+    vec4 velocity;  // xyz: velocity, w: max lifetime
+    vec4 color;     // rgba
+    vec4 params;    // x: size, y: rotation, z: type, w: angular velocity
+};
+
+struct Force {
+    int type;       // force type
+    vec3 position;  // position/direction
+    float strength; // strength
+    float param1;   // extra param 1
+    float param2;   // extra param 2
+    vec3 axis;      // axis vector
+    float enabled;  // is enabled
+};
+
+// ==================== Buffer Bindings ====================
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    Particle particles[];
+};
+
+layout(binding = 1) uniform atomic_uint aliveCount;
+
+// ==================== Uniforms ====================
+
+uniform float uDeltaTime;
+uniform int uParticleCount;
+uniform int uForceCount;
+uniform int uCollisionMode;
+uniform int uCollisionResponse;
+uniform float uBounciness;
+uniform float uBounceChance;     // Bounce probability (0-1)
+uniform float uBounceSpread;     // Bounce velocity spread (degrees)
+uniform int uRandomSeed;         // Deterministic random seed
+
+// Force data (max 16)
+uniform float uForces[192]; // 16 * 12 floats
+
+// Collision plane params
+uniform vec4 uCollisionPlane; // xyz: normal, w: distance
+
+// ==================== Force Type Constants ====================
+
+const int FORCE_GRAVITY = 0;
+const int FORCE_WIND = 1;
+const int FORCE_VORTEX = 2;
+const int FORCE_TURBULENCE = 3;
+const int FORCE_ATTRACTOR = 4;
+const int FORCE_REPULSOR = 5;
+const int FORCE_DRAG = 6;
+const int FORCE_CURL_NOISE = 7;
+const int FORCE_ORBITAL = 8;
+const int FORCE_VELOCITY_LIMIT = 9;
+const int FORCE_VECTOR_FIELD = 10;
+const int FORCE_SPRING = 11;
+
+// Collision mode constants
+const int COLLISION_NONE = 0;
+const int COLLISION_WORLD = 1;
+const int COLLISION_PLANE = 2;
+const int COLLISION_SPHERE = 3;
+const int COLLISION_BOX = 4;
+
+// Collision response constants
+const int RESPONSE_KILL = 0;
+const int RESPONSE_BOUNCE = 1;
+const int RESPONSE_BOUNCE_DAMPED = 2;
+const int RESPONSE_STICK = 3;
+const int RESPONSE_SLIDE = 4;
+
+// ==================== Noise Functions (simplified) ====================
+
+uint hash(uint x) {
+    x += (x << 10u);
+    x ^= (x >> 6u);
+    x += (x << 3u);
+    x ^= (x >> 11u);
+    x += (x << 15u);
+    return x;
+}
+
+float hashFloat(uint x) {
+    return float(hash(x)) / 4294967295.0;
+}
+
+float noise3D(vec3 p) {
+    uvec3 i = uvec3(floor(p));
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+
+    float n = float(i.x + i.y * 57u + i.z * 113u);
+    return mix(
+        mix(mix(hashFloat(uint(n)), hashFloat(uint(n + 1.0)), f.x),
+            mix(hashFloat(uint(n + 57.0)), hashFloat(uint(n + 58.0)), f.x), f.y),
+        mix(mix(hashFloat(uint(n + 113.0)), hashFloat(uint(n + 114.0)), f.x),
+            mix(hashFloat(uint(n + 170.0)), hashFloat(uint(n + 171.0)), f.x), f.y),
+        f.z
+    ) * 2.0 - 1.0;
+}
+
+vec3 curlNoise(vec3 p) {
+    const float e = 0.1;
+    vec3 dx = vec3(e, 0.0, 0.0);
+    vec3 dy = vec3(0.0, e, 0.0);
+    vec3 dz = vec3(0.0, 0.0, e);
+
+    float n1 = noise3D(p + dy) - noise3D(p - dy);
+    float n2 = noise3D(p + dz) - noise3D(p - dz);
+    float n3 = noise3D(p + dx) - noise3D(p - dx);
+
+    vec3 offset = vec3(31.341, 57.127, 93.853);
+    float m1 = noise3D(p + dy + offset) - noise3D(p - dy + offset);
+    float m2 = noise3D(p + dz + offset) - noise3D(p - dz + offset);
+    float m3 = noise3D(p + dx + offset) - noise3D(p - dx + offset);
+
+    return vec3(n2 - m1, m3 - n2, n1 - m3) / (2.0 * e);
+}
+
+// ==================== Force Calculation ====================
+
+Force getForce(int index) {
+    int base = index * 12;
+    Force f;
+    f.type = int(uForces[base]);
+    f.position = vec3(uForces[base + 1], uForces[base + 2], uForces[base + 3]);
+    f.strength = uForces[base + 4];
+    f.param1 = uForces[base + 5];
+    f.param2 = uForces[base + 6];
+    f.axis = vec3(uForces[base + 8], uForces[base + 9], uForces[base + 10]);
+    f.enabled = uForces[base + 11];
+    return f;
+}
+
+vec3 applyForce(Force f, vec3 pos, vec3 vel) {
+    if (f.enabled < 0.5) return vec3(0.0);
+
+    vec3 force = vec3(0.0);
+
+    switch (f.type) {
+        case FORCE_GRAVITY:
+            force = f.position * f.strength;
+            break;
+
+        case FORCE_WIND:
+            force = f.position * f.strength;
+            // Add turbulence
+            if (f.param1 > 0.0) {
+                force += curlNoise(pos * f.param1) * f.strength * 0.3;
+            }
+            break;
+
+        case FORCE_VORTEX: {
+            vec3 toCenter = f.position - pos;
+            vec3 axis = normalize(f.axis);
+            vec3 radial = toCenter - dot(toCenter, axis) * axis;
+            vec3 tangent = cross(axis, radial);
+            force = normalize(tangent) * f.strength;
+            break;
+        }
+
+        case FORCE_TURBULENCE:
+            force = curlNoise(pos * f.param1) * f.strength;
+            break;
+
+        case FORCE_ATTRACTOR: {
+            vec3 toCenter = f.position - pos;
+            float dist = length(toCenter);
+            if (dist > 0.01 && (f.param1 <= 0.0 || dist < f.param1)) {
+                float falloff = f.param1 > 0.0 ? 1.0 - dist / f.param1 : 1.0;
+                force = normalize(toCenter) * f.strength * falloff * falloff;
+            }
+            break;
+        }
+
+        case FORCE_REPULSOR: {
+            vec3 fromCenter = pos - f.position;
+            float dist = length(fromCenter);
+            if (dist > 0.01 && (f.param1 <= 0.0 || dist < f.param1)) {
+                float falloff = f.param1 > 0.0 ? 1.0 - dist / f.param1 : 1.0;
+                force = normalize(fromCenter) * f.strength * falloff * falloff;
+            }
+            break;
+        }
+
+        case FORCE_DRAG:
+            force = -vel * f.strength;
+            break;
+
+        case FORCE_CURL_NOISE:
+            force = curlNoise(pos * f.param1) * f.strength;
+            break;
+
+        case FORCE_ORBITAL: {
+            vec3 toCenter = f.position - pos;
+            float dist = length(toCenter);
+            if (dist > 0.01) {
+                vec3 radial = normalize(toCenter);
+                vec3 up = vec3(0, 1, 0);
+                vec3 tangent = normalize(cross(up, radial));
+                force = tangent * f.strength + radial * f.param1;
+            }
+            break;
+        }
+
+        case FORCE_VELOCITY_LIMIT: {
+            float speed = length(vel);
+            if (speed > f.strength) {
+                force = -vel * (1.0 - f.strength / speed);
+            }
+            break;
+        }
+
+        case FORCE_SPRING: {
+            vec3 displacement = f.position - pos;
+            force = displacement * f.strength - vel * f.param1;
+            break;
+        }
+    }
+
+    return force;
+}
+
+// ==================== Deterministic Random ====================
+
+// 生成基于粒子索引和帧种子的确定性随机数
+float particleRandom(uint particleIdx, uint channel) {
+    uint seed = particleIdx * 7919u + uint(uRandomSeed) * 104729u + channel * 31337u;
+    return hashFloat(hash(seed));
+}
+
+// 生成随机方向偏移（用于弹跳扩散）
+vec3 randomSpread(uint particleIdx, vec3 baseDir, float spreadAngle) {
+    if (spreadAngle <= 0.0) return baseDir;
+
+    // 生成两个随机角度
+    float theta = particleRandom(particleIdx, 0u) * 6.28318530718; // 0-2π
+    float phi = particleRandom(particleIdx, 1u) * spreadAngle * 0.0174532925; // 转换为弧度
+
+    // 构建正交基
+    vec3 up = abs(baseDir.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangent = normalize(cross(up, baseDir));
+    vec3 bitangent = cross(baseDir, tangent);
+
+    // 在锥形范围内偏移
+    float sinPhi = sin(phi);
+    float cosPhi = cos(phi);
+    vec3 offset = tangent * (sinPhi * cos(theta)) + bitangent * (sinPhi * sin(theta));
+
+    return normalize(baseDir * cosPhi + offset);
+}
+
+// ==================== Collision Detection ====================
+
+bool checkPlaneCollision(vec3 pos, vec3 vel, vec4 plane, out vec3 hitPoint, out vec3 normal) {
+    float dist = dot(pos, plane.xyz) - plane.w;
+    if (dist < 0.0) {
+        hitPoint = pos - plane.xyz * dist;
+        normal = plane.xyz;
+        return true;
+    }
+    return false;
+}
+
+void handleCollision(inout Particle p, vec3 normal, int response, float bounciness, uint particleIdx) {
+    switch (response) {
+        case RESPONSE_KILL:
+            p.position.w = 0.0;
+            break;
+
+        case RESPONSE_BOUNCE:
+        case RESPONSE_BOUNCE_DAMPED: {
+            // 检查弹跳概率
+            float bounceRoll = particleRandom(particleIdx, 2u);
+            if (bounceRoll > uBounceChance) {
+                // 不弹跳，粒子死亡
+                p.position.w = 0.0;
+                break;
+            }
+
+            // 计算反射方向
+            vec3 reflectDir = reflect(p.velocity.xyz, normal);
+
+            // 应用速度扩散
+            if (uBounceSpread > 0.0) {
+                reflectDir = randomSpread(particleIdx, normalize(reflectDir), uBounceSpread) * length(reflectDir);
+            }
+
+            // 应用阻尼
+            float damping = (response == RESPONSE_BOUNCE_DAMPED) ? bounciness : 1.0;
+            p.velocity.xyz = reflectDir * damping;
+            p.position.xyz += normal * 0.01;
+            break;
+        }
+
+        case RESPONSE_STICK:
+            p.velocity.xyz = vec3(0.0);
+            p.position.xyz += normal * 0.01;
+            break;
+
+        case RESPONSE_SLIDE:
+            p.velocity.xyz -= normal * dot(p.velocity.xyz, normal);
+            p.position.xyz += normal * 0.01;
+            break;
+    }
+}
+
+// ==================== Main Function ====================
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= uParticleCount) return;
+
+    Particle p = particles[idx];
+
+    // Check if alive
+    if (p.position.w <= 0.0) return;
+
+    // Update lifetime
+    p.position.w -= uDeltaTime;
+
+    if (p.position.w <= 0.0) {
+        // Particle dead
+        p.position.w = 0.0;
+        particles[idx] = p;
+        return;
+    }
+
+    // Accumulate forces
+    vec3 totalForce = vec3(0.0);
+    for (int i = 0; i < uForceCount && i < 16; i++) {
+        Force f = getForce(i);
+        totalForce += applyForce(f, p.position.xyz, p.velocity.xyz);
+    }
+
+    // Update velocity (semi-implicit Euler)
+    p.velocity.xyz += totalForce * uDeltaTime;
+
+    // Update position
+    p.position.xyz += p.velocity.xyz * uDeltaTime;
+
+    // Update rotation
+    p.params.y += p.params.w * uDeltaTime;
+
+    // Collision detection
+    if (uCollisionMode == COLLISION_PLANE) {
+        vec3 hitPoint, normal;
+        if (checkPlaneCollision(p.position.xyz, p.velocity.xyz, uCollisionPlane, hitPoint, normal)) {
+            handleCollision(p, normal, uCollisionResponse, uBounciness, idx);
+        }
+    }
+    // Other collision modes can be added here
+
+    // Count alive particles
+    if (p.position.w > 0.0) {
+        atomicCounterIncrement(aliveCount);
+    }
+
+    particles[idx] = p;
+}

@@ -15,8 +15,11 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GL42;
+import org.lwjgl.opengl.GL43;
 import org.lwjgl.opengl.GLContext;
 
 import cpw.mods.fml.relauncher.Side;
@@ -37,12 +40,26 @@ public class ShaderProgram implements AutoCloseable {
     private int vertexShaderId = 0;
     private int fragmentShaderId = 0;
     private int geometryShaderId = 0;
+    private int computeShaderId = 0;
+
+    /** 是否为 Compute Shader 程序 */
+    private boolean isComputeProgram = false;
 
     /** Uniform location 缓存 */
     private final Map<String, Integer> uniformCache = new HashMap<>();
 
     /** Geometry Shader 支持状态缓存 */
     private static Boolean geometryShaderSupported = null;
+
+    /** Compute Shader 支持状态缓存 */
+    private static Boolean computeShaderSupported = null;
+
+    /** SSBO 支持状态缓存 */
+    private static Boolean ssboSupported = null;
+
+    /** Compute Shader 工作组大小限制缓存 */
+    private static int[] maxWorkGroupSize = null;
+    private static int maxWorkGroupInvocations = -1;
 
     /**
      * 检查当前系统是否支持 Shader
@@ -68,6 +85,85 @@ public class ShaderProgram implements AutoCloseable {
             }
         }
         return geometryShaderSupported;
+    }
+
+    /**
+     * 检查是否支持 Compute Shader (GL43)
+     *
+     * @return true 如果支持 Compute Shader
+     */
+    public static boolean isComputeShaderSupported() {
+        if (computeShaderSupported == null) {
+            try {
+                var caps = GLContext.getCapabilities();
+                boolean gl43 = caps.OpenGL43;
+                boolean arbCompute = caps.GL_ARB_compute_shader;
+                computeShaderSupported = gl43 || arbCompute;
+                TakoTechMod.LOG.info(
+                    "Compute Shader support check: OpenGL43={}, ARB_compute_shader={}, result={}",
+                    gl43,
+                    arbCompute,
+                    computeShaderSupported);
+            } catch (Exception e) {
+                TakoTechMod.LOG.error("Failed to check compute shader support", e);
+                computeShaderSupported = false;
+            }
+        }
+        return computeShaderSupported;
+    }
+
+    /**
+     * 检查是否支持 SSBO (Shader Storage Buffer Object, GL43)
+     *
+     * @return true 如果支持 SSBO
+     */
+    public static boolean isSSBOSupported() {
+        if (ssboSupported == null) {
+            try {
+                var caps = GLContext.getCapabilities();
+                boolean gl43 = caps.OpenGL43;
+                boolean arbSsbo = caps.GL_ARB_shader_storage_buffer_object;
+                ssboSupported = gl43 || arbSsbo;
+                TakoTechMod.LOG.info(
+                    "SSBO support check: OpenGL43={}, ARB_shader_storage_buffer_object={}, result={}",
+                    gl43,
+                    arbSsbo,
+                    ssboSupported);
+            } catch (Exception e) {
+                TakoTechMod.LOG.error("Failed to check SSBO support", e);
+                ssboSupported = false;
+            }
+        }
+        return ssboSupported;
+    }
+
+    /**
+     * 获取 Compute Shader 最大工作组大小
+     *
+     * @return [maxX, maxY, maxZ] 数组
+     */
+    public static int[] getMaxWorkGroupSize() {
+        if (maxWorkGroupSize == null && isComputeShaderSupported()) {
+            maxWorkGroupSize = new int[3];
+            maxWorkGroupSize[0] = GL11.glGetInteger(GL43.GL_MAX_COMPUTE_WORK_GROUP_SIZE);
+            // 需要用 indexed 查询获取 Y 和 Z
+            // 这里使用通用限制
+            maxWorkGroupSize[1] = maxWorkGroupSize[0];
+            maxWorkGroupSize[2] = maxWorkGroupSize[0];
+        }
+        return maxWorkGroupSize != null ? maxWorkGroupSize : new int[] { 0, 0, 0 };
+    }
+
+    /**
+     * 获取单个工作组最大调用数
+     *
+     * @return 最大调用数
+     */
+    public static int getMaxWorkGroupInvocations() {
+        if (maxWorkGroupInvocations < 0 && isComputeShaderSupported()) {
+            maxWorkGroupInvocations = GL11.glGetInteger(GL43.GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS);
+        }
+        return maxWorkGroupInvocations > 0 ? maxWorkGroupInvocations : 0;
     }
 
     /**
@@ -189,10 +285,96 @@ public class ShaderProgram implements AutoCloseable {
     }
 
     /**
+     * 从资源文件创建 Compute Shader 程序
+     *
+     * @param domain      资源域 (mod id)
+     * @param computePath 计算着色器路径
+     * @return 创建的 ShaderProgram，如果失败则返回无效的程序
+     */
+    public static ShaderProgram createCompute(String domain, String computePath) {
+        ShaderProgram program = new ShaderProgram();
+
+        if (!isComputeShaderSupported()) {
+            TakoTechMod.LOG.warn("Compute shaders not supported on this system");
+            return program;
+        }
+
+        try {
+            String computeSource = program.loadShaderSource(domain, computePath);
+            if (computeSource == null) {
+                TakoTechMod.LOG.error("Failed to load compute shader source: {}", computePath);
+                return program;
+            }
+            program.createComputeProgram(computeSource);
+        } catch (Exception e) {
+            TakoTechMod.LOG.error("Failed to create compute shader program", e);
+            program.cleanup();
+        }
+
+        return program;
+    }
+
+    /**
+     * 从源码创建 Compute Shader 程序
+     *
+     * @param computeSource 计算着色器源码
+     * @return 创建的 ShaderProgram，如果失败则返回无效的程序
+     */
+    public static ShaderProgram createComputeFromSource(String computeSource) {
+        ShaderProgram program = new ShaderProgram();
+
+        if (!isComputeShaderSupported()) {
+            TakoTechMod.LOG.warn("Compute shaders not supported on this system");
+            return program;
+        }
+
+        try {
+            program.createComputeProgram(computeSource);
+        } catch (Exception e) {
+            TakoTechMod.LOG.error("Failed to create compute shader program", e);
+            program.cleanup();
+        }
+
+        return program;
+    }
+
+    /**
      * 私有默认构造函数（用于静态工厂方法）
      */
     private ShaderProgram() {
         // 空构造函数
+    }
+
+    /**
+     * 创建 Compute Shader 程序的核心逻辑
+     */
+    private void createComputeProgram(String computeSource) {
+        computeShaderId = compileShader(GL43.GL_COMPUTE_SHADER, computeSource);
+
+        if (computeShaderId == 0) {
+            cleanup();
+            return;
+        }
+
+        programId = GL20.glCreateProgram();
+        GL20.glAttachShader(programId, computeShaderId);
+        GL20.glLinkProgram(programId);
+
+        if (GL20.glGetProgrami(programId, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
+            String log = GL20.glGetProgramInfoLog(programId, 1024);
+            TakoTechMod.LOG.error("Failed to link compute shader program:\n{}", log);
+            GL20.glDeleteProgram(programId);
+            programId = 0;
+            return;
+        }
+
+        // 链接成功后删除着色器对象
+        GL20.glDetachShader(programId, computeShaderId);
+        GL20.glDeleteShader(computeShaderId);
+        computeShaderId = 0;
+
+        isComputeProgram = true;
+        validateProgram();
     }
 
     /**
@@ -228,17 +410,25 @@ public class ShaderProgram implements AutoCloseable {
     private String loadShaderSource(String domain, String path) {
         try {
             ResourceLocation location = new ResourceLocation(domain, path);
+            TakoTechMod.LOG.info("Loading shader from: {}", location);
+
             InputStream stream = Minecraft.getMinecraft()
                 .getResourceManager()
                 .getResource(location)
                 .getInputStream();
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-                return reader.lines()
+                String source = reader.lines()
                     .collect(Collectors.joining("\n"));
+                TakoTechMod.LOG.info("Loaded shader {} ({} chars)", path, source.length());
+                if (source.isEmpty()) {
+                    TakoTechMod.LOG.error("Shader source is empty: {}", path);
+                }
+                return source;
             }
         } catch (Exception e) {
-            TakoTechMod.LOG.error("Failed to load shader: {}:{}", domain, path, e);
+            TakoTechMod.LOG.error("Failed to load shader: {}:{} - {}", domain, path, e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
@@ -269,6 +459,7 @@ public class ShaderProgram implements AutoCloseable {
         if (type == GL20.GL_VERTEX_SHADER) return "vertex";
         if (type == GL20.GL_FRAGMENT_SHADER) return "fragment";
         if (type == GL32.GL_GEOMETRY_SHADER) return "geometry";
+        if (type == GL43.GL_COMPUTE_SHADER) return "compute";
         return "unknown";
     }
 
@@ -339,6 +530,81 @@ public class ShaderProgram implements AutoCloseable {
         GL20.glUseProgram(0);
     }
 
+    // ==================== Compute Shader 调度 ====================
+
+    /**
+     * 调度 Compute Shader
+     * 必须先调用 use() 绑定程序
+     *
+     * @param numGroupsX X 方向工作组数量
+     * @param numGroupsY Y 方向工作组数量
+     * @param numGroupsZ Z 方向工作组数量
+     */
+    public void dispatch(int numGroupsX, int numGroupsY, int numGroupsZ) {
+        if (!isComputeProgram || programId == 0) {
+            TakoTechMod.LOG.warn("Cannot dispatch non-compute shader program");
+            return;
+        }
+        GL43.glDispatchCompute(numGroupsX, numGroupsY, numGroupsZ);
+    }
+
+    /**
+     * 调度 Compute Shader（1D）
+     *
+     * @param numGroupsX X 方向工作组数量
+     */
+    public void dispatch(int numGroupsX) {
+        dispatch(numGroupsX, 1, 1);
+    }
+
+    /**
+     * 设置内存屏障，确保 Compute Shader 写入完成后再读取
+     *
+     * @param barriers 屏障类型（GL_SHADER_STORAGE_BARRIER_BIT 等）
+     */
+    public static void memoryBarrier(int barriers) {
+        if (isComputeShaderSupported()) {
+            GL42.glMemoryBarrier(barriers);
+        }
+    }
+
+    /**
+     * SSBO 内存屏障
+     */
+    public static void memoryBarrierSSBO() {
+        memoryBarrier(GL43.GL_SHADER_STORAGE_BARRIER_BIT);
+    }
+
+    /**
+     * 顶点属性内存屏障（用于 Compute → 渲染）
+     */
+    public static void memoryBarrierVertexAttrib() {
+        // GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT = 0x00000001
+        memoryBarrier(0x00000001);
+    }
+
+    /**
+     * 缓冲区更新内存屏障
+     */
+    public static void memoryBarrierBufferUpdate() {
+        // GL_BUFFER_UPDATE_BARRIER_BIT = 0x00000200
+        memoryBarrier(0x00000200);
+    }
+
+    /**
+     * 所有内存屏障
+     */
+    public static void memoryBarrierAll() {
+        memoryBarrier(GL42.GL_ALL_BARRIER_BITS);
+    }
+
+    /**
+     * 是否为 Compute Shader 程序
+     */
+    public boolean isComputeProgram() {
+        return isComputeProgram;
+    }
+
     /**
      * 获取程序 ID
      */
@@ -381,12 +647,18 @@ public class ShaderProgram implements AutoCloseable {
             GL20.glDeleteShader(fragmentShaderId);
             fragmentShaderId = 0;
         }
+        if (computeShaderId != 0) {
+            GL20.glDeleteShader(computeShaderId);
+            computeShaderId = 0;
+        }
         if (programId != 0) {
             GL20.glDeleteProgram(programId);
             programId = 0;
         }
         uniformCache.clear();
         blockIndexCache.clear();
+        ssboIndexCache.clear();
+        isComputeProgram = false;
     }
 
     // ==================== Uniform Location ====================
@@ -546,5 +818,90 @@ public class ShaderProgram implements AutoCloseable {
         }
 
         return GL31.glGetActiveUniformBlocki(programId, blockIndex, GL31.GL_UNIFORM_BLOCK_DATA_SIZE);
+    }
+
+    // ==================== Shader Storage Buffer (SSBO) ====================
+
+    /** SSBO index 缓存 */
+    private final Map<String, Integer> ssboIndexCache = new HashMap<>();
+
+    /**
+     * 获取 Shader Storage Block 的资源索引
+     *
+     * @param blockName storage block 名称
+     * @return resource index，如果不存在返回 -1
+     */
+    public int getShaderStorageBlockIndex(String blockName) {
+        if (!isValid() || !isSSBOSupported()) {
+            return -1;
+        }
+
+        return ssboIndexCache.computeIfAbsent(blockName, name -> {
+            int index = GL43.glGetProgramResourceIndex(programId, GL43.GL_SHADER_STORAGE_BLOCK, name);
+            if (index == GL31.GL_INVALID_INDEX) {
+                TakoTechMod.LOG
+                    .warn("Shader storage block '{}' not found in shader program (ID = {})", name, programId);
+                return -1;
+            }
+            return index;
+        });
+    }
+
+    /**
+     * 将 Shader Storage Block 绑定到指定的 binding point
+     *
+     * @param blockName    storage block 名称
+     * @param bindingPoint 绑定点
+     * @return true 如果绑定成功
+     */
+    public boolean bindShaderStorageBlock(String blockName, int bindingPoint) {
+        int blockIndex = getShaderStorageBlockIndex(blockName);
+        if (blockIndex == -1) {
+            return false;
+        }
+
+        GL43.glShaderStorageBlockBinding(programId, blockIndex, bindingPoint);
+        return true;
+    }
+
+    // GL43 常量 (LWJGL 2 可能不完整支持 GL43)
+    /** GL_SHADER_STORAGE_BUFFER = 0x90D2 */
+    private static final int GL_SHADER_STORAGE_BUFFER = 0x90D2;
+
+    /**
+     * 将 SSBO 绑定到指定的 binding point（静态方法）
+     *
+     * @param ssboId       SSBO ID
+     * @param bindingPoint 绑定点
+     */
+    public static void bindSSBO(int ssboId, int bindingPoint) {
+        if (isSSBOSupported()) {
+            GL30.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, ssboId);
+        }
+    }
+
+    /**
+     * 将 SSBO 的一部分绑定到指定的 binding point
+     *
+     * @param ssboId       SSBO ID
+     * @param bindingPoint 绑定点
+     * @param offset       偏移量（字节）
+     * @param size         大小（字节）
+     */
+    public static void bindSSBORange(int ssboId, int bindingPoint, long offset, long size) {
+        if (isSSBOSupported()) {
+            GL30.glBindBufferRange(GL_SHADER_STORAGE_BUFFER, bindingPoint, ssboId, offset, size);
+        }
+    }
+
+    /**
+     * 解绑指定 binding point 上的 SSBO
+     *
+     * @param bindingPoint 绑定点
+     */
+    public static void unbindSSBO(int bindingPoint) {
+        if (isSSBOSupported()) {
+            GL30.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, 0);
+        }
     }
 }

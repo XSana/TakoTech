@@ -270,6 +270,9 @@ public class SpriteBatch implements AutoCloseable {
         // 使用 shader
         ShaderProgram shader = ShaderType.GUI_COLOR.get();
         if (shader == null || !shader.isValid()) {
+            vertexOffset = 0;
+            indexOffset = 0;
+            quadCount = 0;
             return;
         }
         shader.use();

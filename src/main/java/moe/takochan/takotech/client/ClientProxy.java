@@ -43,6 +43,13 @@ public class ClientProxy extends CommonProxy {
         FMLCommonHandler.instance()
             .bus()
             .register(new ConfigChangeHandler());
+
+        // [测试代码] 渲染框架测试处理器 - 开发调试用，生产环境应注释掉
+        // 按键: U=开关测试, I=下一阶段, O=上一阶段, P=自动推进, B=切换Bloom
+        // moe.takochan.takotech.client.renderer.test.RenderFrameworkTestHandler testHandler = new
+        // moe.takochan.takotech.client.renderer.test.RenderFrameworkTestHandler();
+        // MinecraftForge.EVENT_BUS.register(testHandler);
+        // FMLCommonHandler.instance().bus().register(testHandler);
     }
 
     @Override

@@ -277,6 +277,19 @@ public final class MathUtils {
         return MATRIX_BUFFER;
     }
 
+    /**
+     * 将 float 数组转换为 FloatBuffer
+     *
+     * @param array 源数组
+     * @return FloatBuffer
+     */
+    public static FloatBuffer toFloatBuffer(float[] array) {
+        MATRIX_BUFFER.clear();
+        MATRIX_BUFFER.put(array, 0, Math.min(array.length, 16));
+        MATRIX_BUFFER.flip();
+        return MATRIX_BUFFER;
+    }
+
     // ==================== 向量操作 ====================
 
     /**

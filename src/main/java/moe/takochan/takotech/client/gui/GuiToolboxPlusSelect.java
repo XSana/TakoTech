@@ -3,15 +3,20 @@ package moe.takochan.takotech.client.gui;
 import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_IN;
 import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_OUT;
 
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import moe.takochan.takotech.utils.ToolboxHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -25,6 +30,8 @@ import codechicken.nei.api.TaggedInventoryArea;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
+import moe.takochan.takotech.client.renderer.graphics.shader.ShaderProgram;
+import moe.takochan.takotech.client.renderer.graphics.shader.ShaderType;
 import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.data.ToolData;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
@@ -154,9 +161,9 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         }
 
         // 每个四边形 4 顶点，每顶点 6 floats (x, y, r, g, b, a)
-        java.nio.FloatBuffer vertexBuffer = org.lwjgl.BufferUtils.createFloatBuffer(totalQuads * 4 * 6);
+        FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(totalQuads * 4 * 6);
         // 每个四边形 6 索引（2 个三角形）
-        java.nio.IntBuffer indexBuffer = org.lwjgl.BufferUtils.createIntBuffer(totalQuads * 6);
+        IntBuffer indexBuffer = BufferUtils.createIntBuffer(totalQuads * 6);
 
         int vertexIndex = 0;
         for (int i = 0; i < n; i++) {
@@ -243,20 +250,16 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         GL11.glDisable(GL11.GL_DEPTH_TEST);
 
         // 使用 Shader 并绘制
-        moe.takochan.takotech.client.renderer.graphics.shader.ShaderProgram shader = moe.takochan.takotech.client.renderer.graphics.shader.ShaderType.GUI_COLOR
-            .get();
+        ShaderProgram shader = ShaderType.GUI_COLOR.get();
         if (shader != null && shader.isValid()) {
             shader.use();
 
             // 设置投影矩阵
-            net.minecraft.client.gui.ScaledResolution sr = new net.minecraft.client.gui.ScaledResolution(
-                mc,
-                mc.displayWidth,
-                mc.displayHeight);
+            ScaledResolution sr = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
             int screenWidth = sr.getScaledWidth();
             int screenHeight = sr.getScaledHeight();
 
-            java.nio.FloatBuffer projMatrix = org.lwjgl.BufferUtils.createFloatBuffer(16);
+            FloatBuffer projMatrix = BufferUtils.createFloatBuffer(16);
             // 正交投影矩阵
             float left = 0, right = screenWidth, bottom = screenHeight, top = 0, near = -1, far = 1;
             projMatrix.put(2.0f / (right - left))
@@ -408,7 +411,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      */
     private void loadItems(ItemStack stack) {
         items.clear();
-        if (ItemToolboxPlus.isMetaGeneratedTool(stack)) {
+        if (ToolboxHelper.isMetaGeneratedTool(stack)) {
             this.items.add(new ToolData(-1, DEFAULT_ITEM));
         }
         final List<ToolData> list = getGTTools(stack);
@@ -423,10 +426,10 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      * @return 工具列表，如果不存在则返回 null
      */
     public List<ToolData> getGTTools(ItemStack stack) {
-        return ItemToolboxPlus.getToolbox(stack)
+        return ToolboxHelper.getToolbox(stack)
             .map(toolbox -> {
                 if (toolbox.getItem() instanceof ItemToolboxPlus) {
-                    return ItemToolboxPlus.getToolItems(toolbox);
+                    return ToolboxHelper.getToolItems(toolbox);
                 }
                 return null;
             })

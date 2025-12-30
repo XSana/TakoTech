@@ -36,64 +36,6 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
         this.setTextureName(CommonUtils.resource(NameConstants.ITEM_TOOLBOX_PLUS));
     }
 
-    // ==================== 静态方法代理到 ToolboxHelper ====================
-
-    /**
-     * @deprecated 使用 {@link ToolboxHelper#getToolItems(ItemStack)}
-     */
-    @Deprecated
-    public static List<ToolData> getToolItems(ItemStack itemStack) {
-        return ToolboxHelper.getToolItems(itemStack);
-    }
-
-    /**
-     * @deprecated 使用 {@link ToolboxHelper#setItemToSlot(ItemStack, int, ItemStack)}
-     */
-    @Deprecated
-    public static void setItemToSlot(ItemStack itemStack, int slot, ItemStack toolStack) {
-        ToolboxHelper.setItemToSlot(itemStack, slot, toolStack);
-    }
-
-    /**
-     * @deprecated 使用 {@link ToolboxHelper#getStackInSlot(ItemStack, int)}
-     */
-    @Deprecated
-    public static ItemStack getStackInSlot(ItemStack itemStack, int slot) {
-        return ToolboxHelper.getStackInSlot(itemStack, slot);
-    }
-
-    /**
-     * @deprecated 使用 {@link ToolboxHelper#getToolbox(ItemStack)}
-     */
-    @Deprecated
-    public static Optional<ItemStack> getToolbox(ItemStack itemStack) {
-        return ToolboxHelper.getToolbox(itemStack);
-    }
-
-    /**
-     * @deprecated 使用 {@link ToolboxHelper#isItemToolbox(ItemStack)}
-     */
-    @Deprecated
-    public static boolean isItemToolbox(ItemStack itemStack) {
-        return ToolboxHelper.isItemToolbox(itemStack);
-    }
-
-    /**
-     * @deprecated 使用 {@link ToolboxHelper#isToolboxPlus(ItemStack)}
-     */
-    @Deprecated
-    public static boolean isToolboxPlus(ItemStack itemStack) {
-        return ToolboxHelper.isToolboxPlus(itemStack);
-    }
-
-    /**
-     * @deprecated 使用 {@link ToolboxHelper#isMetaGeneratedTool(ItemStack)}
-     */
-    @Deprecated
-    public static boolean isMetaGeneratedTool(ItemStack itemStack) {
-        return ToolboxHelper.isMetaGeneratedTool(itemStack);
-    }
-
     /**
      * 添加物品信息
      *

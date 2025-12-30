@@ -1,16 +1,15 @@
-#version 330 core
+#version 420 core
 
-// 顶点属性
+// Vertex attributes
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
 layout (location = 2) in vec4 aColor;
 
-// 输出到片元着色器
+// Output to fragment shader
 out vec2 vTexCoord;
 out vec4 vColor;
 
 // GlobalUniforms UBO (binding = 0)
-// 所有 shader 共享，每帧更新一次
 layout(std140, binding = 0) uniform GlobalUniforms {
     mat4 uProjection;    // offset 0,   size 64
     mat4 uView;          // offset 64,  size 64

@@ -126,6 +126,9 @@ public class World3DBatch implements AutoCloseable {
         projectionBuffer.clear();
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, projectionBuffer);
 
+        // 保存 GL 状态
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_LINE_BIT);
+
         // 设置渲染状态
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -541,6 +544,10 @@ public class World3DBatch implements AutoCloseable {
 
         flush();
         GL20.glUseProgram(0);
+
+        // 恢复 GL 状态
+        GL11.glPopAttrib();
+
         drawing = false;
     }
 

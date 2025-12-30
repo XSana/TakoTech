@@ -1,5 +1,8 @@
 package moe.takochan.takotech.client.renderer.graphics.material;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.client.renderer.graphics.shader.ShaderProgram;
@@ -162,6 +165,22 @@ public class Material {
         return textureId != 0;
     }
 
+    public float getEmissiveR() {
+        return emissiveR;
+    }
+
+    public float getEmissiveG() {
+        return emissiveG;
+    }
+
+    public float getEmissiveB() {
+        return emissiveB;
+    }
+
+    public float getEmissiveA() {
+        return emissiveA;
+    }
+
     // ==================== Apply ====================
 
     /**
@@ -183,6 +202,11 @@ public class Material {
 
         // 纹理相关
         shader.setUniformBool("uUseTexture", textureId != 0);
+        if (textureId != 0) {
+            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+            shader.setUniformInt("uMainTexture", 0);
+        }
 
         // 投影/视图矩阵开关
         shader.setUniformBool("uUseProjection", useProjection);

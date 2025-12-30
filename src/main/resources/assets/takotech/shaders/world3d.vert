@@ -1,15 +1,15 @@
 #version 120
 
-// 顶点属性
+// Vertex attributes
 attribute vec3 aPos;
 attribute vec4 aColor;
 
-// 输出到片元着色器
+// Output to fragment shader
 varying vec4 vColor;
 
-// 变换矩阵
-uniform mat4 uModelView;      // MC 的 ModelView 矩阵
-uniform mat4 uProjection;     // MC 的投影矩阵
+// Transform matrices
+uniform mat4 uModelView;      // MC ModelView matrix
+uniform mat4 uProjection;     // MC Projection matrix
 
 void main()
 {

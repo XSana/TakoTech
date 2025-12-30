@@ -45,7 +45,14 @@ public enum ShaderType {
      * 用于在 MC 世界中渲染 3D 图元（线框、方块、粒子等）。
      * 支持顶点颜色和 ViewProjection 矩阵变换。
      */
-    WORLD_3D("shaders/world3d.vert", "shaders/world3d.frag");
+    WORLD_3D("shaders/world3d.vert", "shaders/world3d.frag"),
+
+    /**
+     * 线条渲染着色器。
+     * 用于 LineRendererComponent 的 billboard 线条渲染。
+     * 支持顶点颜色、全局透明度和发光强度（用于 Bloom）。
+     */
+    LINE("shaders/line.vert", "shaders/line.frag");
 
     private final String vertFilepath;
     private final String fragFilepath;
@@ -97,6 +104,25 @@ public enum ShaderType {
             throw new IllegalStateException("Shader " + name() + " not initialized. Call initializeAll() first.");
         }
         return SHADER_CACHE.get(this);
+    }
+
+    /**
+     * 安全获取着色器程序，不抛出异常。
+     *
+     * @return 对应的 ShaderProgram 实例，如果未初始化或加载失败则返回 null
+     */
+    public ShaderProgram getOrNull() {
+        return SHADER_CACHE.get(this);
+    }
+
+    /**
+     * 检查该着色器是否已成功加载。
+     *
+     * @return true 如果着色器已加载且有效
+     */
+    public boolean isLoaded() {
+        ShaderProgram shader = SHADER_CACHE.get(this);
+        return shader != null && shader.isValid();
     }
 
     /**

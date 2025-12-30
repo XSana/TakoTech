@@ -1,9 +1,6 @@
 package moe.takochan.takotech.network;
 
-import static moe.takochan.takotech.common.item.ic2.ItemToolboxPlus.getToolbox;
-import static moe.takochan.takotech.common.item.ic2.ItemToolboxPlus.isMetaGeneratedTool;
-import static moe.takochan.takotech.common.item.ic2.ItemToolboxPlus.isToolboxPlus;
-
+import moe.takochan.takotech.utils.ToolboxHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -57,13 +54,13 @@ public class PacketToolboxSelected implements IMessage {
          */
         public void selectTool(int slot) {
             // 获取工具箱并处理选择逻辑
-            getToolbox(currentItem).ifPresent(t -> {
+            ToolboxHelper.getToolbox(currentItem).ifPresent(t -> {
                 // 复制工具箱
                 ItemStack toolbox = t.copy();
                 if (toolbox.getItem() instanceof ItemToolboxPlus) {
-                    if (isToolboxPlus(currentItem)) {
+                    if (ToolboxHelper.isToolboxPlus(currentItem)) {
                         handleToolSelection(slot, toolbox);
-                    } else if (isMetaGeneratedTool(currentItem)) {
+                    } else if (ToolboxHelper.isMetaGeneratedTool(currentItem)) {
                         handleMetaToolSelection(slot, toolbox);
                     }
                 }
@@ -78,12 +75,12 @@ public class PacketToolboxSelected implements IMessage {
          */
         private void handleToolSelection(int slot, ItemStack toolbox) {
             // 获取指定槽位的工具
-            ItemStack tool = ItemToolboxPlus.getStackInSlot(toolbox, slot);
+            ItemStack tool = ToolboxHelper.getStackInSlot(toolbox, slot);
             // 如果工具为空，直接返回
             if (tool == null) return;
 
             // 将指定槽位的工具设置为空
-            ItemToolboxPlus.setItemToSlot(toolbox, slot, null);
+            ToolboxHelper.setItemToSlot(toolbox, slot, null);
 
             // 将工具箱数据写入工具的 NBT
             NBTTagCompound toolNbt = new NBTTagCompound();
@@ -112,7 +109,7 @@ public class PacketToolboxSelected implements IMessage {
             nbt.removeTag(NBTConstants.TOOLBOX_SLOT);
 
             // 将当前物品放回工具箱的指定槽位
-            ItemToolboxPlus.setItemToSlot(toolbox, currentSlot, currentItem);
+            ToolboxHelper.setItemToSlot(toolbox, currentSlot, currentItem);
             if (slot == -1) {
                 // 如果选择的是默认槽位，则将工具箱放入玩家当前手持的槽位
                 player.inventory.setInventorySlotContents(player.inventory.currentItem, toolbox);

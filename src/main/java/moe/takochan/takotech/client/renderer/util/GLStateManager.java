@@ -169,5 +169,9 @@ public class GLStateManager implements AutoCloseable {
     @Override
     public void close() {
         restoreState();
+        // 确保 MC 固定管线渲染不受影响 - VBO/VAO 必须解绑
+        // MC 1.7.10 的 Tessellator 使用 glTexCoordPointer 等函数，
+        // 这些函数在 VBO 绑定时会抛出 "Cannot use Buffers when Array Buffer Object is enabled"
+        unbindAll();
     }
 }

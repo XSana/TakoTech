@@ -1,9 +1,9 @@
-#version 330 core
+#version 420 core
 
-// 常量
+// Constants
 const float PI = 3.14159265359;
 
-// 从顶点着色器接收
+// From vertex shader
 in vec3 vWorldPos;
 in vec3 vNormal;
 in vec2 vTexCoord;
@@ -19,7 +19,7 @@ layout(std140, binding = 0) uniform GlobalUniforms {
     vec4 uTime;
 };
 
-// 材质参数
+// Material parameters
 uniform vec4 uAlbedo;
 uniform float uMetallic;
 uniform float uRoughness;
@@ -30,7 +30,7 @@ uniform float uNormalStrength;
 uniform float uF0;
 uniform bool uUseVertexColor;
 
-// 纹理开关
+// Texture flags
 uniform bool uHasAlbedoMap;
 uniform bool uHasNormalMap;
 uniform bool uHasMetallicMap;
@@ -39,7 +39,7 @@ uniform bool uHasAOMap;
 uniform bool uHasEmissiveMap;
 uniform bool uUseIBL;
 
-// 纹理采样器
+// Texture samplers
 uniform sampler2D uAlbedoMap;
 uniform sampler2D uNormalMap;
 uniform sampler2D uMetallicMap;
@@ -47,25 +47,25 @@ uniform sampler2D uRoughnessMap;
 uniform sampler2D uAOMap;
 uniform sampler2D uEmissiveMap;
 
-// IBL 纹理
+// IBL textures
 uniform samplerCube uIrradianceMap;
 uniform samplerCube uPrefilterMap;
 uniform sampler2D uBrdfLUT;
 
-// 光源 (简单点光源支持)
+// Lights (simple point light support)
 uniform vec3 uLightPositions[4];
 uniform vec3 uLightColors[4];
 uniform int uLightCount;
 
-// 相机位置
+// Camera position
 uniform vec3 uCameraPos;
 
-// 输出
+// Output
 layout(location = 0) out vec4 FragColor;
 
-// ==================== PBR 函数 ====================
+// ==================== PBR Functions ====================
 
-// 法线分布函数 (GGX/Trowbridge-Reitz)
+// Normal Distribution Function (GGX/Trowbridge-Reitz)
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness * roughness;
@@ -80,7 +80,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
     return num / denom;
 }
 
-// 几何函数 (Schlick-GGX)
+// Geometry Function (Schlick-GGX)
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
     float r = (roughness + 1.0);
@@ -92,7 +92,7 @@ float GeometrySchlickGGX(float NdotV, float roughness)
     return num / denom;
 }
 
-// 几何函数 (Smith)
+// Geometry Function (Smith)
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
     float NdotV = max(dot(N, V), 0.0);
@@ -103,19 +103,19 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-// 菲涅尔方程 (Schlick 近似)
+// Fresnel Equation (Schlick approximation)
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-// 菲涅尔方程 (带粗糙度，用于 IBL)
+// Fresnel Equation with roughness (for IBL)
 vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 {
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-// 从法线贴图获取法线
+// Get normal from normal map
 vec3 getNormalFromMap()
 {
     if (!uHasNormalMap) {
@@ -135,7 +135,7 @@ vec3 getNormalFromMap()
 
 void main()
 {
-    // 采样材质属性
+    // Sample material properties
     vec3 albedo = uAlbedo.rgb;
     if (uHasAlbedoMap) {
         albedo = pow(texture(uAlbedoMap, vTexCoord).rgb, vec3(2.2)); // sRGB to linear
@@ -153,7 +153,7 @@ void main()
     if (uHasRoughnessMap) {
         roughness = texture(uRoughnessMap, vTexCoord).r;
     }
-    roughness = max(roughness, 0.04); // 防止除零
+    roughness = max(roughness, 0.04); // Prevent division by zero
 
     float ao = uAO;
     if (uHasAOMap) {
@@ -166,20 +166,20 @@ void main()
     }
     emissive *= uEmissiveIntensity;
 
-    // 计算向量
+    // Calculate vectors
     vec3 N = getNormalFromMap();
     vec3 V = normalize(uCameraPos - vWorldPos);
     vec3 R = reflect(-V, N);
 
-    // 计算 F0 (表面反射率)
+    // Calculate F0 (surface reflectance)
     vec3 F0 = vec3(uF0);
     F0 = mix(F0, albedo, metallic);
 
-    // 直接光照
+    // Direct lighting
     vec3 Lo = vec3(0.0);
     for (int i = 0; i < uLightCount && i < 4; ++i)
     {
-        // 计算每个光源的贡献
+        // Calculate contribution from each light
         vec3 L = normalize(uLightPositions[i] - vWorldPos);
         vec3 H = normalize(V + L);
         float distance = length(uLightPositions[i] - vWorldPos);
@@ -195,11 +195,11 @@ void main()
         float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
         vec3 specular = numerator / denominator;
 
-        // kS 是菲涅尔
+        // kS is Fresnel
         vec3 kS = F;
-        // kD 是漫反射部分
+        // kD is diffuse component
         vec3 kD = vec3(1.0) - kS;
-        // 金属没有漫反射
+        // Metals have no diffuse
         kD *= 1.0 - metallic;
 
         float NdotL = max(dot(N, L), 0.0);
@@ -207,11 +207,11 @@ void main()
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
 
-    // 环境光照
+    // Ambient lighting
     vec3 ambient;
     if (uUseIBL)
     {
-        // IBL 漫反射
+        // IBL diffuse
         vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
         vec3 kS = F;
         vec3 kD = 1.0 - kS;
@@ -220,7 +220,7 @@ void main()
         vec3 irradiance = texture(uIrradianceMap, N).rgb;
         vec3 diffuse = irradiance * albedo;
 
-        // IBL 高光
+        // IBL specular
         const float MAX_REFLECTION_LOD = 4.0;
         vec3 prefilteredColor = textureLod(uPrefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
         vec2 brdf = texture(uBrdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
@@ -230,16 +230,16 @@ void main()
     }
     else
     {
-        // 简单环境光
+        // Simple ambient light
         ambient = vec3(0.03) * albedo * ao;
     }
 
     vec3 color = ambient + Lo + emissive;
 
-    // HDR 色调映射 (Reinhard)
+    // HDR tone mapping (Reinhard)
     color = color / (color + vec3(1.0));
 
-    // Gamma 校正
+    // Gamma correction
     color = pow(color, vec3(1.0 / 2.2));
 
     FragColor = vec4(color, uAlbedo.a);

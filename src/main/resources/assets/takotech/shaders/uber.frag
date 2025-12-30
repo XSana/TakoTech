@@ -1,42 +1,42 @@
-#version 330 core
+#version 420 core
 
-// 渲染模式常量
-const int MODE_COLOR = 0;           // 纯色渲染
-const int MODE_TEXTURE = 1;         // 纹理渲染
-const int MODE_TEXTURE_COLOR = 2;   // 纹理 * 颜色
-const int MODE_BLUR_H = 3;          // 水平模糊
-const int MODE_BLUR_V = 4;          // 垂直模糊
+// Render mode constants
+const int MODE_COLOR = 0;           // Solid color
+const int MODE_TEXTURE = 1;         // Texture only
+const int MODE_TEXTURE_COLOR = 2;   // Texture * Color
+const int MODE_BLUR_H = 3;          // Horizontal blur
+const int MODE_BLUR_V = 4;          // Vertical blur
 
-// 从顶点着色器接收
+// From vertex shader
 in vec2 vTexCoord;
 in vec4 vColor;
 
-// 材质参数
+// Material parameters
 uniform int uRenderMode;
 uniform vec4 uBaseColor;
 uniform float uAlpha;
 
-// 纹理
+// Texture
 uniform sampler2D uMainTexture;
 uniform bool uUseTexture;
 
-// 模糊参数
+// Blur parameters
 uniform float uBlurScale;
 
-// PBR 预留参数 (未来扩展)
+// PBR reserved parameters (future extension)
 uniform float uMetallic;
 uniform float uRoughness;
 uniform float uAO;
 uniform vec4 uEmissive;
 
-// 输出
+// Output
 layout(location = 0) out vec4 FragColor;
 
-// 高斯模糊权重
+// Gaussian blur weights
 const float BLUR_WEIGHTS[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
 
 vec4 sampleBlur(bool horizontal) {
-    vec2 texOffset = uBlurScale / textureSize(uMainTexture, 0);
+    vec2 texOffset = uBlurScale / vec2(textureSize(uMainTexture, 0));
     vec3 result = texture(uMainTexture, vTexCoord).rgb * BLUR_WEIGHTS[0];
 
     for (int i = 1; i < 5; ++i) {
@@ -56,38 +56,38 @@ void main()
 
     switch (uRenderMode) {
         case MODE_COLOR:
-            // 纯色模式：使用顶点颜色或基础颜色
+            // Color mode: use vertex color or base color
             finalColor = vColor.a > 0.0 ? vColor : uBaseColor;
             break;
 
         case MODE_TEXTURE:
-            // 纹理模式：纯纹理采样
+            // Texture mode: pure texture sampling
             finalColor = texture(uMainTexture, vTexCoord);
             break;
 
         case MODE_TEXTURE_COLOR:
-            // 纹理 + 颜色调制
+            // Texture + color modulation
             vec4 texColor = texture(uMainTexture, vTexCoord);
             vec4 modColor = vColor.a > 0.0 ? vColor : uBaseColor;
             finalColor = texColor * modColor;
             break;
 
         case MODE_BLUR_H:
-            // 水平模糊
+            // Horizontal blur
             finalColor = sampleBlur(true);
             break;
 
         case MODE_BLUR_V:
-            // 垂直模糊
+            // Vertical blur
             finalColor = sampleBlur(false);
             break;
 
         default:
-            finalColor = vec4(1.0, 0.0, 1.0, 1.0); // 错误：洋红色
+            finalColor = vec4(1.0, 0.0, 1.0, 1.0); // Error: magenta
             break;
     }
 
-    // 应用全局 alpha
+    // Apply global alpha
     finalColor.a *= uAlpha;
 
     FragColor = finalColor;

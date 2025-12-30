@@ -1,13 +1,13 @@
-#version 330 core
+#version 420 core
 
-// 顶点属性
+// Vertex attributes
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoord;
 layout (location = 3) in vec3 aTangent;
 layout (location = 4) in vec4 aColor;
 
-// 输出到片元着色器
+// Output to fragment shader
 out vec3 vWorldPos;
 out vec3 vNormal;
 out vec2 vTexCoord;
@@ -34,7 +34,7 @@ void main()
 
     gl_Position = uProjection * uView * worldPos;
 
-    // 变换法线到世界空间
+    // Transform normal to world space
     vNormal = normalize(uNormalMatrix * aNormal);
     vTangent = normalize(uNormalMatrix * aTangent);
     vBitangent = cross(vNormal, vTangent);

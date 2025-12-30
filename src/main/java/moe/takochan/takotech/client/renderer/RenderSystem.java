@@ -1,14 +1,23 @@
 package moe.takochan.takotech.client.renderer;
 
+import org.lwjgl.opengl.Display;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.client.renderer.graphics.batch.BatchConfig;
 import moe.takochan.takotech.client.renderer.graphics.batch.SpriteBatch;
 import moe.takochan.takotech.client.renderer.graphics.batch.World3DBatch;
+import moe.takochan.takotech.client.renderer.graphics.buffer.GlobalUniforms;
 import moe.takochan.takotech.client.renderer.graphics.camera.Camera;
+import moe.takochan.takotech.client.renderer.graphics.core.RenderContext;
+import moe.takochan.takotech.client.renderer.graphics.ecs.World;
+import moe.takochan.takotech.client.renderer.graphics.math.MathUtils;
+import moe.takochan.takotech.client.renderer.graphics.particle.ParticleSystem;
+import moe.takochan.takotech.client.renderer.graphics.postprocess.PostProcessor;
 import moe.takochan.takotech.client.renderer.graphics.shader.ShaderProgram;
 import moe.takochan.takotech.client.renderer.graphics.shader.ShaderType;
+import moe.takochan.takotech.client.renderer.graphics.system.ParticleUpdateSystem;
 
 /**
  * 渲染系统入口点。
@@ -61,6 +70,20 @@ public final class RenderSystem {
 
     /** 批量渲染器配置 */
     private static BatchConfig batchConfig = null;
+
+    // ==================== ECS ====================
+
+    /** ECS 世界 */
+    private static World ecsWorld = null;
+    private static boolean ecsWorldInitialized = false;
+
+    /** 渲染上下文 */
+    private static RenderContext renderContext = null;
+    private static boolean renderContextInitialized = false;
+
+    /** 后处理器 */
+    private static PostProcessor postProcessor = null;
+    private static boolean postProcessorInitialized = false;
 
     private RenderSystem() {}
 
@@ -125,6 +148,24 @@ public final class RenderSystem {
             world3DBatch = null;
         }
         world3DBatchInitialized = false;
+
+        // 释放 ECS World
+        if (ecsWorld != null) {
+            ecsWorld.destroy();
+            ecsWorld = null;
+        }
+        ecsWorldInitialized = false;
+
+        // 释放渲染上下文
+        renderContext = null;
+        renderContextInitialized = false;
+
+        // 释放后处理器
+        if (postProcessor != null) {
+            postProcessor.cleanup();
+            postProcessor = null;
+        }
+        postProcessorInitialized = false;
 
         // 清理 shaders
         ShaderType.cleanupAll();
@@ -257,6 +298,11 @@ public final class RenderSystem {
     public static void updateWorldCamera(float partialTicks) {
         Camera camera = getWorldCamera();
         if (camera != null) {
+            int width = Display.getWidth();
+            int height = Display.getHeight();
+            if (width > 0 && height > 0) {
+                camera.setAspectRatio((float) width / (float) height);
+            }
             camera.syncFromMinecraft(partialTicks);
         }
     }
@@ -320,5 +366,165 @@ public final class RenderSystem {
      */
     public static BatchConfig getBatchConfig() {
         return batchConfig;
+    }
+
+    // ==================== GPGPU 粒子系统 ====================
+
+    /**
+     * 检查当前系统是否支持 GPGPU 粒子系统
+     * 需要 OpenGL 4.3+ 支持 Compute Shader 和 SSBO
+     *
+     * @return true 如果支持 GPGPU 粒子系统
+     */
+    public static boolean isParticleSystemSupported() {
+        return ParticleSystem.isSupported();
+    }
+
+    /**
+     * 创建 GPGPU 粒子系统
+     *
+     * @param maxParticles 最大粒子数量
+     * @return 新的 ParticleSystem 实例，如果系统不支持则返回 null
+     * @throws IllegalStateException 如果 RenderSystem 未初始化
+     */
+    public static ParticleSystem createParticleSystem(int maxParticles) {
+        if (!initialized) {
+            throw new IllegalStateException("RenderSystem not initialized. Call RenderSystem.init() first.");
+        }
+        if (!isParticleSystemSupported()) {
+            TakoTechMod.LOG.warn("GPGPU particle system not supported on this hardware");
+            return null;
+        }
+        ParticleSystem system = new ParticleSystem(maxParticles);
+        if (!system.initialize()) {
+            TakoTechMod.LOG.error("Failed to initialize particle system");
+            return null;
+        }
+        return system;
+    }
+
+    /**
+     * 创建默认容量的 GPGPU 粒子系统（10000 粒子）
+     *
+     * @return 新的 ParticleSystem 实例，如果系统不支持则返回 null
+     * @throws IllegalStateException 如果 RenderSystem 未初始化
+     */
+    public static ParticleSystem createParticleSystem() {
+        return createParticleSystem(10000);
+    }
+
+    // ==================== ECS 接口 ====================
+
+    /**
+     * 获取 ECS 世界实例
+     * 用于创建和管理实体、组件、系统
+     *
+     * @return ECS World 实例，如果系统不支持 shader 则返回 null
+     * @throws IllegalStateException 如果 RenderSystem 未初始化
+     */
+    public static World getWorld() {
+        if (!initialized) {
+            throw new IllegalStateException("RenderSystem not initialized. Call RenderSystem.init() first.");
+        }
+        if (!isShaderSupported()) {
+            return null;
+        }
+        // 延迟初始化 ECS World
+        if (!ecsWorldInitialized) {
+            ecsWorld = new World("TakoTechWorld");
+
+            // 注册默认系统
+            ecsWorld.registerSystem(new ParticleUpdateSystem());
+
+            ecsWorldInitialized = true;
+            TakoTechMod.LOG.info("ECS World lazily initialized");
+        }
+        return ecsWorld;
+    }
+
+    /**
+     * 获取渲染上下文
+     * 用于传递相机信息和矩阵到着色器
+     *
+     * @return RenderContext 实例，如果系统不支持 shader 则返回 null
+     * @throws IllegalStateException 如果 RenderSystem 未初始化
+     */
+    public static RenderContext getRenderContext() {
+        if (!initialized) {
+            throw new IllegalStateException("RenderSystem not initialized. Call RenderSystem.init() first.");
+        }
+        if (!isShaderSupported()) {
+            return null;
+        }
+        // 延迟初始化渲染上下文
+        if (!renderContextInitialized) {
+            renderContext = new RenderContext();
+            renderContextInitialized = true;
+            TakoTechMod.LOG.info("RenderContext lazily initialized");
+        }
+        return renderContext;
+    }
+
+    /**
+     * 获取后处理器
+     * 用于 Bloom、HDR 等后处理效果
+     *
+     * @return PostProcessor 实例，如果系统不支持 shader 则返回 null
+     * @throws IllegalStateException 如果 RenderSystem 未初始化
+     */
+    public static PostProcessor getPostProcessor() {
+        if (!initialized) {
+            throw new IllegalStateException("RenderSystem not initialized. Call RenderSystem.init() first.");
+        }
+        if (!isShaderSupported()) {
+            return null;
+        }
+        // 延迟初始化后处理器
+        if (!postProcessorInitialized) {
+            postProcessor = new PostProcessor();
+            if (!postProcessor.initialize()) {
+                TakoTechMod.LOG.error("Failed to initialize PostProcessor");
+                postProcessor = null;
+            }
+            postProcessorInitialized = true;
+            TakoTechMod.LOG.info("PostProcessor lazily initialized");
+        }
+        return postProcessor;
+    }
+
+    /**
+     * 更新 ECS 世界（每帧调用）
+     *
+     * @param deltaTime 时间增量（秒）
+     */
+    public static void updateWorld(float deltaTime) {
+        World world = getWorld();
+        if (world != null) {
+            world.update(deltaTime);
+        }
+        GlobalUniforms uniforms = GlobalUniforms.INSTANCE;
+        if (uniforms.isAvailable()) {
+            uniforms.updateTime(deltaTime);
+        }
+    }
+
+    /**
+     * 更新渲染上下文（每帧调用，在渲染前）
+     *
+     * @param partialTicks 渲染插值
+     */
+    public static void updateRenderContext(float partialTicks) {
+        RenderContext ctx = getRenderContext();
+        if (ctx != null) {
+            ctx.syncFromMinecraft(partialTicks);
+            GlobalUniforms uniforms = GlobalUniforms.INSTANCE;
+            uniforms.init();
+            if (uniforms.isAvailable()) {
+                uniforms.setProjection(MathUtils.toFloatBuffer(ctx.getProjMatrix()));
+                uniforms.setView(MathUtils.toFloatBuffer(ctx.getViewMatrix()));
+                uniforms.setScreenSize(Display.getWidth(), Display.getHeight());
+                uniforms.bind();
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 package moe.takochan.takotech.client.settings;
 
+import moe.takochan.takotech.utils.ToolboxHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -60,7 +61,7 @@ public class KeyHandler {
         if (stack == null) return false;
 
         if (stack.getItem() instanceof ItemToolboxPlus) {
-            return !ItemToolboxPlus.getToolItems(stack)
+            return !ToolboxHelper.getToolItems(stack)
                 .isEmpty();
         } else if (stack.getItem() instanceof MetaGeneratedTool) {
             return CommonUtils.openNbtData(stack)

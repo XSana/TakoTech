@@ -1,0 +1,251 @@
+#version 430 core
+
+// particle_emit.comp - Particle emission compute shader
+// Generates initial state for new particles
+
+layout(local_size_x = 256) in;
+
+// ==================== Data Structures ====================
+
+struct Particle {
+    vec4 position;  // xyz: position, w: current lifetime
+    vec4 velocity;  // xyz: velocity, w: max lifetime
+    vec4 color;     // rgba
+    vec4 params;    // x: size, y: rotation, z: type, w: angular velocity
+};
+
+// ==================== Buffer Bindings ====================
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    Particle particles[];
+};
+
+layout(binding = 1) uniform atomic_uint nextFreeSlot;
+
+// ==================== Uniforms ====================
+
+uniform int uEmitCount;
+uniform int uMaxParticles;
+uniform float uBaseTime;
+
+// Emitter parameters
+uniform vec3 uEmitterPos;
+uniform int uShapeType;
+uniform float uShapeParam1;
+uniform float uShapeParam2;
+uniform float uShapeParam3;
+uniform float uLifetimeMin;
+uniform float uLifetimeMax;
+uniform vec3 uVelocity;
+uniform float uSpeed;
+uniform float uSizeMin;
+uniform float uSizeMax;
+uniform vec4 uColor;
+uniform int uParticleType;
+uniform float uRotationMin;
+uniform float uRotationMax;
+uniform float uAngularVelMin;
+uniform float uAngularVelMax;
+
+// ==================== Shape Type Constants ====================
+
+const int SHAPE_POINT = 0;
+const int SHAPE_SPHERE = 1;
+const int SHAPE_SPHERE_SURFACE = 2;
+const int SHAPE_HEMISPHERE = 3;
+const int SHAPE_CIRCLE = 4;
+const int SHAPE_RING = 5;
+const int SHAPE_CONE = 6;
+const int SHAPE_BOX = 7;
+const int SHAPE_BOX_EDGE = 8;
+const int SHAPE_CYLINDER = 9;
+const int SHAPE_LINE = 10;
+const int SHAPE_RECTANGLE = 11;
+
+// ==================== Random Number Generation ====================
+
+uint hash(uint x) {
+    x += (x << 10u);
+    x ^= (x >> 6u);
+    x += (x << 3u);
+    x ^= (x >> 11u);
+    x += (x << 15u);
+    return x;
+}
+
+uint seed;
+
+float random() {
+    seed = hash(seed);
+    return float(seed) / 4294967295.0;
+}
+
+float randomRange(float min, float max) {
+    return min + random() * (max - min);
+}
+
+vec3 randomDirection() {
+    float theta = random() * 6.283185307;
+    float phi = acos(2.0 * random() - 1.0);
+    float sinPhi = sin(phi);
+    return vec3(sinPhi * cos(theta), cos(phi), sinPhi * sin(theta));
+}
+
+vec3 randomInSphere(float radius) {
+    vec3 dir = randomDirection();
+    float r = pow(random(), 1.0 / 3.0) * radius;
+    return dir * r;
+}
+
+vec3 randomOnSphere(float radius) {
+    return randomDirection() * radius;
+}
+
+vec3 randomInHemisphere(float radius) {
+    vec3 p = randomInSphere(radius);
+    p.y = abs(p.y);
+    return p;
+}
+
+vec3 randomInCircle(float radius) {
+    float r = sqrt(random()) * radius;
+    float theta = random() * 6.283185307;
+    return vec3(r * cos(theta), 0.0, r * sin(theta));
+}
+
+vec3 randomOnRing(float outer, float inner) {
+    float r = sqrt(mix(inner * inner, outer * outer, random()));
+    float theta = random() * 6.283185307;
+    return vec3(r * cos(theta), 0.0, r * sin(theta));
+}
+
+vec3 randomInCone(float radius, float angle, float height) {
+    float h = random() * height;
+    float r = (h / max(height, 0.001)) * radius * tan(angle);
+    float theta = random() * 6.283185307;
+    return vec3(r * cos(theta), h, r * sin(theta));
+}
+
+vec3 randomInBox(float w, float h, float d) {
+    return vec3(
+        (random() - 0.5) * w,
+        (random() - 0.5) * h,
+        (random() - 0.5) * d
+    );
+}
+
+vec3 randomInCylinder(float radius, float height) {
+    float r = sqrt(random()) * radius;
+    float theta = random() * 6.283185307;
+    float y = (random() - 0.5) * height;
+    return vec3(r * cos(theta), y, r * sin(theta));
+}
+
+vec3 randomOnLine(float length) {
+    return vec3((random() - 0.5) * length, 0.0, 0.0);
+}
+
+vec3 randomInRectangle(float width, float height) {
+    return vec3(
+        (random() - 0.5) * width,
+        0.0,
+        (random() - 0.5) * height
+    );
+}
+
+// ==================== Position Generation ====================
+
+vec3 generatePosition() {
+    switch (uShapeType) {
+        case SHAPE_POINT:
+            return vec3(0.0);
+
+        case SHAPE_SPHERE:
+            return randomInSphere(uShapeParam1);
+
+        case SHAPE_SPHERE_SURFACE:
+            return randomOnSphere(uShapeParam1);
+
+        case SHAPE_HEMISPHERE:
+            return randomInHemisphere(uShapeParam1);
+
+        case SHAPE_CIRCLE:
+            return randomInCircle(uShapeParam1);
+
+        case SHAPE_RING:
+            return randomOnRing(uShapeParam1, uShapeParam2);
+
+        case SHAPE_CONE:
+            return randomInCone(uShapeParam1, uShapeParam2, uShapeParam3);
+
+        case SHAPE_BOX:
+            return randomInBox(uShapeParam1, uShapeParam2, uShapeParam3);
+
+        case SHAPE_CYLINDER:
+            return randomInCylinder(uShapeParam1, uShapeParam2);
+
+        case SHAPE_LINE:
+            return randomOnLine(uShapeParam1);
+
+        case SHAPE_RECTANGLE:
+            return randomInRectangle(uShapeParam1, uShapeParam2);
+
+        default:
+            return vec3(0.0);
+    }
+}
+
+// ==================== Velocity Generation ====================
+
+vec3 generateVelocity(vec3 localPos) {
+    vec3 vel = uVelocity;
+
+    // Add radial velocity
+    if (uSpeed != 0.0) {
+        float len = length(localPos);
+        if (len > 0.0001) {
+            vel += normalize(localPos) * uSpeed;
+        } else {
+            vel += randomDirection() * uSpeed;
+        }
+    }
+
+    return vel;
+}
+
+// ==================== Main Function ====================
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= uEmitCount) return;
+
+    // Initialize random seed
+    seed = uint(idx) + uint(uBaseTime * 10000.0) + hash(uint(gl_GlobalInvocationID.x));
+
+    // Get free slot
+    uint slot = atomicCounterIncrement(nextFreeSlot);
+    if (slot >= uMaxParticles) {
+        // Wrap around to beginning
+        slot = slot % uint(uMaxParticles);
+    }
+
+    // Generate local position
+    vec3 localPos = generatePosition();
+
+    // Generate lifetime
+    float lifetime = randomRange(uLifetimeMin, uLifetimeMax);
+
+    // Generate particle
+    Particle p;
+    p.position = vec4(uEmitterPos + localPos, lifetime);
+    p.velocity = vec4(generateVelocity(localPos), lifetime);
+    p.color = uColor;
+    p.params = vec4(
+        randomRange(uSizeMin, uSizeMax),
+        randomRange(uRotationMin, uRotationMax),
+        float(uParticleType),
+        randomRange(uAngularVelMin, uAngularVelMax)
+    );
+
+    particles[slot] = p;
+}

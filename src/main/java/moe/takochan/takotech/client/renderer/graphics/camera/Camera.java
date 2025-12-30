@@ -2,6 +2,9 @@ package moe.takochan.takotech.client.renderer.graphics.camera;
 
 import java.nio.FloatBuffer;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.EntityLivingBase;
+
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
@@ -355,10 +358,10 @@ public class Camera {
      * @param partialTicks 插值因子（用于平滑）
      */
     public void syncFromMinecraft(float partialTicks) {
-        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+        Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null) return;
 
-        net.minecraft.entity.EntityLivingBase entity = mc.renderViewEntity != null ? mc.renderViewEntity : mc.thePlayer;
+        EntityLivingBase entity = mc.renderViewEntity != null ? mc.renderViewEntity : mc.thePlayer;
 
         // 插值位置
         double posX = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks;
@@ -415,6 +418,7 @@ public class Camera {
 
     private void updateProjectionMatrix() {
         if (projectionType == ProjectionType.PERSPECTIVE) {
+            // fov is already stored in radians (see setPerspective), pass directly
             MathUtils.perspective(fov, aspectRatio, nearPlane, farPlane, projectionMatrix);
         } else {
             float halfW = orthoWidth / 2.0f;

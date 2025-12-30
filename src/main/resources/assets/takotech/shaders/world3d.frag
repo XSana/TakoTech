@@ -1,9 +1,9 @@
 #version 120
 
-// 从顶点着色器接收
+// From vertex shader
 varying vec4 vColor;
 
-// 参数
+// Parameters
 uniform float uAlpha;
 
 void main()
