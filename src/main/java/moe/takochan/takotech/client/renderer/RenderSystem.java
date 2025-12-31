@@ -8,6 +8,7 @@ import moe.takochan.takotech.TakoTechMod;
 import moe.takochan.takotech.client.renderer.graphics.batch.BatchConfig;
 import moe.takochan.takotech.client.renderer.graphics.batch.SpriteBatch;
 import moe.takochan.takotech.client.renderer.graphics.batch.World3DBatch;
+import moe.takochan.takotech.client.renderer.graphics.batch.World3DBatchLit;
 import moe.takochan.takotech.client.renderer.graphics.buffer.GlobalUniforms;
 import moe.takochan.takotech.client.renderer.graphics.camera.Camera;
 import moe.takochan.takotech.client.renderer.graphics.core.RenderContext;
@@ -67,6 +68,10 @@ public final class RenderSystem {
     /** 3D 世界批量渲染器 - 用于在世界中渲染 3D 图元 */
     private static World3DBatch world3DBatch = null;
     private static boolean world3DBatchInitialized = false;
+
+    /** 3D 世界批量渲染器（带 MC 光照支持） */
+    private static World3DBatchLit world3DBatchLit = null;
+    private static boolean world3DBatchLitInitialized = false;
 
     /** 批量渲染器配置 */
     private static BatchConfig batchConfig = null;
@@ -148,6 +153,13 @@ public final class RenderSystem {
             world3DBatch = null;
         }
         world3DBatchInitialized = false;
+
+        // 释放 World3DBatchLit
+        if (world3DBatchLit != null) {
+            world3DBatchLit.close();
+            world3DBatchLit = null;
+        }
+        world3DBatchLitInitialized = false;
 
         // 释放 ECS World
         if (ecsWorld != null) {
@@ -356,6 +368,57 @@ public final class RenderSystem {
             return null;
         }
         return new World3DBatch(maxVertices);
+    }
+
+    /**
+     * 获取共享的 World3DBatchLit 实例
+     * 用于在 MC 世界中渲染带 MC 光照的 3D 图元
+     *
+     * @return World3DBatchLit 实例，如果系统不支持 shader 则返回 null
+     * @throws IllegalStateException 如果 RenderSystem 未初始化
+     */
+    public static World3DBatchLit getWorld3DBatchLit() {
+        if (!initialized) {
+            throw new IllegalStateException("RenderSystem not initialized. Call RenderSystem.init() first.");
+        }
+        if (!isShaderSupported()) {
+            return null;
+        }
+        // 延迟初始化 World3DBatchLit（使用 BatchConfig 的推荐值）
+        if (!world3DBatchLitInitialized) {
+            int maxVerts = batchConfig != null ? batchConfig.getWorld3DMaxVertices()
+                : BatchConfig.DEFAULT_WORLD3D_VERTICES;
+            world3DBatchLit = new World3DBatchLit(maxVerts);
+            world3DBatchLitInitialized = true;
+            TakoTechMod.LOG.info("World3DBatchLit lazily initialized with {} vertices", maxVerts);
+        }
+        return world3DBatchLit;
+    }
+
+    /**
+     * 创建新的 World3DBatchLit 实例（使用 BatchConfig 推荐值）
+     *
+     * @return 新的 World3DBatchLit 实例，如果系统不支持 shader 则返回 null
+     */
+    public static World3DBatchLit createWorld3DBatchLit() {
+        if (!isShaderSupported()) {
+            return null;
+        }
+        int maxVerts = batchConfig != null ? batchConfig.getWorld3DMaxVertices() : BatchConfig.DEFAULT_WORLD3D_VERTICES;
+        return new World3DBatchLit(maxVerts);
+    }
+
+    /**
+     * 创建指定容量的 World3DBatchLit 实例
+     *
+     * @param maxVertices 最大顶点数
+     * @return 新的 World3DBatchLit 实例，如果系统不支持 shader 则返回 null
+     */
+    public static World3DBatchLit createWorld3DBatchLit(int maxVertices) {
+        if (!isShaderSupported()) {
+            return null;
+        }
+        return new World3DBatchLit(maxVertices);
     }
 
     /**

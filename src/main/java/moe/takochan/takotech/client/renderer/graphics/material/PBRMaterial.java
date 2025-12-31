@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL13;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import moe.takochan.takotech.client.renderer.graphics.lighting.MCLightingHelper;
 import moe.takochan.takotech.client.renderer.graphics.shader.ShaderProgram;
 
 /**
@@ -58,6 +59,7 @@ public class PBRMaterial {
     public static final int TEXTURE_SLOT_IBL_IRRADIANCE = 6;
     public static final int TEXTURE_SLOT_IBL_PREFILTER = 7;
     public static final int TEXTURE_SLOT_BRDF_LUT = 8;
+    public static final int TEXTURE_SLOT_MC_LIGHTMAP = 9;
 
     // ==================== 基础颜色 ====================
 
@@ -124,6 +126,23 @@ public class PBRMaterial {
 
     /** 折射率 (IOR) - 用于菲涅尔计算, 默认 1.5 (玻璃) */
     private float ior = 1.5f;
+
+    // ==================== MC 光照 ====================
+
+    /** 是否使用 MC 光照 */
+    private boolean useMCLighting = false;
+
+    /** MC 光照坐标 U (方块光照, 0-1) */
+    private float lightCoordU = 1.0f;
+
+    /** MC 光照坐标 V (天空光照, 0-1) */
+    private float lightCoordV = 1.0f;
+
+    /** MC 满光时的环境光基准强度 (default 0.5) */
+    private float mcAmbientBase = 0.5f;
+
+    /** MC 光照对直接光的影响程度 (0-1, default 0.3) */
+    private float mcLightInfluence = 0.3f;
 
     // ==================== 构造函数 ====================
 
@@ -265,6 +284,73 @@ public class PBRMaterial {
         return this;
     }
 
+    // ==================== MC 光照 ====================
+
+    /**
+     * 启用/禁用 MC 光照
+     */
+    public PBRMaterial setUseMCLighting(boolean use) {
+        this.useMCLighting = use;
+        return this;
+    }
+
+    /**
+     * 设置 MC 光照坐标
+     *
+     * @param blockLight 方块光照级别 (0-15)
+     * @param skyLight   天空光照级别 (0-15)
+     */
+    public PBRMaterial setLightCoord(int blockLight, int skyLight) {
+        this.lightCoordU = Math.max(0, Math.min(15, blockLight)) / 15.0f;
+        this.lightCoordV = Math.max(0, Math.min(15, skyLight)) / 15.0f;
+        return this;
+    }
+
+    /**
+     * 设置 MC 光照坐标（归一化值）
+     *
+     * @param blockLightUV 方块光照 UV (0-1)
+     * @param skyLightUV   天空光照 UV (0-1)
+     */
+    public PBRMaterial setLightCoordUV(float blockLightUV, float skyLightUV) {
+        this.lightCoordU = Math.max(0, Math.min(1, blockLightUV));
+        this.lightCoordV = Math.max(0, Math.min(1, skyLightUV));
+        return this;
+    }
+
+    /**
+     * 从数组设置 MC 光照坐标
+     *
+     * @param coords 光照坐标数组 [blockLightUV, skyLightUV]
+     */
+    public PBRMaterial setLightCoordUV(float[] coords) {
+        if (coords != null && coords.length >= 2) {
+            this.lightCoordU = Math.max(0, Math.min(1, coords[0]));
+            this.lightCoordV = Math.max(0, Math.min(1, coords[1]));
+        }
+        return this;
+    }
+
+    /**
+     * 设置 MC 满光时的环境光基准强度
+     *
+     * @param base 基准强度 (default 0.5, 范围建议 0.1-1.0)
+     */
+    public PBRMaterial setMCAmbientBase(float base) {
+        this.mcAmbientBase = Math.max(0, base);
+        return this;
+    }
+
+    /**
+     * 设置 MC 光照对直接光的影响程度
+     *
+     * @param influence 影响程度 (0=不影响, 1=完全影响, default 0.3)
+     */
+    public PBRMaterial setMCLightInfluence(float influence) {
+        this.mcLightInfluence = Math.max(0, Math.min(1, influence));
+        return this;
+    }
+
     // ==================== Getters ====================
 
     public float getMetallic() {
@@ -293,6 +379,18 @@ public class PBRMaterial {
 
     public boolean usesIBL() {
         return useIBL;
+    }
+
+    public boolean usesMCLighting() {
+        return useMCLighting;
+    }
+
+    public float getLightCoordU() {
+        return lightCoordU;
+    }
+
+    public float getLightCoordV() {
+        return lightCoordV;
     }
 
     // ==================== Apply ====================
@@ -336,6 +434,14 @@ public class PBRMaterial {
         float f0 = (ior - 1) / (ior + 1);
         f0 = f0 * f0;
         shader.setUniformFloat("uF0", f0);
+
+        // MC 光照
+        shader.setUniformBool("uUseMCLighting", useMCLighting);
+        if (useMCLighting) {
+            shader.setUniformVec2("uLightCoord", lightCoordU, lightCoordV);
+            shader.setUniformFloat("uMCAmbientBase", mcAmbientBase);
+            shader.setUniformFloat("uMCLightInfluence", mcLightInfluence);
+        }
 
         // 绑定纹理
         bindTextures(shader);
@@ -408,6 +514,12 @@ public class PBRMaterial {
             }
         }
 
+        // MC Lightmap
+        if (useMCLighting) {
+            MCLightingHelper.bindLightmap(TEXTURE_SLOT_MC_LIGHTMAP);
+            shader.setUniformInt("uMCLightmap", TEXTURE_SLOT_MC_LIGHTMAP);
+        }
+
         // 恢复到默认纹理单元
         GL13.glActiveTexture(GL13.GL_TEXTURE0);
     }
@@ -416,7 +528,7 @@ public class PBRMaterial {
      * 解绑所有纹理
      */
     public void unbindTextures() {
-        for (int i = 0; i <= TEXTURE_SLOT_BRDF_LUT; i++) {
+        for (int i = 0; i <= TEXTURE_SLOT_MC_LIGHTMAP; i++) {
             GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         }

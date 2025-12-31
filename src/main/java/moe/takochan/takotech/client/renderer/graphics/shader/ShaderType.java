@@ -48,6 +48,13 @@ public enum ShaderType {
     WORLD_3D("shaders/world3d.vert", "shaders/world3d.frag"),
 
     /**
+     * 3D 世界渲染着色器（带 MC 光照支持）。
+     * 扩展 WORLD_3D，支持采样 MC 的 lightmap 纹理。
+     * 支持日夜循环和方块光源。
+     */
+    WORLD_3D_LIT("shaders/world3d_lit.vert", "shaders/world3d_lit.frag"),
+
+    /**
      * 线条渲染着色器。
      * 用于 LineRendererComponent 的 billboard 线条渲染。
      * 支持顶点颜色、全局透明度和发光强度（用于 Bloom）。

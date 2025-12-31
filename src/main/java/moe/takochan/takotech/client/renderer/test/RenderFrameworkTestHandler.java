@@ -29,6 +29,7 @@ import moe.takochan.takotech.client.renderer.RenderSystem;
 import moe.takochan.takotech.client.renderer.graphics.batch.InstancedBatch;
 import moe.takochan.takotech.client.renderer.graphics.batch.SpriteBatch;
 import moe.takochan.takotech.client.renderer.graphics.batch.World3DBatch;
+import moe.takochan.takotech.client.renderer.graphics.batch.World3DBatchLit;
 import moe.takochan.takotech.client.renderer.graphics.buffer.GlobalUniforms;
 import moe.takochan.takotech.client.renderer.graphics.camera.Camera;
 import moe.takochan.takotech.client.renderer.graphics.component.LineRendererComponent;
@@ -40,6 +41,7 @@ import moe.takochan.takotech.client.renderer.graphics.culling.AABB;
 import moe.takochan.takotech.client.renderer.graphics.ecs.Entity;
 import moe.takochan.takotech.client.renderer.graphics.ecs.World;
 import moe.takochan.takotech.client.renderer.graphics.framebuffer.Framebuffer;
+import moe.takochan.takotech.client.renderer.graphics.lighting.MCLightingHelper;
 import moe.takochan.takotech.client.renderer.graphics.material.Material;
 import moe.takochan.takotech.client.renderer.graphics.material.PBRMaterial;
 import moe.takochan.takotech.client.renderer.graphics.math.MathUtils;
@@ -148,6 +150,8 @@ public class RenderFrameworkTestHandler {
 
     /** World3DBatch for line rendering */
     private World3DBatch worldBatch;
+    /** World3DBatchLit for MC-lit 3D rendering */
+    private World3DBatchLit worldBatchLit;
     /** Instanced batch for GPU instancing */
     private InstancedBatch instancedBatch;
     /** Instanced test base mesh */
@@ -204,6 +208,9 @@ public class RenderFrameworkTestHandler {
     /** PBR test entities */
     private List<Entity> pbrEntities = new ArrayList<>();
     private List<PBRMaterial> pbrMaterials = new ArrayList<>();
+
+    /** World3DBatchLit test fixed positions (set at activation) */
+    private double[] litBoxBasePos = null; // [x, y, z] - base position for lit boxes
 
     /** Parent-child hierarchy test */
     private Entity parentEntity;
@@ -461,6 +468,10 @@ public class RenderFrameworkTestHandler {
             logTestResult("World3DBatch Creation", worldBatch != null);
             logger.logInfo("World3DBatch created with capacity 16384");
 
+            worldBatchLit = new World3DBatchLit(16384);
+            logTestResult("World3DBatchLit Creation", worldBatchLit != null);
+            logger.logInfo("World3DBatchLit created with MC lighting support");
+
             SpriteBatch spriteBatch = RenderSystem.getSpriteBatch();
             logTestResult("SpriteBatch Available", spriteBatch != null);
 
@@ -512,7 +523,7 @@ public class RenderFrameworkTestHandler {
                 pp.setBloomThreshold(0.3f); // 更低的阈值，捕获更多亮部
                 pp.setBloomIntensity(2.5f); // 更高的强度
                 pp.setBlurIterations(6); // 更多迭代，更大扩散
-                pp.setBlurScale(8.0f); // 更大的模糊范围
+                pp.setBlurScale(2.0f); // 更大的模糊范围
                 logTestResult("PostProcessor Available", true);
                 logger.logInfo("PostProcessor configured: threshold=0.3, intensity=2.5, blur=6, scale=2.0");
             } else {
@@ -1872,6 +1883,12 @@ public class RenderFrameworkTestHandler {
                         basePlayerY,
                         basePlayerZ,
                         player.rotationYaw));
+
+                // Initialize fixed position for World3DBatchLit test boxes
+                // Place them 3 blocks in front of player at activation
+                double yawRad = baseYawRad + Math.PI / 2; // Forward direction
+                litBoxBasePos = new double[] { basePlayerX + Math.cos(yawRad) * 3.0, basePlayerY,
+                    basePlayerZ + Math.sin(yawRad) * 3.0 };
             }
 
             setStage(TestStage.ENVIRONMENT, true);
@@ -2756,6 +2773,66 @@ public class RenderFrameworkTestHandler {
         worldBatch.drawLine(footX, footY + 0.05, footZ, footX, footY + 0.05, footZ + 1, 0, 0, 1, 1);
 
         worldBatch.end();
+
+        // Render MC-lit 3D test (boxes that respond to MC lighting)
+        renderWorld3DLitTest(footX, footY, footZ, player);
+    }
+
+    /**
+     * Render test geometry using World3DBatchLit to demonstrate MC lighting integration.
+     * The boxes will respond to nearby light sources (torches, glowstone, etc.) and day/night cycle.
+     * Uses fixed positions set at test activation time.
+     */
+    private void renderWorld3DLitTest(double footX, double footY, double footZ, EntityPlayer player) {
+        if (worldBatchLit == null || litBoxBasePos == null) return;
+
+        // Get camera position for coordinate conversion
+        double camX = MCRenderHelper.getCameraX();
+        double camY = MCRenderHelper.getCameraY();
+        double camZ = MCRenderHelper.getCameraZ();
+
+        // Configure MC lighting
+        net.minecraft.world.World mcWorld = Minecraft.getMinecraft().theWorld;
+        worldBatchLit.setWorld(mcWorld);
+        worldBatchLit.setPlayerEyePosition(camX, camY, camZ);
+        worldBatchLit.setLightingEnabled(true);
+        worldBatchLit.setLightIntensity(1.0f);
+        worldBatchLit.setMinBrightness(0.05f);
+
+        // begin() automatically captures MC matrices and sets up culling (CCW front face)
+        worldBatchLit.begin(GL11.GL_TRIANGLES);
+
+        // World positions (set at test activation)
+        double worldX = litBoxBasePos[0];
+        double worldY = litBoxBasePos[1] + 0.5; // Slightly above ground
+        double worldZ = litBoxBasePos[2];
+
+        // Convert to camera-relative coordinates (required by World3DBatchLit)
+        double baseX = worldX - camX;
+        double baseY = worldY - camY;
+        double baseZ = worldZ - camZ;
+
+        // Draw 4 colored boxes in a row - they will be lit by MC light sources
+        float boxSize = 0.4f;
+        float spacing = 0.6f;
+
+        // Red box
+        worldBatchLit
+            .drawSolidBox(baseX - spacing * 1.5, baseY, baseZ, boxSize, boxSize, boxSize, 1.0f, 0.3f, 0.3f, 1.0f);
+
+        // Green box
+        worldBatchLit
+            .drawSolidBox(baseX - spacing * 0.5, baseY, baseZ, boxSize, boxSize, boxSize, 0.3f, 1.0f, 0.3f, 1.0f);
+
+        // Blue box
+        worldBatchLit
+            .drawSolidBox(baseX + spacing * 0.5, baseY, baseZ, boxSize, boxSize, boxSize, 0.3f, 0.3f, 1.0f, 1.0f);
+
+        // White box (best for seeing lighting changes)
+        worldBatchLit
+            .drawSolidBox(baseX + spacing * 1.5, baseY, baseZ, boxSize, boxSize, boxSize, 1.0f, 1.0f, 1.0f, 1.0f);
+
+        worldBatchLit.end();
     }
 
     private void renderMeshEntity(RenderContext ctx, Entity entity) {
@@ -2869,9 +2946,14 @@ public class RenderFrameworkTestHandler {
         // In camera-relative coordinates, camera is at origin
         shader.setUniformVec3("uCameraPos", 0.0f, 0.0f, 0.0f);
         shader.setUniformInt("uLightCount", 1);
-        // Light position relative to camera
-        shader.setUniformVec3("uLightPositions[0]", 3.0f, 4.0f, 2.0f);
-        shader.setUniformVec3("uLightColors[0]", 3.0f, 3.0f, 3.0f);
+        // Light position relative to camera - closer and brighter for visible PBR effect
+        // Point light attenuation is 1/distance², so we need high intensity
+        shader.setUniformVec3("uLightPositions[0]", 1.0f, 2.0f, 3.0f);
+        shader.setUniformVec3("uLightColors[0]", 50.0f, 50.0f, 50.0f);
+
+        // Bind MC lightmap for lighting integration
+        net.minecraft.world.World mcWorld = Minecraft.getMinecraft().theWorld;
+        MCLightingHelper.bindLightmap(MCLightingHelper.LIGHTMAP_TEXTURE_SLOT);
 
         for (int i = 0; i < pbrEntities.size(); i++) {
             Entity entity = pbrEntities.get(i);
@@ -2887,11 +2969,20 @@ public class RenderFrameworkTestHandler {
             cameraRelativeMat.m32 -= ctx.getCameraZ();
             ctx.setModelMatrix(cameraRelativeMat);
 
+            // Get MC light at entity world position
+            float[] lightCoord = MCLightingHelper
+                .getLightmapCoords(mcWorld, (int) worldMat.m30, (int) worldMat.m31, (int) worldMat.m32);
+
             ctx.applyModelToShader();
             pbrMaterials.get(i)
+                .setUseMCLighting(true)
+                .setLightCoordUV(lightCoord)
                 .apply(shader);
             sphereMesh.draw();
         }
+
+        // Unbind MC lightmap
+        MCLightingHelper.unbindLightmap(MCLightingHelper.LIGHTMAP_TEXTURE_SLOT);
 
         ShaderProgram.unbind();
     }
@@ -3606,6 +3697,7 @@ public class RenderFrameworkTestHandler {
         bounceTestEntities.clear();
         bounceTestLabels.clear();
         bounceTestPositions = null;
+        litBoxBasePos = null;
         bloomTestEntities.clear();
         magicCircleOuter = null;
         magicCircleInner = null;
@@ -3658,6 +3750,10 @@ public class RenderFrameworkTestHandler {
         if (worldBatch != null) {
             worldBatch.close();
             worldBatch = null;
+        }
+        if (worldBatchLit != null) {
+            worldBatchLit.close();
+            worldBatchLit = null;
         }
         if (instancedBatch != null) {
             instancedBatch.close();

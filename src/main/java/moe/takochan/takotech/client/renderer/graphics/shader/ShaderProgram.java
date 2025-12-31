@@ -474,6 +474,14 @@ public class ShaderProgram implements AutoCloseable {
         }
         GL20.glAttachShader(program, fragmentId);
 
+        // Bind vertex attribute locations before linking
+        // Must match the order used by Mesh/DynamicMesh
+        GL20.glBindAttribLocation(program, 0, "aPos");
+        GL20.glBindAttribLocation(program, 1, "aColor");
+        GL20.glBindAttribLocation(program, 2, "aTexCoord");
+        GL20.glBindAttribLocation(program, 2, "aLightCoord");
+        GL20.glBindAttribLocation(program, 3, "aNormal");
+
         GL20.glLinkProgram(program);
 
         if (GL20.glGetProgrami(program, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {

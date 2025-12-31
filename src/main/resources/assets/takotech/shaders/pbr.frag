@@ -52,6 +52,20 @@ uniform samplerCube uIrradianceMap;
 uniform samplerCube uPrefilterMap;
 uniform sampler2D uBrdfLUT;
 
+// MC Lighting integration
+uniform bool uUseMCLighting;        // Enable MC lightmap lighting
+uniform sampler2D uMCLightmap;      // MC lightmap texture (16x16)
+uniform vec2 uLightCoord;           // MC light coordinates (blockLight, skyLight)
+uniform float uMCAmbientBase;       // Base ambient intensity for MC full light (default 0.5)
+uniform float uMCLightInfluence;    // How much MC light affects direct lighting (0-1, default 0.3)
+
+// Constants for MC lightmap sampling
+const float MC_LIGHTMAP_SCALE = 15.0 / 16.0;
+const float MC_LIGHTMAP_OFFSET = 0.5 / 16.0;
+
+// Luminance weights (Rec. 709)
+const vec3 LUMINANCE_WEIGHTS = vec3(0.2126, 0.7152, 0.0722);
+
 // Lights (simple point light support)
 uniform vec3 uLightPositions[4];
 uniform vec3 uLightColors[4];
@@ -232,6 +246,33 @@ void main()
     {
         // Simple ambient light
         ambient = vec3(0.03) * albedo * ao;
+    }
+
+    // Apply MC lightmap if enabled
+    if (uUseMCLighting)
+    {
+        // Sample MC lightmap (accounts for day/night cycle and block light)
+        vec2 lightUV = uLightCoord * MC_LIGHTMAP_SCALE + MC_LIGHTMAP_OFFSET;
+        vec3 mcLightColor = texture(uMCLightmap, lightUV).rgb;
+
+        // Convert to luminance for intensity calculation
+        float mcLuminance = dot(mcLightColor, LUMINANCE_WEIGHTS);
+
+        // Calculate MC ambient contribution
+        // Base ambient (0.5 default) scaled by MC light intensity
+        float ambientBase = uMCAmbientBase > 0.0 ? uMCAmbientBase : 0.5;
+        vec3 mcAmbient = mcLightColor * ambientBase;
+
+        // Blend: replace simple ambient with MC-based ambient
+        // Keep the AO influence
+        ambient = mcAmbient * albedo * ao;
+
+        // Direct lighting: partially influenced by MC light
+        // Our point lights should still work, but dimmed in dark areas
+        float influence = clamp(uMCLightInfluence, 0.0, 1.0);
+        if (influence < 0.001) influence = 0.3; // default
+        float directMultiplier = mix(1.0, mcLuminance, influence);
+        Lo *= directMultiplier;
     }
 
     vec3 color = ambient + Lo + emissive;
