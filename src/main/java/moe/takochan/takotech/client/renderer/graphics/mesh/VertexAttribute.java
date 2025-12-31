@@ -82,4 +82,12 @@ public class VertexAttribute {
     public static VertexAttribute colorByte(int offset) {
         return new VertexAttribute(GL11.GL_UNSIGNED_BYTE, offset, 4, true);
     }
+
+    /**
+     * MC 光照贴图坐标属性 (vec2: blockLight, skyLight)
+     * Values normalized to 0-1 range for lightmap texture sampling.
+     */
+    public static VertexAttribute lightCoord(int offset) {
+        return new VertexAttribute(GL11.GL_FLOAT, offset, 2);
+    }
 }

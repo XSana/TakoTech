@@ -63,6 +63,13 @@ public final class VertexFormat {
         VertexAttribute.normal(12),
         VertexAttribute.colorFloat(24));
 
+    /** 3D 位置 + 颜色 + 光照坐标 (vec3 + vec4 + vec2) - 36 bytes */
+    public static final VertexFormat POSITION_3D_COLOR_LIGHT = new VertexFormat(
+        36,
+        VertexAttribute.position3D(0),
+        VertexAttribute.colorFloat(12),
+        VertexAttribute.lightCoord(28));
+
     // ==================== 实例字段 ====================
 
     private final int stride;
@@ -162,6 +169,12 @@ public final class VertexFormat {
         public Builder colorByte() {
             attrs.add(VertexAttribute.colorByte(currentOffset));
             currentOffset += 4; // 4 bytes
+            return this;
+        }
+
+        public Builder lightCoord() {
+            attrs.add(VertexAttribute.lightCoord(currentOffset));
+            currentOffset += 8; // 2 floats
             return this;
         }
 
