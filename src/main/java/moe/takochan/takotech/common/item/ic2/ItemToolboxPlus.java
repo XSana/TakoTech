@@ -3,7 +3,6 @@ package moe.takochan.takotech.common.item.ic2;
 import static moe.takochan.takotech.client.settings.GameSettings.selectTool;
 
 import java.util.List;
-import java.util.Optional;
 
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.settings.GameSettings;
@@ -16,11 +15,9 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import ic2.core.item.IHandHeldInventory;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
-import moe.takochan.takotech.common.data.ToolData;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
-import moe.takochan.takotech.utils.ToolboxHelper;
 
 public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInventory {
 

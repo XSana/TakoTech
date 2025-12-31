@@ -1,5 +1,7 @@
 package moe.takochan.takotech.client;
 
+import net.minecraftforge.common.MinecraftForge;
+
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
@@ -10,6 +12,7 @@ import moe.takochan.takotech.client.renderer.RenderSystem;
 import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.CommonProxy;
 import moe.takochan.takotech.common.event.ConfigChangeHandler;
+import moe.takochan.takotech.common.event.RenderGameOverlayEventHandler;
 
 public class ClientProxy extends CommonProxy {
 
@@ -19,6 +22,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
+        MinecraftForge.EVENT_BUS.register(new RenderGameOverlayEventHandler());
         // 初始化渲染系统（包括 Shader 注册）
         RenderSystem.init();
     }
@@ -46,10 +50,11 @@ public class ClientProxy extends CommonProxy {
 
         // [测试代码] 渲染框架测试处理器 - 开发调试用，生产环境应注释掉
         // 按键: U=开关测试, I=下一阶段, O=上一阶段, P=自动推进, B=切换Bloom
-        // moe.takochan.takotech.client.renderer.test.RenderFrameworkTestHandler testHandler = new
-        // moe.takochan.takotech.client.renderer.test.RenderFrameworkTestHandler();
-        // MinecraftForge.EVENT_BUS.register(testHandler);
-        // FMLCommonHandler.instance().bus().register(testHandler);
+        moe.takochan.takotech.client.renderer.test.RenderFrameworkTestHandler testHandler = new moe.takochan.takotech.client.renderer.test.RenderFrameworkTestHandler();
+        MinecraftForge.EVENT_BUS.register(testHandler);
+        FMLCommonHandler.instance()
+            .bus()
+            .register(testHandler);
     }
 
     @Override

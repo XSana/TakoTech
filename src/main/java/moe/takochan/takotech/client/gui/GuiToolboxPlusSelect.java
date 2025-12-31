@@ -8,7 +8,6 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import moe.takochan.takotech.utils.ToolboxHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -40,6 +39,7 @@ import moe.takochan.takotech.config.ClientConfig;
 import moe.takochan.takotech.network.NetworkHandler;
 import moe.takochan.takotech.network.PacketToolboxSelected;
 import moe.takochan.takotech.utils.SectorVertexUtils;
+import moe.takochan.takotech.utils.ToolboxHelper;
 
 @SideOnly(Side.CLIENT)
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {

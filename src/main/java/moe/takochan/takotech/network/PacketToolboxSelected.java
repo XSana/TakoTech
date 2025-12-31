@@ -1,6 +1,5 @@
 package moe.takochan.takotech.network;
 
-import moe.takochan.takotech.utils.ToolboxHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -12,6 +11,7 @@ import io.netty.buffer.ByteBuf;
 import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.utils.CommonUtils;
+import moe.takochan.takotech.utils.ToolboxHelper;
 
 public class PacketToolboxSelected implements IMessage {
 
@@ -54,17 +54,18 @@ public class PacketToolboxSelected implements IMessage {
          */
         public void selectTool(int slot) {
             // 获取工具箱并处理选择逻辑
-            ToolboxHelper.getToolbox(currentItem).ifPresent(t -> {
-                // 复制工具箱
-                ItemStack toolbox = t.copy();
-                if (toolbox.getItem() instanceof ItemToolboxPlus) {
-                    if (ToolboxHelper.isToolboxPlus(currentItem)) {
-                        handleToolSelection(slot, toolbox);
-                    } else if (ToolboxHelper.isMetaGeneratedTool(currentItem)) {
-                        handleMetaToolSelection(slot, toolbox);
+            ToolboxHelper.getToolbox(currentItem)
+                .ifPresent(t -> {
+                    // 复制工具箱
+                    ItemStack toolbox = t.copy();
+                    if (toolbox.getItem() instanceof ItemToolboxPlus) {
+                        if (ToolboxHelper.isToolboxPlus(currentItem)) {
+                            handleToolSelection(slot, toolbox);
+                        } else if (ToolboxHelper.isMetaGeneratedTool(currentItem)) {
+                            handleMetaToolSelection(slot, toolbox);
+                        }
                     }
-                }
-            });
+                });
         }
 
         /**

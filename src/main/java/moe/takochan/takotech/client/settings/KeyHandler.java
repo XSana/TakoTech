@@ -1,6 +1,5 @@
 package moe.takochan.takotech.client.settings;
 
-import moe.takochan.takotech.utils.ToolboxHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -15,6 +14,7 @@ import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.network.NetworkHandler;
 import moe.takochan.takotech.network.PacketToolboxOpenSelectGUI;
 import moe.takochan.takotech.utils.CommonUtils;
+import moe.takochan.takotech.utils.ToolboxHelper;
 
 /**
  * 按键处理器类

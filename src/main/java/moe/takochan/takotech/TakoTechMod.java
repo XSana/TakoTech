@@ -9,6 +9,7 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 import moe.takochan.takotech.common.CommonProxy;
 import moe.takochan.takotech.common.Reference;
 import moe.takochan.takotech.network.NetworkHandler;
@@ -61,7 +62,7 @@ public class TakoTechMod {
 
     @Mod.EventHandler
     // register server commands in this event handler (Remove if not needed)
-    public void serverStopping(FMLServerStartingEvent event) {
+    public void serverStopping(FMLServerStoppingEvent event) {
         proxy.serverStopping(event);
     }
 }
