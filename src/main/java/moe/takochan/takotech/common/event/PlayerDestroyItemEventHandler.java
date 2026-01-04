@@ -17,6 +17,9 @@ public class PlayerDestroyItemEventHandler {
      * 处理工具损坏事件
      * <p>
      * 当玩家破坏物品时触发，检查是否为 GT 工具，并恢复工具箱
+     * <p>
+     * 注意：某些 mod（如龙之研究）会调用 destroyCurrentEquippedItem() 来放置物品，
+     * 这也会触发此事件。需要检查工具是否真的耗尽才能返还工具箱。
      *
      * @param event 玩家破坏物品事件
      */
@@ -32,6 +35,14 @@ public class PlayerDestroyItemEventHandler {
             EntityPlayer player = event.entityPlayer;
             // 检查玩家是否有效且物品包含工具箱数据
             if (player != null && tag.hasKey(NBTConstants.TOOLBOX_DATA)) {
+                // 验证工具确实已耗尽（防止其他 mod 调用 destroyCurrentEquippedItem 触发误判）
+                long damage = MetaGeneratedTool.getToolDamage(brokenStack);
+                long maxDamage = MetaGeneratedTool.getToolMaxDamage(brokenStack);
+                if (damage < maxDamage) {
+                    // 工具未真正耗尽，不返还工具箱
+                    return;
+                }
+
                 // 获取工具箱数据并加载工具箱物品
                 final NBTTagCompound toolboxItems = tag.getCompoundTag(NBTConstants.TOOLBOX_DATA);
                 final ItemStack toolbox = ItemStack.loadItemStackFromNBT(toolboxItems);

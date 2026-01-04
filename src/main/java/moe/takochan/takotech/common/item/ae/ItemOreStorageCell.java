@@ -58,6 +58,11 @@ import moe.takochan.takotech.utils.I18nUtils;
  */
 public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, IItemGroup {
 
+    /**
+     * 最大可存储的矿物类型数量
+     */
+    private static final int MAX_ORE_TYPES = 114514;
+
     private static final EnumMap<OreStorageType, Map<String, Boolean>> oreWhitelistCache = new EnumMap<>(
         OreStorageType.class);
 
@@ -269,8 +274,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      */
     @Override
     public int getTotalTypes(ItemStack cellItem) {
-        // 应该没这么多矿物类型吧（恶臭）
-        return 114514;
+        return MAX_ORE_TYPES;
     }
 
     /**

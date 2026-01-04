@@ -33,24 +33,33 @@
  *
  * For more details, see https://docs.gradle.org/8.0.1/userguide/java_library_plugin.html#sec:java_library_configurations_graph
  */
-dependencies {
-    runtimeOnlyNonPublishable("com.github.GTNewHorizons:NotEnoughItems:2.7.87-GTNH:dev")
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.8.14:dev')
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:Angelica:1.0.0-beta56:dev')
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:ServerUtilities:2.1.61:dev')
+// 强制指定 GTNHLib 版本，防止传递依赖升级
+configurations.all {
+    resolutionStrategy {
+        force 'com.github.GTNewHorizons:GTNHLib:0.7.10'
+    }
+}
 
-    // use GTNH280-rc1 version
-    // Lib
-    compileOnly("com.github.GTNewHorizons:GTNHLib:0.6.39:dev")
+dependencies {
+    // JNA for Windows IME control
+//    shadowImplementation('net.java.dev.jna:jna:5.14.0')
+//    shadowImplementation('net.java.dev.jna:jna-platform:5.14.0')
+
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:NotEnoughItems:2.8.40-GTNH:dev")
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.8.15:dev')
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:Angelica:1.0.0-beta66b:dev')
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:ServerUtilities:2.2.2:dev')
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:Draconic-Evolution:1.4.27-GTNH:dev')
+
 
     // AE
-    api('com.github.GTNewHorizons:Applied-Energistics-2-Unofficial:rv3-beta-688-GTNH:dev')
-    api('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.4.114-gtnh:dev') {
+    api('com.github.GTNewHorizons:Applied-Energistics-2-Unofficial:rv3-beta-695-GTNH:dev')
+    api('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.4.119-gtnh:dev') {
         exclude group: 'com.github.GTNewHorizons', module: 'Applied-Energistics-2-Unofficial'
     }
 
     // GT
-    api('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.459:dev') {
+    api('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.482:dev') {
         exclude group: 'com.github.GTNewHorizons', module: 'Applied-Energistics-2-Unofficial'
         exclude group: 'com.github.GTNewHorizons', module: 'AE2FluidCraft-Rework'
     }
