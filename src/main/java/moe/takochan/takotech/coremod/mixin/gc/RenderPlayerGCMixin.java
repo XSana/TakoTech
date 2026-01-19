@@ -1,7 +1,5 @@
 package moe.takochan.takotech.coremod.mixin.gc;
 
-import micdoodle8.mods.galacticraft.core.client.model.ModelPlayerGC;
-import micdoodle8.mods.galacticraft.core.client.render.entities.RenderPlayerGC;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -12,6 +10,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import micdoodle8.mods.galacticraft.core.client.model.ModelPlayerGC;
+import micdoodle8.mods.galacticraft.core.client.render.entities.RenderPlayerGC;
 import moe.takochan.takotech.client.interfaces.IPlayerRendererSkinSelector;
 import moe.takochan.takotech.client.interfaces.IPlayerSkinModelConfig;
 import moe.takochan.takotech.client.interfaces.ISkinTypeProvider;
@@ -51,8 +51,7 @@ public abstract class RenderPlayerGCMixin extends RenderPlayer implements IPlaye
         }
 
         String skinType = ((ISkinTypeProvider) player).takotech$getSkinType();
-        ModelBiped target = "slim".equals(skinType) && this.takotech$modelAlex != null
-            ? this.takotech$modelAlex
+        ModelBiped target = "slim".equals(skinType) && this.takotech$modelAlex != null ? this.takotech$modelAlex
             : this.takotech$modelSteve;
 
         this.mainModel = target;

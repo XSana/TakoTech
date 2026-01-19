@@ -14,8 +14,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class DefaultPlayerSkinTT {
 
-    public static final ResourceLocation TEXTURE_STEVE = new ResourceLocation("textures/entity/steve.png");
-    public static final ResourceLocation TEXTURE_ALEX = new ResourceLocation("textures/entity/alex.png");
+    public static final ResourceLocation TEXTURE_STEVE = new ResourceLocation("takotech", "textures/entity/steve.png");
+    public static final ResourceLocation TEXTURE_ALEX = new ResourceLocation("takotech", "textures/entity/alex.png");
 
     /**
      * 获取玩家默认皮肤（Alex/Steve）。

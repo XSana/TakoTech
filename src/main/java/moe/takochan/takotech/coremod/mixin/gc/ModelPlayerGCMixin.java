@@ -1,6 +1,5 @@
 package moe.takochan.takotech.coremod.mixin.gc;
 
-import micdoodle8.mods.galacticraft.core.client.model.ModelPlayerGC;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.model.ModelBase;
@@ -18,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import micdoodle8.mods.galacticraft.core.client.model.ModelPlayerGC;
 import moe.takochan.takotech.client.interfaces.IPlayerSkinModel;
 import moe.takochan.takotech.client.interfaces.IPlayerSkinModelConfig;
 
@@ -177,8 +177,8 @@ public abstract class ModelPlayerGCMixin extends ModelBiped implements IPlayerSk
 
         this.takotech$rightArmWear = new ModelRenderer(modelBase, 40, 32);
         this.takotech$rightArmWear.setTextureSize(64, 64);
-        this.takotech$rightArmWear.addBox(smallArms ? -2.0F : -3.0F, -2.0F, -2.0F, smallArms ? 3 : 4, 12, 4,
-            modelSize + 0.25F);
+        this.takotech$rightArmWear
+            .addBox(smallArms ? -2.0F : -3.0F, -2.0F, -2.0F, smallArms ? 3 : 4, 12, 4, modelSize + 0.25F);
         this.takotech$rightArmWear.setRotationPoint(-5.0F, smallArms ? 2.5F : 2.0F, 0.0F);
 
         this.takotech$leftLegWear = new ModelRenderer(modelBase, 0, 48);

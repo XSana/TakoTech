@@ -93,7 +93,8 @@ public abstract class RenderPlayerMixin {
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         skinModel.takotech$getRightArmWear().rotateAngleX = 0.0F;
-        skinModel.takotech$getRightArmWear().render(0.0625F);
+        skinModel.takotech$getRightArmWear()
+            .render(0.0625F);
         GL11.glDisable(GL11.GL_BLEND);
         ci.cancel();
     }
