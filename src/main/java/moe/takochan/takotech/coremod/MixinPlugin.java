@@ -11,10 +11,13 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 
+/**
+ * Mixin 插件入口与加载列表。
+ */
 public class MixinPlugin implements IMixinConfigPlugin {
 
     /**
-     * 该方法在插件加载时被调用。可以在这里进行插件的初始化操作，例如加载配置文件等。
+     * 插件加载时调用，可用于初始化。
      *
      * @param mixinPackage Mixin 包名
      */
@@ -22,9 +25,9 @@ public class MixinPlugin implements IMixinConfigPlugin {
     public void onLoad(String mixinPackage) {}
 
     /**
-     * 返回映射器配置的路径。该方法用于指定反向映射配置文件（如果有）。 如果不需要映射器配置，可以返回空字符串。
+     * 返回 refmap 配置路径。
      *
-     * @return 映射器配置的路径，空字符串表示不需要配置
+     * @return refmap 配置路径，空字符串表示不使用
      */
     @Override
     public String getRefMapperConfig() {
@@ -32,11 +35,11 @@ public class MixinPlugin implements IMixinConfigPlugin {
     }
 
     /**
-     * 判断是否应用某个 Mixin。该方法接收目标类名和 Mixin 类名，根据条件返回是否应用该 Mixin。
+     * 判断是否应用某个 mixin。
      *
-     * @param targetClassName 目标类的名称
-     * @param mixinClassName  Mixin 类的名称
-     * @return 是否应用该 Mixin
+     * @param targetClassName 目标类名
+     * @param mixinClassName  Mixin 类名
+     * @return 是否应用
      */
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
@@ -44,18 +47,18 @@ public class MixinPlugin implements IMixinConfigPlugin {
     }
 
     /**
-     * 用于确定目标类的最终列表。可以在这里操作传入的目标类集，决定哪些类需要应用该 Mixin。
+     * 接收并处理目标类列表。
      *
-     * @param myTargets    该插件应该处理的目标类名集合
-     * @param otherTargets 其他插件目标类名集合
+     * @param myTargets    当前插件的目标类集合
+     * @param otherTargets 其他插件的目标类集合
      */
     @Override
     public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {}
 
     /**
-     * 返回需要应用的所有 Mixin 类的完整类名列表。该方法会被调用来加载所有 Mixin。
+     * 返回需要加载的 mixin 列表。
      *
-     * @return 需要应用的 Mixin 类名列表
+     * @return mixin 列表
      */
     @Override
     public List<String> getMixins() {
@@ -64,40 +67,51 @@ public class MixinPlugin implements IMixinConfigPlugin {
         boolean isClient = FMLLaunchHandler.side()
             .isClient();
 
-        // 如果已经加了InputFix，或LWJGL3ify（Java17+）则不执行Mixin修复
+        // 如果已加载 InputFix 或 LWJGL3ify（Java17+），则跳过修复
         if (isClient && Stream.of("lain.mods.inputfix.InputFix", "me.eigenraven.lwjgl3ify.core.Lwjgl3ifyCoremod")
             .noneMatch(this::isClassExistSafe)) {
             mixins.add("InputFixMixin");
         }
 
+        // 客户端：双层皮肤与瘦臂支持
+        if (isClient) {
+            mixins.add("AbstractClientPlayerMixin");
+            mixins.add("SkinManagerMixin");
+            mixins.add("ImageBufferDownloadMixin");
+            mixins.add("RendererLivingEntityAccessor");
+            mixins.add("RenderPlayerMixin");
+        }
+
         mixins.add("NetHandlerPlayServerMixin");
 
-        // 返回要应用的 Mixin 类名
         return mixins;
     }
 
     /**
-     * 在 Mixin 应用到目标类之前调用。可以在这里做一些预处理工作，例如修改目标类的字节码。
+     * mixin 应用前回调。
      *
-     * @param s          目标类的名称
-     * @param classNode  目标类的字节码节点
-     * @param s1         Mixin 类的名称
-     * @param iMixinInfo Mixin 信息
+     * @param s          目标类名
+     * @param classNode  目标类节点
+     * @param s1         mixin 类名
+     * @param iMixinInfo mixin 信息
      */
     @Override
     public void preApply(String s, ClassNode classNode, String s1, IMixinInfo iMixinInfo) {}
 
     /**
-     * 在 Mixin 应用到目标类之后调用。可以在这里进行后处理操作，例如输出日志或修改类的字节码。
+     * mixin 应用后回调。
      *
-     * @param s          目标类的名称
-     * @param classNode  目标类的字节码节点
-     * @param s1         Mixin 类的名称
-     * @param iMixinInfo Mixin 信息
+     * @param s          目标类名
+     * @param classNode  目标类节点
+     * @param s1         mixin 类名
+     * @param iMixinInfo mixin 信息
      */
     @Override
     public void postApply(String s, ClassNode classNode, String s1, IMixinInfo iMixinInfo) {}
 
+    /**
+     * 安全判断类是否存在。
+     */
     private boolean isClassExistSafe(String className) {
         try {
             Class.forName(className);
