@@ -9,12 +9,14 @@ import org.lwjgl.opengl.GL11;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
+import moe.takochan.takotech.client.interfaces.IPlayerSkinModel;
+
 /**
  * 支持双层皮肤与瘦臂的玩家模型。
  * 将 1.8+ 的玩家模型特性移植到 1.7.10。
  */
 @SideOnly(Side.CLIENT)
-public class ModelPlayerTT extends ModelBiped {
+public class ModelPlayerTT extends ModelBiped implements IPlayerSkinModel {
 
     // 外层模型（身体各部位的第二层）
     public ModelRenderer bipedLeftArmwear;
@@ -189,5 +191,21 @@ public class ModelPlayerTT extends ModelBiped {
      */
     public boolean isSmallArms() {
         return this.smallArms;
+    }
+
+    /**
+     * 是否为瘦臂模型。
+     */
+    @Override
+    public boolean takotech$isSmallArms() {
+        return this.smallArms;
+    }
+
+    /**
+     * 右臂外层模型（第一人称使用）。
+     */
+    @Override
+    public ModelRenderer takotech$getRightArmWear() {
+        return this.bipedRightArmwear;
     }
 }
