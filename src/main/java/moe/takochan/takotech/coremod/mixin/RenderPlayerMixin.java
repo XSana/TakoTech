@@ -178,13 +178,19 @@ public abstract class RenderPlayerMixin {
             return (player instanceof EntityPlayerSP) ? 0.1D : 0.0D;
         }
 
-        ItemStack currentItem = player.inventory.getCurrentItem();
+        ItemStack currentItem = player.getCurrentEquippedItem();
+        if (currentItem == null) {
+            currentItem = player.getItemInUse();
+        }
+        if (currentItem == null) {
+            currentItem = player.inventory.getCurrentItem();
+        }
         if (currentItem != null && currentItem.getItem() instanceof IHoldableItem) {
             IHoldableItem holdableItem = (IHoldableItem) currentItem.getItem();
             if (holdableItem.shouldCrouch(player)
                 || holdableItem.shouldHoldLeftHandUp(player)
                 || holdableItem.shouldHoldRightHandUp(player)) {
-                return 0.1D;
+                return 0.175D;
             }
         }
 
