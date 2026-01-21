@@ -1,9 +1,11 @@
 package moe.takochan.takotech.coremod.mixin;
 
 import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,12 +13,14 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import moe.takochan.takotech.client.interfaces.IPlayerRendererSkinSelector;
 import moe.takochan.takotech.client.interfaces.IPlayerSkinModel;
 import moe.takochan.takotech.client.interfaces.ISkinTypeProvider;
 import moe.takochan.takotech.client.model.ModelPlayerTT;
+import micdoodle8.mods.galacticraft.api.item.IHoldableItem;
 
 /**
  * 替换 RenderPlayer 的默认模型，支持双层皮肤与瘦臂。
@@ -39,6 +43,9 @@ public abstract class RenderPlayerMixin {
     @Unique
     private float takotech$armRotationPointX;
 
+    @Unique
+    private double takotech$extraYOffset;
+
     /**
      * 构造后创建 Steve/Alex 模型。
      */
@@ -60,6 +67,17 @@ public abstract class RenderPlayerMixin {
     private void beforeDoRender(AbstractClientPlayer player, double x, double y, double z, float entityYaw,
         float partialTicks, CallbackInfo ci) {
         this.takotech$applySkinType(player);
+        this.takotech$extraYOffset = this.takotech$getCrouchOffset(player);
+    }
+
+    @ModifyArg(
+        method = "doRender(Lnet/minecraft/client/entity/AbstractClientPlayer;DDDFF)V",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/entity/RendererLivingEntity;doRender(Lnet/minecraft/entity/EntityLivingBase;DDDFF)V"),
+        index = 2)
+    private double takotech$adjustRenderY(double y) {
+        return y - this.takotech$extraYOffset;
     }
 
     /**
@@ -153,5 +171,23 @@ public abstract class RenderPlayerMixin {
             ((RendererLivingEntityAccessor) this).takotech$setMainModel(this.takotech$modelSteve);
             this.modelBipedMain = this.takotech$modelSteve;
         }
+    }
+
+    private double takotech$getCrouchOffset(AbstractClientPlayer player) {
+        if (player.isSneaking()) {
+            return (player instanceof EntityPlayerSP) ? 0.1D : 0.0D;
+        }
+
+        ItemStack currentItem = player.inventory.getCurrentItem();
+        if (currentItem != null && currentItem.getItem() instanceof IHoldableItem) {
+            IHoldableItem holdableItem = (IHoldableItem) currentItem.getItem();
+            if (holdableItem.shouldCrouch(player)
+                || holdableItem.shouldHoldLeftHandUp(player)
+                || holdableItem.shouldHoldRightHandUp(player)) {
+                return 0.1D;
+            }
+        }
+
+        return 0.0D;
     }
 }
