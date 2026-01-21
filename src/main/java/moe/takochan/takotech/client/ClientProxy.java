@@ -1,6 +1,9 @@
 package moe.takochan.takotech.client;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
+import moe.takochan.takotech.client.input.IMEControl;
+import moe.takochan.takotech.client.input.IMEStateHandler;
 import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.CommonProxy;
 
@@ -16,5 +19,13 @@ public class ClientProxy extends CommonProxy {
         // 创建游戏设置实例并注册按键绑定
         GameSettings gameSettings = new GameSettings();
         gameSettings.register();
+
+        // 初始化 IME 控制 (每 tick 检查文本框焦点状态)
+        IMEControl.init();
+        if (IMEControl.isAvailable()) {
+            FMLCommonHandler.instance()
+                .bus()
+                .register(new IMEStateHandler());
+        }
     }
 }
