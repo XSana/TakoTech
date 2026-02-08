@@ -1,5 +1,7 @@
 package moe.takochan.takotech.coremod.mixin;
 
+import gregtech.api.items.MetaGeneratedTool;
+import moe.takochan.takotech.utils.ToolboxHelper;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -44,7 +46,14 @@ public abstract class NetHandlerPlayServerMixin {
         ItemStack itemstack = this.playerEntity.inventory.getCurrentItem();
         if (itemstack != null && itemstack.stackSize == 0) {
             // 检查物品是否为 MetaGeneratedTool 且为工具箱
-            if (ItemToolboxPlus.isMetaGeneratedTool(itemstack) && ItemToolboxPlus.isItemToolbox(itemstack)) {
+            if (ToolboxHelper.isMetaGeneratedTool(itemstack) && ToolboxHelper.isItemToolbox(itemstack)) {
+                // 验证工具确实已耗尽（防止其他 mod 异常调用）
+                long damage = MetaGeneratedTool.getToolDamage(itemstack);
+                long maxDamage = MetaGeneratedTool.getToolMaxDamage(itemstack);
+                if (damage < maxDamage) {
+                    // 工具未真正耗尽，不返还工具箱
+                    return;
+                }
                 // 从 NBT 中恢复工具箱数据
                 NBTTagCompound tag = CommonUtils.openNbtData(itemstack);
                 NBTTagCompound toolboxItems = tag.getCompoundTag(NBTConstants.TOOLBOX_DATA);
