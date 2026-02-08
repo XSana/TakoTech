@@ -1,7 +1,5 @@
 package moe.takochan.takotech.coremod.mixin;
 
-import gregtech.api.items.MetaGeneratedTool;
-import moe.takochan.takotech.utils.ToolboxHelper;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -14,9 +12,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
+import gregtech.api.items.MetaGeneratedTool;
 import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.utils.CommonUtils;
+import moe.takochan.takotech.utils.ToolboxHelper;
 
 @Mixin(value = NetHandlerPlayServer.class)
 public abstract class NetHandlerPlayServerMixin {
